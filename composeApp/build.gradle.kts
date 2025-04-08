@@ -82,6 +82,10 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.crossevol.wordbook"
             packageVersion = "1.0.0"
+
+            // Explicitly include the java.logging module for jlink
+            jlinkArgs.add("--add-modules")
+            jlinkArgs.add("java.logging")
         }
     }
 }
