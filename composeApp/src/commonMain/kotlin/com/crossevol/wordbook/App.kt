@@ -1,15 +1,17 @@
 package com.crossevol.wordbook
 
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.Composable
 import com.crossevol.wordbook.data.model.WordItem
 import com.crossevol.wordbook.ui.components.sampleWordItem
+import com.crossevol.wordbook.ui.screens.ApiKeySettingPage // Import ApiKeySettingPage
+import com.crossevol.wordbook.ui.screens.EditProfilePage // Import EditProfilePage
 import com.crossevol.wordbook.ui.screens.HomePage
-import com.crossevol.wordbook.ui.screens.SettingsPage // Import the new Settings Page
+import com.crossevol.wordbook.ui.screens.SettingsPage
 import com.crossevol.wordbook.ui.screens.WordDetailPage
 import com.crossevol.wordbook.ui.screens.WordReviewPage
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -19,7 +21,9 @@ sealed class Screen {
     object Home : Screen()
     data class Detail(val word: WordItem) : Screen()
     data class Review(val word: WordItem) : Screen()
-    object Settings : Screen() // Add Settings screen state
+    object Settings : Screen()
+    object EditProfile : Screen() // Add EditProfile screen state
+    object ApiKeySettings : Screen() // Add ApiKeySettings screen state
 }
 
 @Composable
@@ -30,7 +34,7 @@ fun App() {
 
     MaterialTheme {
         when (val screen = currentScreen) {
-            is Screen.Home -> {
+            is Screen.Home           -> {
                 HomePage(
                     onWordItemClick = { word ->
                         currentScreen = Screen.Detail(word) // Navigate to Detail
@@ -38,14 +42,16 @@ fun App() {
                     onNavigate = { route ->
                         println("Bottom nav clicked: $route")
                         when (route) {
-                            "home" -> currentScreen = Screen.Home // Stay home or return home
-                            "review" -> currentScreen = Screen.Review(sampleWordItem) // Navigate to Review
+                            "home"     -> currentScreen = Screen.Home // Stay home or return home
+                            "review" -> currentScreen =
+                                Screen.Review(sampleWordItem) // Navigate to Review
                             "settings" -> currentScreen = Screen.Settings // Navigate to Settings
                         }
                     }
                 )
             }
-            is Screen.Detail -> {
+
+            is Screen.Detail         -> {
                 WordDetailPage(
                     wordItem = screen.word,
                     onBack = {
@@ -53,7 +59,8 @@ fun App() {
                     }
                 )
             }
-            is Screen.Review -> {
+
+            is Screen.Review         -> {
                 WordReviewPage(
                     wordItem = screen.word, // Use the word passed in the state (currently sampleWordItem)
                     onAction = {
@@ -68,7 +75,8 @@ fun App() {
                     }
                 )
             }
-            is Screen.Settings -> {
+
+            is Screen.Settings       -> {
                 SettingsPage(
                     onNavigateBack = { currentScreen = Screen.Home }, // Navigate back to Home
                     // Add other callbacks as needed, e.g.:
@@ -77,11 +85,37 @@ fun App() {
                         // Implement actual logout logic and navigate (e.g., to a login screen or back home)
                         currentScreen = Screen.Home // Example: Go back home after logout
                     },
-                    onEditProfile = { println("Edit Profile clicked!") },
-                    onChangeApiKey = { println("Change API Key clicked!") },
+                    onEditProfile = {
+                        currentScreen = Screen.EditProfile
+                    }, // Navigate to EditProfile
+                    onChangeApiKey = {
+                        currentScreen = Screen.ApiKeySettings
+                    }, // Navigate to ApiKeySettings
                     onNotificationSettings = { println("Notification Settings clicked!") },
                     onIntroduction = { println("Introduction clicked!") },
                     onTermsOfService = { println("Terms of Service clicked!") }
+                )
+            }
+
+            is Screen.EditProfile    -> {
+                EditProfilePage(
+                    onNavigateBack = { currentScreen = Screen.Settings }, // Go back to Settings
+                    onSaveChanges = { name, city, state, bio ->
+                        println("Saving Profile: Name=$name, City=$city, State=$state, Bio=$bio")
+                        // Add actual save logic here
+                        currentScreen = Screen.Settings // Navigate back to Settings after save
+                    }
+                )
+            }
+
+            is Screen.ApiKeySettings -> {
+                ApiKeySettingPage(
+                    onNavigateBack = { currentScreen = Screen.Settings }, // Go back to Settings
+                    onSaveChanges = { name, city, state ->
+                        println("Saving API Key Settings: Name=$name, City=$city, State=$state")
+                        // Add actual save logic here (likely involves API key field not shown in design)
+                        currentScreen = Screen.Settings // Navigate back to Settings after save
+                    }
                 )
             }
         }

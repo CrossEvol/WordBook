@@ -3,26 +3,34 @@ package com.crossevol.wordbook.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Info // For Introduction
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Notifications // For Notification Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.Image
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import org.jetbrains.compose.resources.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import wordbook.composeapp.generated.resources.Res // Import generated resources
+import wordbook.composeapp.generated.resources.girl
 
 /**
  * Settings Page composable based on the design image SettingsPage.png.
@@ -71,12 +79,14 @@ fun SettingsPage(
                     .padding(horizontal = 24.dp, vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Placeholder for Avatar
-                Box(
+                // Avatar Image
+                Image(
+                    painter = painterResource(Res.drawable.girl), // Load from common resources
+                    contentDescription = "User Avatar",
                     modifier = Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.LightGray) // Placeholder color
+                        .size(80.dp) // Keep original size
+                        .clip(RoundedCornerShape(12.dp)), // Keep original shape
+                    contentScale = ContentScale.Crop // Crop to fit bounds
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 // User Info
@@ -105,12 +115,12 @@ fun SettingsPage(
             verticalArrangement = Arrangement.spacedBy(12.dp) // Space between items
         ) {
             SettingsItem(
-                icon = Icons.Filled.AccountBox,
+                icon = Icons.Filled.AccountBox, // Correct Icon
                 text = "Edit Profile",
                 onClick = onEditProfile
             )
             SettingsItem(
-                icon = Icons.Filled.Lock,
+                icon = Icons.Filled.Lock, // Correct Icon
                 text = "Change ApiKey",
                 onClick = onChangeApiKey
             )
@@ -125,7 +135,7 @@ fun SettingsPage(
                 onClick = onIntroduction
             )
             SettingsItem(
-                icon = Icons.AutoMirrored.Filled.Send, // Use AutoMirrored for LTR/RTL compatibility
+                icon = Icons.AutoMirrored.Filled.Send, // Correct Icon
                 text = "Terms of Services",
                 onClick = onTermsOfService
             )
@@ -148,7 +158,7 @@ fun SettingsPage(
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
         ) {
             Icon(
-                imageVector = Icons.Filled.MailOutline,
+                imageVector = Icons.Filled.ExitToApp, // Correct Icon
                 contentDescription = null, // Button text is descriptive
                 modifier = Modifier.size(ButtonDefaults.IconSize)
             )
