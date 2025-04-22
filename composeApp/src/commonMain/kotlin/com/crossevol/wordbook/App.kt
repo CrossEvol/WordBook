@@ -1,37 +1,18 @@
 package com.crossevol.wordbook
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
+// Import Material 3 Theme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import com.crossevol.wordbook.ui.screens.HomePage // Import the new HomePage
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-import wordbook.composeapp.generated.resources.Res
-import wordbook.composeapp.generated.resources.compose_multiplatform
 
 @Composable
 @Preview
 fun App() {
+    // Apply Material 3 Theme
     MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
-            }
-        }
+        // Display the HomePage as the main content of the application
+        HomePage()
     }
 }
