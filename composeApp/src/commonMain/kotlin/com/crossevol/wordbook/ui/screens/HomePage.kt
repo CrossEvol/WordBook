@@ -63,9 +63,9 @@ val bottomNavItems = listOf(
 @Composable
 fun HomePage(
     words: List<WordItem> = sampleWordList, // Default to sample data
-    onFilterClick: () -> Unit = {},
-    onWordItemClick: (WordItem) -> Unit = {},
-    onNavigate: (String) -> Unit = {} // Callback for navigation
+    // onFilterClick: () -> Unit = {}, // Filter click is handled internally now
+    onWordItemClick: (WordItem) -> Unit, // Changed: Make this non-optional for navigation
+    onNavigate: (String) -> Unit = {} // Callback for bottom navigation
 ) {
     // State for tracking the selected bottom navigation item index
     var selectedItemIndex by remember { mutableStateOf(0) }
@@ -178,7 +178,7 @@ fun HomePage(
 fun WordList(
     words: List<WordItem>,
     visibleFilters: Set<FilterOption>,
-    onWordItemClick: (WordItem) -> Unit,
+    onWordItemClick: (WordItem) -> Unit, // Pass the click handler down
     modifier: Modifier = Modifier
 ) {
     LazyColumn(modifier = modifier) {
@@ -186,7 +186,8 @@ fun WordList(
             WordListItem(
                 item = word,
                 visibleFilters = visibleFilters, // Pass the selected filters
-                modifier = Modifier.clickable { onWordItemClick(word) } // Make items clickable
+                // Apply the clickable modifier here, calling the passed lambda
+                modifier = Modifier.clickable { onWordItemClick(word) }
             )
         }
     }
@@ -197,6 +198,7 @@ fun WordList(
 @Composable
 fun HomePagePreview() {
     MaterialTheme { // Ensure MaterialTheme is applied for preview
-        HomePage()
+        // Provide a dummy lambda for the preview
+        HomePage(onWordItemClick = {})
     }
 }
