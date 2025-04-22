@@ -7,18 +7,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.crossevol.wordbook.data.model.WordItem
-import com.crossevol.wordbook.ui.components.sampleWordItem // Import sampleWordItem
+import com.crossevol.wordbook.ui.components.sampleWordItem
 import com.crossevol.wordbook.ui.screens.HomePage
+import com.crossevol.wordbook.ui.screens.SettingsPage // Import the new Settings Page
 import com.crossevol.wordbook.ui.screens.WordDetailPage
-import com.crossevol.wordbook.ui.screens.WordReviewPage // Import the new Review Page
+import com.crossevol.wordbook.ui.screens.WordReviewPage
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 // Define screen states for navigation
 sealed class Screen {
     object Home : Screen()
     data class Detail(val word: WordItem) : Screen()
-    data class Review(val word: WordItem) : Screen() // Review screen state
-    // Add other screens like Settings here if needed
+    data class Review(val word: WordItem) : Screen()
+    object Settings : Screen() // Add Settings screen state
 }
 
 @Composable
@@ -38,12 +39,8 @@ fun App() {
                         println("Bottom nav clicked: $route")
                         when (route) {
                             "home" -> currentScreen = Screen.Home // Stay home or return home
-                            "review" -> currentScreen = Screen.Review(sampleWordItem) // Navigate to Review with sample data
-                            "settings" -> {
-                                // Handle settings navigation later
-                                println("Navigate to Settings (not implemented)")
-                                // currentScreen = Screen.Settings // Example
-                            }
+                            "review" -> currentScreen = Screen.Review(sampleWordItem) // Navigate to Review
+                            "settings" -> currentScreen = Screen.Settings // Navigate to Settings
                         }
                     }
                 )
@@ -71,7 +68,22 @@ fun App() {
                     }
                 )
             }
-            // Handle other screen states like Settings here
+            is Screen.Settings -> {
+                SettingsPage(
+                    onNavigateBack = { currentScreen = Screen.Home }, // Navigate back to Home
+                    // Add other callbacks as needed, e.g.:
+                    onLogout = {
+                        println("Logout clicked!")
+                        // Implement actual logout logic and navigate (e.g., to a login screen or back home)
+                        currentScreen = Screen.Home // Example: Go back home after logout
+                    },
+                    onEditProfile = { println("Edit Profile clicked!") },
+                    onChangeApiKey = { println("Change API Key clicked!") },
+                    onNotificationSettings = { println("Notification Settings clicked!") },
+                    onIntroduction = { println("Introduction clicked!") },
+                    onTermsOfService = { println("Terms of Service clicked!") }
+                )
+            }
         }
     }
 }
