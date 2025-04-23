@@ -22,3 +22,6 @@ Your response MUST be a single, valid JSON object and nothing else (no introduct
 	"zh_related_words": "CHINESE_RELATED_WORD1;CHINESE_RELATED_WORD2;CHINESE_RELATED_WORD3",
 	"zh_pronounciation": "CHINESE_PRONUNCIATION_GUIDE_(PINYIN_WITH_TONE_MARKS)"
 }
+```
+
+Now the Input is xxx

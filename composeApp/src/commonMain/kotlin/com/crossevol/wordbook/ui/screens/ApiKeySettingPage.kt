@@ -103,7 +103,7 @@ fun ApiKeySettingPage(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Your Name") },
+                    label = { Text("Alias") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -112,7 +112,7 @@ fun ApiKeySettingPage(
                 OutlinedTextField(
                     value = city,
                     onValueChange = { city = it },
-                    label = { Text("Your City") },
+                    label = { Text("ApiKey") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
