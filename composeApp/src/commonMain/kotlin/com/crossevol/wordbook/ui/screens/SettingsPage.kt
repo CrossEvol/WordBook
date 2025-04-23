@@ -51,7 +51,7 @@ fun SettingsPage(
     email: String = "[Email_Address]",
     onNavigateBack: () -> Unit, // Required for navigation
     onEditProfile: () -> Unit = {},
-    onChangeApiKey: () -> Unit = {},
+    onChangeApiKey: () -> Unit = {}, // This will now navigate to ApiKeyListPage
     onNotificationSettings: () -> Unit = {},
     onIntroduction: () -> Unit = {},
     onTermsOfService: () -> Unit = {},
@@ -122,7 +122,7 @@ fun SettingsPage(
             SettingsItem(
                 icon = Icons.Filled.Lock, // Correct Icon
                 text = "Change ApiKey",
-                onClick = onChangeApiKey
+                onClick = onChangeApiKey // This now navigates to ApiKeyListPage
             )
             SettingsItem(
                 icon = Icons.Filled.Notifications,
@@ -163,7 +163,7 @@ fun SettingsPage(
                 modifier = Modifier.size(ButtonDefaults.IconSize)
             )
             Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
-            Text("Log Out", fontSize = 16.sp)
+            Text("Back Home", fontSize = 16.sp)
         }
     }
 }

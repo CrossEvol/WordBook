@@ -8,7 +8,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import com.crossevol.wordbook.data.model.WordItem
 import com.crossevol.wordbook.ui.components.sampleWordItem
-import com.crossevol.wordbook.ui.screens.ApiKeySettingPage // Import ApiKeySettingPage
+import com.crossevol.wordbook.ui.screens.ApiKeyConfig // Import ApiKeyConfig
+import com.crossevol.wordbook.ui.screens.ApiKeyEditingPage // Import ApiKeyEditingPage (renamed)
+import com.crossevol.wordbook.ui.screens.ApiKeyListPage // Import ApiKeyListPage (new)
 import com.crossevol.wordbook.ui.screens.EditProfilePage // Import EditProfilePage
 import com.crossevol.wordbook.ui.screens.HomePage
 import com.crossevol.wordbook.ui.screens.SettingsPage
@@ -24,7 +26,8 @@ sealed class Screen {
     data class Review(val word: WordItem) : Screen()
     object Settings : Screen()
     object EditProfile : Screen() // Add EditProfile screen state
-    object ApiKeySettings : Screen() // Add ApiKeySettings screen state
+    object ApiKeyList : Screen() // Renamed from ApiKeySettings to ApiKeyList
+    data class ApiKeyEdit(val config: ApiKeyConfig? = null) : Screen() // New state for Add/Edit API Key
     object WordFetch : Screen() // Add WordFetch screen state
 }
 
@@ -92,8 +95,8 @@ fun App() {
                         currentScreen = Screen.EditProfile
                     }, // Navigate to EditProfile
                     onChangeApiKey = {
-                        currentScreen = Screen.ApiKeySettings
-                    }, // Navigate to ApiKeySettings
+                        currentScreen = Screen.ApiKeyList // Navigate to the new ApiKeyListPage
+                    },
                     onNotificationSettings = { println("Notification Settings clicked!") },
                     onIntroduction = { println("Introduction clicked!") },
                     onTermsOfService = { println("Terms of Service clicked!") }
@@ -111,13 +114,24 @@ fun App() {
                 )
             }
 
-            is Screen.ApiKeySettings -> {
-                ApiKeySettingPage(
+            is Screen.ApiKeyList -> { // New case for the API Key List page
+                ApiKeyListPage(
+                    // apiKeyConfigs = ... // Provide actual list of saved keys here
                     onNavigateBack = { currentScreen = Screen.Settings }, // Go back to Settings
-                    onSaveChanges = { name, city, state ->
-                        println("Saving API Key Settings: Name=$name, City=$city, State=$state")
-                        // Add actual save logic here (likely involves API key field not shown in design)
-                        currentScreen = Screen.Settings // Navigate back to Settings after save
+                    onAddApiKey = { currentScreen = Screen.ApiKeyEdit(null) }, // Navigate to Edit page for adding
+                    onEditApiKey = { config -> currentScreen = Screen.ApiKeyEdit(config) }, // Navigate to Edit page with config
+                    onDeleteApiKey = { config -> println("Delete API Key: ${config.alias}") } // Handle delete action
+                )
+            }
+
+            is Screen.ApiKeyEdit -> { // Updated case for the API Key Editing page
+                ApiKeyEditingPage(
+                    config = screen.config, // Pass the config (null for add, object for edit)
+                    onNavigateBack = { currentScreen = Screen.ApiKeyList }, // Go back to the List page
+                    onSaveChanges = { alias, apiKey, provider, model ->
+                        println("Saving API Key Settings: Alias=$alias, Provider=$provider, Model=$model, ApiKey=$apiKey")
+                        // Add actual save logic here (distinguish add vs edit using screen.config?.id)
+                        currentScreen = Screen.ApiKeyList // Navigate back to the List page after save
                     }
                 )
             }

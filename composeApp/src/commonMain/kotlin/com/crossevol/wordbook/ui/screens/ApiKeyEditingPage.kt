@@ -24,18 +24,134 @@ data class LLMProvider(
 )
 
 val llmProviders = listOf(
-    LLMProvider("Gemini", listOf("gemini-pro", "gemini-1.5-flash-latest", "gemini-1.5-pro-latest")),
-    LLMProvider("Claude", listOf("claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240229")),
-    LLMProvider("OpenAI", listOf("gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo")),
-    LLMProvider("DeepSeek", listOf("deepseek-coder", "deepseek-chat")),
+    LLMProvider(
+        "Google", // Includes Gemma and the detailed Gemini list provided
+        listOf(
+            // Gemma Models (from previous step, relevant by April 2024)
+            "gemma-7b-it",
+            "gemma-2b-it",
+
+            // Detailed Gemini Models (as provided by user, includes previews/exp/future)
+            "gemini-1.0-pro",
+            "gemini-1.0-pro-001",
+            "gemini-1.0-pro-002",
+            "gemini-1.0-pro-vision",       // Vision model
+            "gemini-1.0-pro-vision-001",   // Vision model specific version
+            "gemini-1.0-ultra",            // Original Ultra
+            "gemini-1.0-ultra-001",        // Original Ultra specific version
+            "gemini-1.5-flash",            // Base 1.5 Flash
+            "gemini-1.5-flash-001",
+            "gemini-1.5-flash-002",
+            "gemini-1.5-flash-exp-0827",   // Experimental
+            "gemini-1.5-flash-preview-051",// Preview (May 2024) - Note: Check if '-0514' intended?
+            "gemini-1.5-pro",              // Base 1.5 Pro
+            "gemini-1.5-pro-001",
+            "gemini-1.5-pro-002",
+            "gemini-1.5-pro-preview-0215", // Preview (Feb 2024)
+            "gemini-1.5-pro-preview-0409", // Preview (Apr 2024)
+            "gemini-1.5-pro-preview-0514", // Preview (May 2024)
+            // Note: Version 2.0/2.5 models are likely internal/experimental/unreleased as of Apr 2024
+            "gemini-2.0-flash",
+            "gemini-2.0-flash-001",
+            "gemini-2.0-flash-exp",
+            "gemini-2.0-flash-lite",
+            "gemini-2.0-flash-lite-001",
+            "gemini-2.0-flash-thinking-ex", // Experimental
+            "gemini-2.0-pro-exp-02-05",     // Experimental
+            "gemini-2.5-flash-preview-04-17", // Preview - Note: Trailing '-'?
+            "gemini-2.5-pro-exp-03-25",     // Experimental
+            "gemini-2.5-pro-preview-03-25"  // Preview
+        )
+    ),
+    LLMProvider(
+        "Anthropic", // Common name for the company behind Claude
+        listOf(
+            "claude-3-opus-20240229",
+            "claude-3-sonnet-20240229",
+            "claude-3-haiku-20240229",
+            "claude-2.1",
+            "claude-instant-1.2"
+        )
+    ),
+    LLMProvider(
+        "OpenAI",
+        listOf(
+            "gpt-4o", // Announced May 2024, kept from original request context
+            "gpt-4-turbo", // Often alias for latest, e.g., gpt-4-turbo-2024-04-09
+            "gpt-4-turbo-preview", // Older preview alias
+            "gpt-4",
+            "gpt-3.5-turbo", // Often alias for latest, e.g., gpt-3.5-turbo-0125
+            "gpt-3.5-turbo-instruct"
+        )
+    ),
+    LLMProvider(
+        "Mistral AI",
+        listOf(
+            "mistral-large-latest", // Feb 2024
+            "mistral-small-latest", // Feb 2024
+            "mixtral-8x22b-instruct-v0.1", // Apr 2024 (open model)
+            "mixtral-8x7b-instruct-v0.1", // Dec 2023
+            "mistral-7b-instruct-v0.2"
+        )
+    ),
+    LLMProvider(
+        "Meta",
+        listOf(
+            "llama-3-70b-instruct", // Released April 18, 2024
+            "llama-3-8b-instruct",  // Released April 18, 2024
+            "llama-2-70b-chat",
+            "llama-2-13b-chat",
+            "llama-2-7b-chat"
+        )
+    ),
+    LLMProvider(
+        "Cohere",
+        listOf(
+            "command-r-plus", // Released April 2024
+            "command-r",      // Released March 2024
+            "command",
+            "command-light"
+        )
+    ),
+    LLMProvider(
+        "DeepSeek",
+        listOf(
+            "deepseek-coder-33b-instruct",
+            "deepseek-coder-6.7b-instruct",
+            "deepseek-coder-1.3b-instruct",
+            "deepseek-llm-67b-chat",
+            "deepseek-llm-7b-chat"
+        )
+    ),
+    LLMProvider(
+        "AI21 Labs",
+        listOf(
+            "jamba-instruct", // March 2024
+            "j2-ultra",
+            "j2-mid",
+            "j2-light"
+        )
+    ),
+    LLMProvider(
+        "Perplexity", // Models often fine-tuned/hosted versions
+        listOf(
+            "llama-3-sonar-large-32k-online", // Based on Llama 3 (April 2024)
+            "llama-3-sonar-large-32k-chat",
+            "llama-3-sonar-small-32k-online", // Based on Llama 3 (April 2024)
+            "llama-3-sonar-small-32k-chat",
+            "pplx-70b-online", // Older models, likely Llama 2 based
+            "pplx-7b-online"   // Older models, likely Mistral based
+        )
+    )
     // Add more providers/models as needed
 )
 
 
 /**
- * Page for setting API Key, potentially with tabs.
- * Based on design/settings/ApiKeySetting.png
+ * Page for adding or editing an API Key configuration.
+ * Based on design/settings/ApiKeySetting.png (conceptually, though the image shows a list)
  *
+ * @param config The ApiKeyConfig to edit, or null for adding a new one.
  * @param onNavigateBack Callback to navigate back.
  * @param onSaveChanges Callback when save button is clicked.
  */
@@ -44,35 +160,30 @@ val llmProviders = listOf(
     ExperimentalMaterialApi::class
 )
 @Composable
-fun ApiKeySettingPage(
+fun ApiKeyEditingPage(
+    config: ApiKeyConfig? = null, // Optional config for editing
     onNavigateBack: () -> Unit,
     // Updated signature to pass alias, apiKey, provider, and model
     onSaveChanges: (alias: String, apiKey: String, provider: String, model: String) -> Unit
 ) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabs = listOf(
-        "Tab 1",
-        "Tab 2",
-        "Tab 3"
-    )
-
-    // State for the input fields
-    var alias by remember { mutableStateOf("") } // Renamed from 'name' to 'alias' for clarity
-    var apiKey by remember { mutableStateOf("") } // Renamed from 'city' to 'apiKey' for clarity
+    // State for the input fields, initialized with config data if editing
+    var alias by remember { mutableStateOf(config?.alias ?: "") }
+    var apiKey by remember { mutableStateOf("") } // API Key is typically not pre-filled for security
+    var selectedProviderName by remember { mutableStateOf(config?.provider ?: "") }
+    var selectedModelName by remember { mutableStateOf(config?.model ?: "") }
 
     // State for the LLM selection dropdowns
-    var selectedProviderName by remember { mutableStateOf("") }
-    var selectedModelName by remember { mutableStateOf("") }
     var isProviderDropdownExpanded by remember { mutableStateOf(false) }
     var isModelDropdownExpanded by remember { mutableStateOf(false) }
 
     // Get models for the currently selected provider
-    val availableModels = llmProviders.find { it.name == selectedProviderName }?.models ?: emptyList()
+    val availableModels =
+        llmProviders.find { it.name == selectedProviderName }?.models ?: emptyList()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Set your ApiKey") }, // Title from design
+                title = { Text(if (config == null) "Add API Key" else "Edit API Key") }, // Title changes based on mode
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -95,17 +206,6 @@ fun ApiKeySettingPage(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()) // Make content scrollable
         ) {
-            // Tab Row (kept as is, though content is the same)
-            PrimaryTabRow(selectedTabIndex = selectedTabIndex) { // Use PrimaryTabRow for Material 3 style
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index },
-                        text = { Text(title) }
-                        // Customize selected/unselected colors if needed
-                    )
-                }
-            }
 
             // Content Area (API Key and LLM Selection)
             Column(
@@ -129,6 +229,7 @@ fun ApiKeySettingPage(
                     value = apiKey,
                     onValueChange = { apiKey = it },
                     label = { Text("ApiKey") },
+                    placeholder = { Text("Enter API Key (required)") }, // Hint for key input
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -217,7 +318,7 @@ fun ApiKeySettingPage(
                             alias,
                             apiKey,
                             selectedProviderName,
-                            selectedModelName
+                            selectedModelName // Pass the selected model
                         )
                     },
                     modifier = Modifier
@@ -238,12 +339,30 @@ fun ApiKeySettingPage(
 
 @Preview
 @Composable
-fun ApiKeySettingPagePreview() {
+fun ApiKeyEditingPagePreview() {
     MaterialTheme {
-        // Update preview call to match the new signature
-        ApiKeySettingPage(
+        // Preview for adding a new key
+        ApiKeyEditingPage(
             onNavigateBack = {},
-            onSaveChanges = { _, _, _, _ -> } // Provide a lambda matching the new signature
+            onSaveChanges = { _, _, _, _ -> }
+        )
+    }
+}
+
+@Preview
+@Composable
+fun ApiKeyEditingPagePreviewEdit() {
+    MaterialTheme {
+        // Preview for editing an existing key
+        val sampleConfig = ApiKeyConfig(
+            alias = "My Gemini Key",
+            provider = "Google",
+            model = "gemini-1.5-pro-preview-0514"
+        )
+        ApiKeyEditingPage(
+            config = sampleConfig,
+            onNavigateBack = {},
+            onSaveChanges = { _, _, _, _ -> }
         )
     }
 }
