@@ -1,0 +1,29 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "```json\n{\n\t\"text\": \"热情\",\n\t\"en_explanation\": \"Enthusiasm; passion; warmth; fervent; cordial\",\n\t\"en_sentences\": \"They welcomed us with great warmth and hospitaly.;She is full of enthusiasm for her work.\",\n\t\"en_related_words\": \"Passion;zeal;ardor;excitement;fervor\",\n\t\"en_pronunciation\": \"rèqíng\",\n\t\"ja_explanation\": \"熱意、情熱、心の温かさ。。\",\n\t\"ja_sentences\": \"彼らは私たちを熱意をもって歓迎した。;彼女は仕事に対して情熱的だ。\",\n\t\"ja_related_words\": \"熱意(ねつい);情熱(じょうねつ);意欲(いよく);積極 的(せっきょくてき);活気(か",\n\t\"zh_explanation\": \"指积极、热烈的感情或态度。\",\n\t\"zh_sentences\": \"他们用极大的热情欢 迎了我们。;她对工作充满热情。\",\n\t\"zh_related_words\": \"热心(rèxīn);激情(jīqíng);积极(jījí);热烈g\"\n}\n```"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 549,
+    "candidatesTokenCount": 1380,
+    "totalTokenCount": 1929,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 549
+      }
+    ],
+    "thoughtsTokenCount": 1059
+  },
+  "modelVersion": "models/gemini-2.5-flash-preview-04-17"
+}

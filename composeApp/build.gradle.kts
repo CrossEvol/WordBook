@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    kotlin("plugin.serialization")
 }
 
 kotlin {
@@ -33,14 +34,31 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+            
+            // ViewModel dependencies
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
+            implementation(libs.androidx.lifecycle.viewmodel.compose) // Added dependency for getViewModel
+
             implementation(libs.androidx.material3)
             implementation(libs.androidx.material3.android)
+            
+            // Kotlinx Serialization
+            implementation(libs.kotlinx.serialization.json)
+            
+            // Ktor
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.ktor.client.okhttp)
+        }
+        
+        androidMain.dependencies {
+            implementation(libs.ktor.client.android)
         }
     }
 }
@@ -68,7 +86,7 @@ android {
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11 // Fixed the extra equals sign here
     }
 }
 
