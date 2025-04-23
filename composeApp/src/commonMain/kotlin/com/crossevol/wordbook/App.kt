@@ -13,6 +13,7 @@ import com.crossevol.wordbook.ui.screens.EditProfilePage // Import EditProfilePa
 import com.crossevol.wordbook.ui.screens.HomePage
 import com.crossevol.wordbook.ui.screens.SettingsPage
 import com.crossevol.wordbook.ui.screens.WordDetailPage
+import com.crossevol.wordbook.ui.screens.WordFetchPage
 import com.crossevol.wordbook.ui.screens.WordReviewPage
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -24,6 +25,7 @@ sealed class Screen {
     object Settings : Screen()
     object EditProfile : Screen() // Add EditProfile screen state
     object ApiKeySettings : Screen() // Add ApiKeySettings screen state
+    object WordFetch : Screen() // Add WordFetch screen state
 }
 
 @Composable
@@ -44,8 +46,9 @@ fun App() {
                         when (route) {
                             "home"     -> currentScreen = Screen.Home // Stay home or return home
                             "review" -> currentScreen =
-                                Screen.Review(sampleWordItem) // Navigate to Review
+                                Screen.Review(sampleWordItem) // Navigate to Review (using sample for now)
                             "settings" -> currentScreen = Screen.Settings // Navigate to Settings
+                            "fetch"    -> currentScreen = Screen.WordFetch // Navigate to WordFetch via FAB
                         }
                     }
                 )
@@ -116,6 +119,12 @@ fun App() {
                         // Add actual save logic here (likely involves API key field not shown in design)
                         currentScreen = Screen.Settings // Navigate back to Settings after save
                     }
+                )
+            }
+            is Screen.WordFetch -> {
+                WordFetchPage(
+                    onBack = { currentScreen = Screen.Home } // Navigate back to Home (or previous screen)
+                    // Pass fetched data if available, handle search logic etc.
                 )
             }
         }

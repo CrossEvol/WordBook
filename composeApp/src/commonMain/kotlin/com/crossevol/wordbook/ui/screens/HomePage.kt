@@ -5,11 +5,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add // Import Add icon for FAB
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Notifications // Using Notifications for Review for now
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton // Import FAB
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -153,6 +155,15 @@ fun HomePage(
                         )
                     )
                 }
+            }
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { onNavigate("fetch") }, // Navigate to fetch screen
+                containerColor = MaterialTheme.colorScheme.secondary, // Example color
+                contentColor = MaterialTheme.colorScheme.onSecondary
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "Add new word")
             }
         }
     ) { innerPadding ->
