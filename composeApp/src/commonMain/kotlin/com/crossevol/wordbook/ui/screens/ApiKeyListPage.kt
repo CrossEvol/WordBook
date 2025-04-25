@@ -24,6 +24,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 data class ApiKeyConfig(
     val id: Long = 0, // Add an ID for potential database operations
     val alias: String,
+    val apiKey: String,
     val provider: String,
     val model: String
     // Note: API Key itself is not stored here for security/simplicity in UI model
@@ -31,9 +32,27 @@ data class ApiKeyConfig(
 
 // Dummy data for preview
 val sampleApiKeyConfigs = listOf(
-    ApiKeyConfig(1, "My Gemini Key", "Google", "gemini-2.5-flash-preview-04-17"),
-    ApiKeyConfig(2, "My Claude Key", "Anthropic", "claude-3-sonnet-20240229"),
-    ApiKeyConfig(3, "My OpenAI Key", "OpenAI", "gpt-4o"),
+    ApiKeyConfig(
+        1,
+        "My Gemini Key",
+        apiKey = "",
+        "Google",
+        "gemini-2.5-flash-preview-04-17"
+    ),
+    ApiKeyConfig(
+        2,
+        "My Claude Key",
+        apiKey = "",
+        "Anthropic",
+        "claude-3-sonnet-20240229"
+    ),
+    ApiKeyConfig(
+        3,
+        "My OpenAI Key",
+        apiKey = "",
+        "OpenAI",
+        "gpt-4o"
+    ),
 )
 
 /**
@@ -76,7 +95,10 @@ fun ApiKeyListPage(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddApiKey) {
-                Icon(Icons.Filled.Add, "Add new API Key")
+                Icon(
+                    Icons.Filled.Add,
+                    "Add new API Key"
+                )
             }
         }
     ) { paddingValues ->
@@ -84,7 +106,10 @@ fun ApiKeyListPage(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp, vertical = 8.dp), // Add padding around the list
+                .padding(
+                    horizontal = 16.dp,
+                    vertical = 8.dp
+                ), // Add padding around the list
             verticalArrangement = Arrangement.spacedBy(8.dp) // Space between list items
         ) {
             items(apiKeyConfigs) { config ->
@@ -120,13 +145,17 @@ fun ApiKeyItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp), // Padding inside the card
+                .padding(
+                    horizontal = 16.dp,
+                    vertical = 8.dp
+                ), // Padding inside the card
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween // Space out content and buttons
         ) {
             // Text Content (Alias and Model)
             Column(
-                modifier = Modifier.weight(1f).padding(end = 8.dp) // Allow text to take space, add end padding
+                modifier = Modifier.weight(1f)
+                    .padding(end = 8.dp) // Allow text to take space, add end padding
             ) {
                 Text(
                     text = config.alias,

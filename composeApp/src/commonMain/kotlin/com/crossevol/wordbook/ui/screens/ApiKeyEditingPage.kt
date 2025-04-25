@@ -356,6 +356,7 @@ fun ApiKeyEditingPagePreviewEdit() {
         // Preview for editing an existing key
         val sampleConfig = ApiKeyConfig(
             alias = "My Gemini Key",
+            apiKey = "",
             provider = "Google",
             model = "gemini-1.5-pro-preview-0514"
         )
