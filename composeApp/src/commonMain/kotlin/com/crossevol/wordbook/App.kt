@@ -10,6 +10,7 @@ import com.crossevol.wordbook.data.api.WordFetchApi // Import API client
 import com.crossevol.wordbook.data.model.WordItem
 import com.crossevol.wordbook.ui.components.sampleWordItem
 import com.crossevol.wordbook.ui.screens.ApiKeyConfig
+import com.crossevol.wordbook.ui.screens.ApiKeyEditingPage // Import the editing page
 import com.crossevol.wordbook.ui.screens.ApiKeyListPage
 import com.crossevol.wordbook.ui.screens.EditProfilePage
 import com.crossevol.wordbook.ui.screens.HomePage
@@ -28,7 +29,7 @@ sealed class Screen {
     object Settings : Screen()
     object EditProfile : Screen()
     object ApiKeyList : Screen()
-    data class ApiKeyEdit(val config: ApiKeyConfig? = null) : Screen()
+    data class ApiKeyEdit(val config: ApiKeyConfig? = null) : Screen() // config is optional for adding
     object WordFetch : Screen() // Add WordFetch screen state
 }
 
@@ -48,7 +49,7 @@ fun App() {
 
     MaterialTheme {
         when (val screen = currentScreen) {
-            is Screen.Home        -> {
+            is Screen.Home -> {
                 HomePage(
                     onWordItemClick = { word ->
                         currentScreen = Screen.Detail(word) // Navigate to Detail
@@ -56,18 +57,18 @@ fun App() {
                     onNavigate = { route ->
                         println("Bottom nav clicked: $route")
                         when (route) {
-                            "home"     -> currentScreen = Screen.Home // Stay home or return home
-                            "review"   -> currentScreen =
+                            "home" -> currentScreen = Screen.Home // Stay home or return home
+                            "review" -> currentScreen =
                                 Screen.Review(sampleWordItem) // Navigate to Review (using sample for now)
                             "settings" -> currentScreen = Screen.Settings // Navigate to Settings
-                            "fetch"    -> currentScreen =
+                            "fetch" -> currentScreen =
                                 Screen.WordFetch // Navigate to WordFetch via FAB
                         }
                     }
                 )
             }
 
-            is Screen.Detail      -> {
+            is Screen.Detail -> {
                 WordDetailPage(
                     wordItem = screen.word,
                     onBack = {
@@ -76,7 +77,7 @@ fun App() {
                 )
             }
 
-            is Screen.Review      -> {
+            is Screen.Review -> {
                 WordReviewPage(
                     wordItem = screen.word, // Use the word passed in the state (currently sampleWordItem)
                     onAction = {
@@ -92,7 +93,7 @@ fun App() {
                 )
             }
 
-            is Screen.Settings    -> {
+            is Screen.Settings -> {
                 SettingsPage(
                     onNavigateBack = { currentScreen = Screen.Home }, // Navigate back to Home
                     // Add other callbacks as needed, e.g.:
@@ -124,13 +125,13 @@ fun App() {
                 )
             }
 
-            is Screen.ApiKeyList  -> { // New case for the API Key List page
+            is Screen.ApiKeyList -> { // New case for the API Key List page
                 ApiKeyListPage(
                     // apiKeyConfigs = ... // Provide actual list of saved keys here
                     onNavigateBack = { currentScreen = Screen.Settings }, // Go back to Settings
                     onAddApiKey = {
                         currentScreen = Screen.ApiKeyEdit(null)
-                    }, // Navigate to Edit page for adding
+                    }, // Navigate to Edit page for adding (config is null)
                     onEditApiKey = { config ->
                         currentScreen = Screen.ApiKeyEdit(config)
                     }, // Navigate to Edit page with config
@@ -138,7 +139,7 @@ fun App() {
                 )
             }
 
-            is Screen.WordFetch   -> {
+            is Screen.WordFetch -> {
                 // Create ViewModel using the proper androidx.lifecycle.viewmodel.compose.viewModel function
                 val wordFetchViewModel = WordFetchViewModel(api = wordFetchApi)
                 WordFetchPage(
@@ -149,7 +150,17 @@ fun App() {
                 )
             }
 
-            is Screen.ApiKeyEdit  -> TODO()
+            is Screen.ApiKeyEdit -> { // Handle the ApiKeyEdit screen state
+                ApiKeyEditingPage(
+                    config = screen.config, // Pass the config from the screen state
+                    onNavigateBack = { currentScreen = Screen.ApiKeyList }, // Go back to the list
+                    onSaveChanges = { alias, apiKey, provider, model ->
+                        // TODO: Implement actual saving logic here (e.g., to database/preferences)
+                        println("Saving API Key: Alias=$alias, Key=$apiKey, Provider=$provider, Model=$model")
+                        currentScreen = Screen.ApiKeyList // Go back to the list after saving
+                    }
+                )
+            }
         }
     }
 }
