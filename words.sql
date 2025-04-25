@@ -33,3 +33,15 @@ CREATE TABLE word_details (
 CREATE INDEX idx_word_details_word_id ON word_details(word_id);
 CREATE INDEX idx_word_details_language_code ON word_details(language_code);
 CREATE INDEX idx_word_details_review ON word_details(last_review_at, review_progress); -- Useful for querying review items
+
+-- Table to store API key configurations submitted from the ApiKeyEditingPage
+CREATE TABLE api_key_configurations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, -- Unique identifier for the API key configuration
+    alias TEXT NOT NULL UNIQUE,           -- User-friendly name for the key configuration
+    apiKey TEXT NOT NULL,                 -- The actual API key string (sensitive data)
+    provider TEXT NOT NULL CHECK (provider IN ('Google', 'Anthropic', 'OpenAI', 'Mistral AI', 'Meta', 'Cohere', 'DeepSeek', 'AI21 Labs', 'Perplexity')), -- The LLM provider name (constrained to known providers)
+    model TEXT NOT NULL                   -- The specific model name (e.g., 'gemini-1.5-pro', 'gpt-4o')
+);
+
+-- Optional: Index on alias for faster lookup by alias
+CREATE INDEX idx_api_key_configurations_alias ON api_key_configurations(alias);
