@@ -63,6 +63,7 @@ class ApiKeyConfigRepository(private val database: AppDatabase) {
         // Ensure the config has a valid ID for update
         if (config.id == 0L) {
             // Handle error: Cannot update config without an ID
+            println("Error: Cannot update config without a valid ID.")
             return
         }
         apiKeyConfigQueries.updateConfig(
@@ -79,6 +80,13 @@ class ApiKeyConfigRepository(private val database: AppDatabase) {
      */
     fun deleteApiKeyConfigById(id: Long) {
         apiKeyConfigQueries.deleteById(id)
+    }
+
+    /**
+     * Count the number of API key configurations in the database.
+     */
+    fun countConfigs(): Long {
+        return apiKeyConfigQueries.countConfigs().executeAsOne()
     }
 
     // TODO: Add method to get the currently selected/active API key config

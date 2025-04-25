@@ -29,3 +29,7 @@ UPDATE apiKeyConfig SET alias = ?, apiKey = ?, provider = ?, model = ? WHERE id 
 
 deleteById:
 DELETE FROM apiKeyConfig WHERE id = ?;
+
+-- Query to count the number of configurations
+countConfigs:
+SELECT COUNT(*) FROM apiKeyConfig;

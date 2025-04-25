@@ -30,30 +30,7 @@ data class ApiKeyConfig(
     // Note: API Key itself is not stored here for security/simplicity in UI model
 )
 
-// Dummy data for preview
-val sampleApiKeyConfigs = listOf(
-    ApiKeyConfig(
-        1,
-        "My Gemini Key",
-        apiKey = "",
-        "Google",
-        "gemini-2.5-flash-preview-04-17"
-    ),
-    ApiKeyConfig(
-        2,
-        "My Claude Key",
-        apiKey = "",
-        "Anthropic",
-        "claude-3-sonnet-20240229"
-    ),
-    ApiKeyConfig(
-        3,
-        "My OpenAI Key",
-        apiKey = "",
-        "OpenAI",
-        "gpt-4o"
-    ),
-)
+// Dummy data for preview - REMOVED, data comes from DB now
 
 /**
  * Page for listing saved API Key configurations.
@@ -68,7 +45,7 @@ val sampleApiKeyConfigs = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ApiKeyListPage(
-    apiKeyConfigs: List<ApiKeyConfig> = sampleApiKeyConfigs, // Use dummy data for preview
+    apiKeyConfigs: List<ApiKeyConfig>, // List is now required, comes from outside
     onNavigateBack: () -> Unit,
     onAddApiKey: () -> Unit,
     onEditApiKey: (ApiKeyConfig) -> Unit,
@@ -112,7 +89,7 @@ fun ApiKeyListPage(
                 ), // Add padding around the list
             verticalArrangement = Arrangement.spacedBy(8.dp) // Space between list items
         ) {
-            items(apiKeyConfigs) { config ->
+            items(apiKeyConfigs, key = { it.id }) { config -> // Add key for better list performance
                 ApiKeyItem(
                     config = config,
                     onEditClick = { onEditApiKey(config) },
@@ -215,7 +192,32 @@ fun ApiKeyItem(
 @Composable
 fun ApiKeyListPagePreview() {
     MaterialTheme {
+        // Provide a sample list for the preview
+        val sampleApiKeyConfigs = listOf(
+            ApiKeyConfig(
+                1,
+                "My Gemini Key",
+                apiKey = "",
+                "Google",
+                "gemini-2.5-flash-preview-04-17"
+            ),
+            ApiKeyConfig(
+                2,
+                "My Claude Key",
+                apiKey = "",
+                "Anthropic",
+                "claude-3-sonnet-20240229"
+            ),
+            ApiKeyConfig(
+                3,
+                "My OpenAI Key",
+                apiKey = "",
+                "OpenAI",
+                "gpt-4o"
+            ),
+        )
         ApiKeyListPage(
+            apiKeyConfigs = sampleApiKeyConfigs, // Use sample data for preview
             onNavigateBack = {},
             onAddApiKey = {},
             onEditApiKey = {},

@@ -15,9 +15,7 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = "WordBook",
     ) {
-        // App() // Modify App to accept database or repository
-        // For now, calling App() without passing the database.
-        // You'll need to update App and its dependencies to use the database.
-        App()
+        // Pass the driverFactory to the App composable
+        App(driverFactory = driverFactory)
     }
 }

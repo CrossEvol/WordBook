@@ -168,7 +168,10 @@ fun ApiKeyEditingPage(
 ) {
     // State for the input fields, initialized with config data if editing
     var alias by remember { mutableStateOf(config?.alias ?: "") }
-    var apiKey by remember { mutableStateOf("") } // API Key is typically not pre-filled for security
+    // API Key is typically not pre-filled for security, but we might need it for update
+    // Let's initialize it with the config's key if editing, but advise caution.
+    // A more secure approach would be to require re-entry on edit.
+    var apiKey by remember { mutableStateOf(config?.apiKey ?: "") }
     var selectedProviderName by remember { mutableStateOf(config?.provider ?: "") }
     var selectedModelName by remember { mutableStateOf(config?.model ?: "") }
 
@@ -355,8 +358,9 @@ fun ApiKeyEditingPagePreviewEdit() {
     MaterialTheme {
         // Preview for editing an existing key
         val sampleConfig = ApiKeyConfig(
+            id = 1, // Add ID for preview context
             alias = "My Gemini Key",
-            apiKey = "",
+            apiKey = "sk-...", // Include a dummy key for preview
             provider = "Google",
             model = "gemini-1.5-pro-preview-0514"
         )

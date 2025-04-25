@@ -4,10 +4,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.setValue
+import com.crossevol.wordbook.data.ApiKeyConfigRepository // Import repository
 import com.crossevol.wordbook.data.api.WordFetchApi // Import API client
 import com.crossevol.wordbook.data.model.WordItem
+import com.crossevol.wordbook.db.AppDatabase
+import com.crossevol.wordbook.db.createDatabase
+import com.crossevol.wordbook.db.initializeDatabase // Import initializer
 import com.crossevol.wordbook.ui.components.sampleWordItem
 import com.crossevol.wordbook.ui.screens.ApiKeyConfig
 import com.crossevol.wordbook.ui.screens.ApiKeyEditingPage // Import the editing page
@@ -35,17 +40,45 @@ sealed class Screen {
 
 @Composable
 @Preview
-fun App() {
+fun App(
+    // Pass DriverFactory from platform-specific main functions
+    driverFactory: com.crossevol.wordbook.db.DriverFactory? = null // Make nullable for Preview
+) {
     // Navigation state using the sealed class
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
+
+    // --- Database and Repository Setup ---
+    // Use remember to create database and repository instances, tied to the composable lifecycle
+    val database: AppDatabase? = remember(driverFactory) {
+        driverFactory?.let { createDatabase(it) }
+    }
+
+    val apiKeyConfigRepository: ApiKeyConfigRepository? = remember(database) {
+        database?.let { ApiKeyConfigRepository(it) }
+    }
+
+    // Track when to refresh API keys list
+    var apiKeyListRefreshTrigger by remember { mutableStateOf(0) }
+
+    // Initialize database with dummy data if empty, runs once
+    LaunchedEffect(database, apiKeyConfigRepository) {
+        if (database != null && apiKeyConfigRepository != null) {
+            initializeDatabase(database, apiKeyConfigRepository)
+        }
+    }
+    // --- End Database Setup ---
+
 
     // TODO: Securely obtain API Key here or pass it from platform-specific code
     // This is a placeholder. Do NOT commit your actual API key.
     // You need to implement platform-specific logic to read this securely (e.g., from .env, secrets manager, etc.)
+    // For now, we'll use a placeholder or fetch the *active* key from the DB later.
     val apiKey = "YOUR_API_KEY_HERE" // <<< REPLACE WITH SECURELY OBTAINED KEY
 
     // Create API client instance (can be singleton or managed by DI)
+    // TODO: Update this to use the *active* API key from the database once implemented
     val wordFetchApi = remember { WordFetchApi(apiKey) }
+
 
     MaterialTheme {
         when (val screen = currentScreen) {
@@ -126,8 +159,14 @@ fun App() {
             }
 
             is Screen.ApiKeyList -> { // New case for the API Key List page
+                // Fetch the list of API keys from the repository whenever we navigate to this screen
+                // or when the refresh trigger changes
+                val apiKeyConfigs = remember(apiKeyConfigRepository, apiKeyListRefreshTrigger) {
+                    apiKeyConfigRepository?.getAllApiKeyConfigs() ?: emptyList()
+                }
+
                 ApiKeyListPage(
-                    // apiKeyConfigs = ... // Provide actual list of saved keys here
+                    apiKeyConfigs = apiKeyConfigs, // Provide actual list from DB
                     onNavigateBack = { currentScreen = Screen.Settings }, // Go back to Settings
                     onAddApiKey = {
                         currentScreen = Screen.ApiKeyEdit(null)
@@ -135,7 +174,13 @@ fun App() {
                     onEditApiKey = { config ->
                         currentScreen = Screen.ApiKeyEdit(config)
                     }, // Navigate to Edit page with config
-                    onDeleteApiKey = { config -> println("Delete API Key: ${config.alias}") } // Handle delete action
+                    onDeleteApiKey = { config ->
+                        // Handle delete action using the repository
+                        apiKeyConfigRepository?.deleteApiKeyConfigById(config.id)
+                        println("Delete API Key: ${config.alias}")
+                        // After deleting, increment the refresh trigger to force refresh
+                        apiKeyListRefreshTrigger++
+                    }
                 )
             }
 
@@ -154,9 +199,30 @@ fun App() {
                 ApiKeyEditingPage(
                     config = screen.config, // Pass the config from the screen state
                     onNavigateBack = { currentScreen = Screen.ApiKeyList }, // Go back to the list
-                    onSaveChanges = { alias, apiKey, provider, model ->
-                        // TODO: Implement actual saving logic here (e.g., to database/preferences)
-                        println("Saving API Key: Alias=$alias, Key=$apiKey, Provider=$provider, Model=$model")
+                    onSaveChanges = { alias, key, provider, model ->
+                        // Implement actual saving logic here (e.g., to database/preferences)
+                        if (apiKeyConfigRepository != null) {
+                            val configToSave = ApiKeyConfig(
+                                id = screen.config?.id ?: 0L, // Use existing ID if editing, 0L for new
+                                alias = alias,
+                                apiKey = key, // Use the entered key
+                                provider = provider,
+                                model = model
+                            )
+                            if (configToSave.id == 0L) {
+                                // Insert new config
+                                apiKeyConfigRepository.insertApiKeyConfig(configToSave)
+                                println("Inserted new API Key: $alias")
+                            } else {
+                                // Update existing config
+                                apiKeyConfigRepository.updateApiKeyConfig(configToSave)
+                                println("Updated API Key: $alias (ID: ${configToSave.id})")
+                            }
+                            // Increment the refresh trigger to force refresh when returning to list
+                            apiKeyListRefreshTrigger++
+                        } else {
+                            println("Error: ApiKeyConfigRepository is not initialized.")
+                        }
                         currentScreen = Screen.ApiKeyList // Go back to the list after saving
                     }
                 )
