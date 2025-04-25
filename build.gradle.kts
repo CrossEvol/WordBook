@@ -6,5 +6,6 @@ plugins {
     alias(libs.plugins.composeMultiplatform) apply false
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
-    alias(libs.plugins.kotlinSerialization) apply false // Added Kotlin Serialization plugin alias
+    alias(libs.plugins.kotlinSerialization) apply false
+    alias(libs.plugins.sqldelight) apply false // Added SQLDelight plugin alias
 }

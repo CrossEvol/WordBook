@@ -18,4 +18,5 @@ captures
 **/xcshareddata/WorkspaceSettings.xcsettings
 .aider*
 .env
+.vscode
 solicit.ps1

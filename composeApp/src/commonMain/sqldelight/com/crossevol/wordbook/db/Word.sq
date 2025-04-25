@@ -1,0 +1,26 @@
+-- Table to store the core word entry and its general metadata
+CREATE TABLE word (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, -- Unique identifier for the word
+    text TEXT NOT NULL UNIQUE,            -- The word or phrase being learned
+    create_at INTEGER NOT NULL -- When the word was added (assuming epoch milliseconds)
+);
+
+-- Optional: Index on text for faster lookup by word
+CREATE INDEX idx_word_text ON word(text);
+
+-- Basic Queries for 'word' table
+
+selectAll:
+SELECT * FROM word;
+
+selectById:
+SELECT * FROM word WHERE id = ?;
+
+selectByText:
+SELECT * FROM word WHERE text = ?;
+
+insertWord:
+INSERT INTO word(text, create_at) VALUES (?, ?);
+
+deleteById:
+DELETE FROM word WHERE id = ?;

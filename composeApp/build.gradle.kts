@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     kotlin("plugin.serialization")
+    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -26,6 +27,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.sqldelight.android.driver)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -50,15 +52,27 @@ kotlin {
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
+            
+            // SQLDelight common
+            implementation(libs.sqldelight.runtime)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.sqldelight.sqlite.driver)
         }
         
         androidMain.dependencies {
             implementation(libs.ktor.client.android)
+        }
+    }
+}
+
+sqldelight {
+    databases {
+        create("AppDatabase") {
+            packageName.set("com.crossevol.wordbook.db")
         }
     }
 }
@@ -86,7 +100,7 @@ android {
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11 // Fixed the extra equals sign here
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
 

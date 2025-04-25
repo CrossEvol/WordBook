@@ -1,0 +1,31 @@
+-- Table to store API key configurations submitted from the ApiKeyEditingPage
+CREATE TABLE apiKeyConfig (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, -- Unique identifier for the API key configuration
+    alias TEXT NOT NULL UNIQUE,           -- User-friendly name for the key configuration
+    apiKey TEXT NOT NULL,                 -- The actual API key string (sensitive data)
+    provider TEXT NOT NULL, -- The LLM provider name (CHECK constraint handled in Kotlin)
+    model TEXT NOT NULL                   -- The specific model name (e.g., 'gemini-1.5-pro', 'gpt-4o')
+);
+
+-- Optional: Index on alias for faster lookup by alias
+CREATE INDEX idx_api_key_config_alias ON apiKeyConfig(alias);
+
+-- Basic Queries for 'apiKeyConfig' table
+
+selectAll:
+SELECT * FROM apiKeyConfig;
+
+selectById:
+SELECT * FROM apiKeyConfig WHERE id = ?;
+
+selectByAlias:
+SELECT * FROM apiKeyConfig WHERE alias = ?;
+
+insertConfig:
+INSERT INTO apiKeyConfig(alias, apiKey, provider, model) VALUES (?, ?, ?, ?);
+
+updateConfig:
+UPDATE apiKeyConfig SET alias = ?, apiKey = ?, provider = ?, model = ? WHERE id = ?; -- Corrected: only one WHERE clause
+
+deleteById:
+DELETE FROM apiKeyConfig WHERE id = ?;

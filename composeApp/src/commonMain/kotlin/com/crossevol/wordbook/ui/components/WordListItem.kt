@@ -37,7 +37,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  */
 @Composable
 fun RatingBar(
-    rating: Int,
+    rating: Long,
     maxRating: Int = 5,
     modifier: Modifier = Modifier,
     starColor: Color = Color(0xFFFFC107), // Amber color for filled stars
@@ -152,8 +152,8 @@ fun WordListItem(
         // Only show divider if not in NONE mode (Moved outside explanation block)
         // This ensures the divider appears if *any* content below the title row is shown.
         if (!showNone && (showPronunciation || showExplanation || showProgress || showSentences)) {
-             Spacer(modifier = Modifier.height(8.dp))
-             Divider(color = MaterialTheme.colorScheme.outlineVariant) // Use Material3 Divider
+            Spacer(modifier = Modifier.height(8.dp))
+            Divider(color = MaterialTheme.colorScheme.outlineVariant) // Use Material3 Divider
         }
     }
 }
@@ -165,10 +165,12 @@ val sampleWordItem = WordItem(
     explanation = "Say welcome to the world.",
     pronunciation = "[ Nǐ hǎo shìjiè ]",
     rating = 3,
+    languageCode = "",
+    wordDetailId = 1,
     sentences = listOf(
         "The bright sun shines over the vast ocean, casting a golden glow on the waves today.",
         "The bright sun shines over the vast ocean, casting a golden glow on the waves today.",
-    )
+    ),
 )
 
 @Preview
