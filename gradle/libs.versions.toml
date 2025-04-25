@@ -15,16 +15,19 @@ androidx-test-junit = "1.2.1"
 compose-multiplatform = "1.7.3"
 junit = "4.13.2"
 kotlin = "2.1.10"
+kotlinLogging = "6.0.3"
 kotlinx-coroutines = "1.10.1"
 kotlinxSerializationJson = "1.6.3"
 ktorClientCore = "2.3.10"
 lifecycleViewmodel = "2.8.7"
 material3Android = "1.3.2"
 mvvmCore = "0.16.1"
+slf4jSimple = "2.0.13"
 sqldelight = "2.0.2" # Added SQLDelight version
 
 [libraries]
 androidx-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3Android" }
+kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlinLogging" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -49,6 +52,7 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "lifecycleViewmodel" }
 mvvm-compose = { module = "dev.icerock.moko:mvvm-compose", version.ref = "mvvmCore" }
 mvvm-core = { module = "dev.icerock.moko:mvvm-core", version.ref = "mvvmCore" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4jSimple" }
 sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" } # Added SQLDelight runtime
 sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" } # Added Android driver
 sqldelight-sqlite-driver = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" } # Added JVM/Desktop driver

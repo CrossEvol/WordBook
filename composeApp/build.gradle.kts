@@ -13,7 +13,6 @@ plugins {
 
 kotlin {
     androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
@@ -36,7 +35,7 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
-            
+
             // ViewModel dependencies
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
@@ -44,17 +43,22 @@ kotlin {
 
             implementation(libs.androidx.material3)
             implementation(libs.androidx.material3.android)
-            
+
             // Kotlinx Serialization
             implementation(libs.kotlinx.serialization.json)
-            
+
             // Ktor
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
-            
+
             // SQLDelight common
             implementation(libs.sqldelight.runtime)
+
+            // Kotlin Logging (SLF4J API)
+            implementation(libs.kotlin.logging)
+            // SLF4J Simple Provider for common logging output (Console/Logcat)
+            implementation(libs.slf4j.simple) // Added slf4j-simple provider
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -62,7 +66,7 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.sqldelight.sqlite.driver)
         }
-        
+
         androidMain.dependencies {
             implementation(libs.ktor.client.android)
         }

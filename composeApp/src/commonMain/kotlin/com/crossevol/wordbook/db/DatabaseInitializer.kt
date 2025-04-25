@@ -2,6 +2,9 @@ package com.crossevol.wordbook.db
 
 import com.crossevol.wordbook.data.ApiKeyConfigRepository
 import com.crossevol.wordbook.ui.screens.ApiKeyConfig
+import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
+
+private val logger = KotlinLogging.logger {} // Add logger instance
 
 /**
  * Handles initial database setup, like populating tables with default data if empty.
@@ -12,7 +15,7 @@ fun initializeDatabase(
 ) {
     // Check if the apiKeyConfig table is empty
     if (apiKeyConfigRepository.countConfigs() == 0L) {
-        println("DatabaseInitializer: apiKeyConfig table is empty, inserting dummy data.")
+        logger.info { "DatabaseInitializer: apiKeyConfig table is empty, inserting dummy data." } // Replaced println
         // Insert dummy data
         val dummyConfigs = listOf(
             ApiKeyConfig(
@@ -40,8 +43,8 @@ fun initializeDatabase(
                 apiKeyConfigRepository.insertApiKeyConfig(config)
             }
         }
-        println("DatabaseInitializer: Dummy data inserted.")
+        logger.info { "DatabaseInitializer: Dummy data inserted." } // Replaced println
     } else {
-        println("DatabaseInitializer: apiKeyConfig table is not empty, skipping dummy data insertion.")
+        logger.debug { "DatabaseInitializer: apiKeyConfig table is not empty, skipping dummy data insertion." } // Replaced println
     }
 }

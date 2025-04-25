@@ -24,7 +24,10 @@ import com.crossevol.wordbook.ui.screens.WordDetailPage
 import com.crossevol.wordbook.ui.screens.WordFetchPage
 import com.crossevol.wordbook.ui.screens.WordReviewPage
 import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel // Import ViewModel
+import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
 import org.jetbrains.compose.ui.tooling.preview.Preview
+
+private val logger = KotlinLogging.logger {} // Add logger instance
 
 // Define screen states for navigation
 sealed class Screen {
@@ -85,10 +88,11 @@ fun App(
             is Screen.Home -> {
                 HomePage(
                     onWordItemClick = { word ->
+                        logger.info { "Navigating to Detail for word: ${word.title}" } // Replaced println
                         currentScreen = Screen.Detail(word) // Navigate to Detail
                     },
                     onNavigate = { route ->
-                        println("Bottom nav clicked: $route")
+                        logger.info { "Bottom nav clicked: $route" } // Replaced println
                         when (route) {
                             "home" -> currentScreen = Screen.Home // Stay home or return home
                             "review" -> currentScreen =
@@ -105,6 +109,7 @@ fun App(
                 WordDetailPage(
                     wordItem = screen.word,
                     onBack = {
+                        logger.info { "Navigating back to Home from Detail." } // Replaced println
                         currentScreen = Screen.Home // Navigate back to Home from Detail
                     }
                 )
@@ -116,44 +121,53 @@ fun App(
                     onAction = {
                         // Action taken (Edit, Delete, Cancel), dismiss overlay and go back home
                         currentScreen = Screen.Home
-                        println("Review action taken, returning home.")
+                        logger.info { "Review action taken, returning home." } // Replaced println
                     },
                     onBack = {
                         // Explicit back navigation from Review screen, go back home
                         currentScreen = Screen.Home
-                        println("Review back pressed, returning home.")
+                        logger.info { "Review back pressed, returning home." } // Replaced println
                     }
                 )
             }
 
             is Screen.Settings -> {
                 SettingsPage(
-                    onNavigateBack = { currentScreen = Screen.Home }, // Navigate back to Home
+                    onNavigateBack = {
+                        logger.info { "Navigating back to Home from Settings." } // Replaced println
+                        currentScreen = Screen.Home
+                    }, // Navigate back to Home
                     // Add other callbacks as needed, e.g.:
                     onLogout = {
-                        println("Logout clicked!")
+                        logger.info { "Logout clicked!" } // Replaced println
                         // Implement actual logout logic and navigate (e.g., to a login screen or back home)
                         currentScreen = Screen.Home // Example: Go back home after logout
                     },
                     onEditProfile = {
+                        logger.info { "Navigating to EditProfile." } // Replaced println
                         currentScreen = Screen.EditProfile
                     }, // Navigate to EditProfile
                     onChangeApiKey = {
+                        logger.info { "Navigating to ApiKeyList." } // Replaced println
                         currentScreen = Screen.ApiKeyList // Navigate to the new ApiKeyListPage
                     },
-                    onNotificationSettings = { println("Notification Settings clicked!") },
-                    onIntroduction = { println("Introduction clicked!") },
-                    onTermsOfService = { println("Terms of Service clicked!") }
+                    onNotificationSettings = { logger.info { "Notification Settings clicked!" } }, // Replaced println
+                    onIntroduction = { logger.info { "Introduction clicked!" } }, // Replaced println
+                    onTermsOfService = { logger.info { "Terms of Service clicked!" } } // Replaced println
                 )
             }
 
             is Screen.EditProfile -> {
                 EditProfilePage(
-                    onNavigateBack = { currentScreen = Screen.Settings }, // Go back to Settings
+                    onNavigateBack = {
+                        logger.info { "Navigating back to Settings from EditProfile." } // Replaced println
+                        currentScreen = Screen.Settings
+                    }, // Go back to Settings
                     onSaveChanges = { name, city, state, bio ->
-                        println("Saving Profile: Name=$name, City=$city, State=$state, Bio=$bio")
+                        logger.info { "Saving Profile: Name=$name, City=$city, State=$state, Bio=$bio" } // Replaced println
                         // Add actual save logic here
                         currentScreen = Screen.Settings // Navigate back to Settings after save
+                        logger.info { "Navigating back to Settings after saving profile." } // Replaced println
                     }
                 )
             }
@@ -162,22 +176,29 @@ fun App(
                 // Fetch the list of API keys from the repository whenever we navigate to this screen
                 // or when the refresh trigger changes
                 val apiKeyConfigs = remember(apiKeyConfigRepository, apiKeyListRefreshTrigger) {
-                    apiKeyConfigRepository?.getAllApiKeyConfigs() ?: emptyList()
+                    apiKeyConfigRepository?.getAllApiKeyConfigs() ?: emptyList<ApiKeyConfig>().also {
+                        logger.warn { "ApiKeyConfigRepository is null or returned empty list." } // Replaced println
+                    }
                 }
 
                 ApiKeyListPage(
                     apiKeyConfigs = apiKeyConfigs, // Provide actual list from DB
-                    onNavigateBack = { currentScreen = Screen.Settings }, // Go back to Settings
+                    onNavigateBack = {
+                        logger.info { "Navigating back to Settings from ApiKeyList." } // Replaced println
+                        currentScreen = Screen.Settings
+                    }, // Go back to Settings
                     onAddApiKey = {
+                        logger.info { "Navigating to ApiKeyEdit (Add mode)." } // Replaced println
                         currentScreen = Screen.ApiKeyEdit(null)
                     }, // Navigate to Edit page for adding (config is null)
                     onEditApiKey = { config ->
+                        logger.info { "Navigating to ApiKeyEdit (Edit mode) for ID: ${config.id}" } // Replaced println
                         currentScreen = Screen.ApiKeyEdit(config)
                     }, // Navigate to Edit page with config
                     onDeleteApiKey = { config ->
                         // Handle delete action using the repository
                         apiKeyConfigRepository?.deleteApiKeyConfigById(config.id)
-                        println("Delete API Key: ${config.alias}")
+                        logger.info { "Deleted API Key: ${config.alias} (ID: ${config.id})" } // Replaced println
                         // After deleting, increment the refresh trigger to force refresh
                         apiKeyListRefreshTrigger++
                     }
@@ -190,6 +211,7 @@ fun App(
                 WordFetchPage(
                     viewModel = wordFetchViewModel, // Pass the ViewModel
                     onBack = {
+                        logger.info { "Navigating back to Home from WordFetch." } // Replaced println
                         currentScreen = Screen.Home
                     } // Navigate back to Home (or previous screen)
                 )
@@ -198,7 +220,10 @@ fun App(
             is Screen.ApiKeyEdit -> { // Handle the ApiKeyEdit screen state
                 ApiKeyEditingPage(
                     config = screen.config, // Pass the config from the screen state
-                    onNavigateBack = { currentScreen = Screen.ApiKeyList }, // Go back to the list
+                    onNavigateBack = {
+                        logger.info { "Navigating back to ApiKeyList from ApiKeyEdit." } // Replaced println
+                        currentScreen = Screen.ApiKeyList
+                    }, // Go back to the list
                     onSaveChanges = { alias, key, provider, model ->
                         // Implement actual saving logic here (e.g., to database/preferences)
                         if (apiKeyConfigRepository != null) {
@@ -212,18 +237,19 @@ fun App(
                             if (configToSave.id == 0L) {
                                 // Insert new config
                                 apiKeyConfigRepository.insertApiKeyConfig(configToSave)
-                                println("Inserted new API Key: $alias")
+                                logger.info { "Inserted new API Key: $alias" } // Replaced println
                             } else {
                                 // Update existing config
                                 apiKeyConfigRepository.updateApiKeyConfig(configToSave)
-                                println("Updated API Key: $alias (ID: ${configToSave.id})")
+                                logger.info { "Updated API Key: $alias (ID: ${configToSave.id})" } // Replaced println
                             }
                             // Increment the refresh trigger to force refresh when returning to list
                             apiKeyListRefreshTrigger++
                         } else {
-                            println("Error: ApiKeyConfigRepository is not initialized.")
+                            logger.error { "ApiKeyConfigRepository is not initialized. Cannot save API key." } // Replaced println
                         }
                         currentScreen = Screen.ApiKeyList // Go back to the list after saving
+                        logger.info { "Navigating back to ApiKeyList after saving API key." } // Replaced println
                     }
                 )
             }

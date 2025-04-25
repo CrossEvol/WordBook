@@ -8,6 +8,9 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
+import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
+
+private val logger = KotlinLogging.logger {} // Add logger instance
 
 // --- Data classes for API Request Body (based on solicit.ps1) ---
 
@@ -102,11 +105,15 @@ class WordFetchApi(private val apiKey: String) {
      */
     suspend fun fetchWordDetails(query: String): WordFetchResultJson {
         if (apiKey.isBlank() || apiKey == "YOUR_API_KEY_HERE") {
+             logger.error { "API Key is not configured." } // Replaced println
              throw IllegalStateException("API Key is not configured.")
         }
         if (query.isBlank()) {
+            logger.warn { "Attempted to fetch with empty query." } // Replaced println
             throw IllegalArgumentException("Search query cannot be empty.")
         }
+
+        logger.debug { "Fetching word details for query: '$query' from API." } // Replaced println
 
         // Construct the prompt text including the instructions and the query
         // This should match the structure in solicit.ps1
@@ -157,7 +164,10 @@ class WordFetchApi(private val apiKey: String) {
 
             // Extract the text containing the inner JSON
             val responseText = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
-                ?: throw Exception("API response did not contain expected text content.")
+                ?: run {
+                    logger.error { "API response did not contain expected text content." } // Replaced println
+                    throw Exception("API response did not contain expected text content.")
+                }
 
             // Clean the text: remove ```json\n prefix and \n``` suffix
             val jsonString = responseText
@@ -165,12 +175,17 @@ class WordFetchApi(private val apiKey: String) {
                 .removeSuffix("\n```")
                 .trim() // Trim any extra whitespace
 
+            logger.debug { "Received raw API response text:\n$responseText" } // Replaced println
+            logger.debug { "Extracted JSON string:\n$jsonString" } // Replaced println
+
             // Parse the inner JSON string
-            return Json.decodeFromString<WordFetchResultJson>(jsonString)
+            val result = Json.decodeFromString<WordFetchResultJson>(jsonString)
+            logger.info { "Successfully parsed API response for query: '$query'" } // Replaced println
+            return result
 
         } catch (e: Exception) {
             // Wrap specific Ktor exceptions or rethrow
-            println("API Fetch Error: ${e.message}")
+            logger.error(e) { "API Fetch Error for query '$query': ${e.message}" } // Replaced println, added exception
             throw Exception("Failed to fetch word details: ${e.message}", e)
         }
     }

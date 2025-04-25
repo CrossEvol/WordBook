@@ -20,7 +20,10 @@ import androidx.compose.ui.unit.dp
 import com.crossevol.wordbook.data.api.WordFetchApi
 import com.crossevol.wordbook.data.api.WordFetchResultJson // Import the data class
 import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel // Import ViewModel
+import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
 import org.jetbrains.compose.ui.tooling.preview.Preview
+
+private val logger = KotlinLogging.logger {} // Add logger instance
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -294,7 +297,7 @@ fun EnglishContent(result: WordFetchResultJson) {
             result.getEnSentencesList().forEach { sentence ->
                 SentenceItem(text = sentence) {
                     // Handle sentence click if needed
-                    println("EN Sentence clicked: $sentence")
+                    logger.debug { "EN Sentence clicked: $sentence" } // Replaced println
                 }
             }
         }
@@ -348,7 +351,7 @@ fun JapaneseContent(result: WordFetchResultJson) {
             result.getJaSentencesList().forEach { sentence ->
                 SentenceItem(text = sentence) {
                     // Handle sentence click if needed
-                    println("JA Sentence clicked: $sentence")
+                    logger.debug { "JA Sentence clicked: $sentence" } // Replaced println
                 }
             }
         }
@@ -402,7 +405,7 @@ fun ChineseContent(result: WordFetchResultJson) {
             result.getZhSentencesList().forEach { sentence ->
                 SentenceItem(text = sentence) {
                     // Handle sentence click if needed
-                    println("ZH Sentence clicked: $sentence")
+                    logger.debug { "ZH Sentence clicked: $sentence" } // Replaced println
                 }
             }
         }

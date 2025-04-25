@@ -32,7 +32,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.crossevol.wordbook.data.model.WordItem
 import com.crossevol.wordbook.ui.components.sampleWordItem // For preview
+import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
 import org.jetbrains.compose.ui.tooling.preview.Preview
+
+private val logger = KotlinLogging.logger {} // Add logger instance
 
 /**
  * Displays the details of a single WordItem.
@@ -116,7 +119,7 @@ fun WordDetailPage(
                 wordItem.sentences.forEach { sentence ->
                     SentenceItem(text = sentence) {
                         // Handle sentence click if needed in the future
-                        println("Sentence clicked: $sentence")
+                        logger.debug { "Sentence clicked: $sentence" } // Replaced println
                     }
                 }
             }
