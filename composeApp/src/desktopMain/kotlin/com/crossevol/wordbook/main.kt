@@ -1,9 +1,9 @@
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.crossevol.wordbook.App
-import com.crossevol.wordbook.db.createDatabase
 import com.crossevol.wordbook.db.DriverFactory
-import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
+import com.russhwolf.settings.PreferencesSettings // Import PreferencesSettings
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {} // Add logger instance
 
@@ -13,16 +13,19 @@ fun main() = application {
     logger.info { "Desktop application started." } // Log application start
 
     // Create the database instance using the Desktop driver factory
+    // The database instance will be created in the common App composable
     val driverFactory = DriverFactory()
-    val database = createDatabase(driverFactory)
 
-    // TODO: Pass the 'database' instance or a repository using it
-    // to your App composable or a dependency injection framework.
-    Window(
-        onCloseRequest = ::exitApplication,
-        title = "WordBook",
-    ) {
-        // Pass the driverFactory to the App composable
-        App(driverFactory = driverFactory)
+    // Create the Settings instance using Preferences
+    val settings = PreferencesSettings.Factory().create("wordbook_settings") // Use a named preference set
+
+
+    Window(onCloseRequest = ::exitApplication, title = "Wordbook") {
+        // Pass the driver factory and settings instance to the common App composable
+        // The App composable should handle the nullable case for previews.
+        App(
+            settings = settings, // Pass the settings instance
+            driverFactory = driverFactory // Pass the driver factory
+        )
     }
 }

@@ -9,6 +9,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.setValue
 import com.crossevol.wordbook.data.ApiKeyConfigRepository // Import repository
 import com.crossevol.wordbook.data.api.WordFetchApi // Import API client
+import com.crossevol.wordbook.data.SettingsRepository // Import SettingsRepository
 import com.crossevol.wordbook.data.model.WordItem
 import com.crossevol.wordbook.db.AppDatabase
 import com.crossevol.wordbook.db.createDatabase
@@ -24,6 +25,7 @@ import com.crossevol.wordbook.ui.screens.WordDetailPage
 import com.crossevol.wordbook.ui.screens.WordFetchPage
 import com.crossevol.wordbook.ui.screens.WordReviewPage
 import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel // Import ViewModel
+import com.russhwolf.settings.Settings // Import Settings
 import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -44,7 +46,8 @@ sealed class Screen {
 @Composable
 @Preview
 fun App(
-    // Pass DriverFactory from platform-specific main functions
+    // Dependencies passed from platform-specific main functions
+    settings: Settings? = null, // Pass Settings instance
     driverFactory: com.crossevol.wordbook.db.DriverFactory? = null // Make nullable for Preview
 ) {
     // Navigation state using the sealed class
@@ -58,6 +61,11 @@ fun App(
 
     val apiKeyConfigRepository: ApiKeyConfigRepository? = remember(database) {
         database?.let { ApiKeyConfigRepository(it) }
+    }
+
+    // Create Settings Repository instance
+    val settingsRepository: SettingsRepository? = remember(settings) {
+        settings?.let { SettingsRepository(it) }
     }
 
     // Track when to refresh API keys list
@@ -87,6 +95,7 @@ fun App(
         when (val screen = currentScreen) {
             is Screen.Home -> {
                 HomePage(
+                    settingsRepository = settingsRepository, // Pass the settings repository
                     onWordItemClick = { word ->
                         logger.info { "Navigating to Detail for word: ${word.title}" } // Replaced println
                         currentScreen = Screen.Detail(word) // Navigate to Detail

@@ -1,6 +1,7 @@
 package com.crossevol.wordbook.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box // Import Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +11,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Notifications // Using Notifications for Review for now
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.DropdownMenu // Import DropdownMenu
+import androidx.compose.material3.DropdownMenuItem // Import DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton // Import FAB
 import androidx.compose.material3.Icon
@@ -28,6 +31,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color // Import Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.crossevol.wordbook.data.model.FilterOption // Import FilterOption
 import com.crossevol.wordbook.data.model.WordItem
@@ -35,6 +39,7 @@ import com.crossevol.wordbook.ui.components.FilterDropdownMenu // Import FilterD
 import com.crossevol.wordbook.ui.components.WordListItem
 import com.crossevol.wordbook.ui.components.sampleWordItem
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import com.crossevol.wordbook.data.SettingsRepository // Import SettingsRepository
 
 
 // Sample data for the home page list
@@ -64,6 +69,7 @@ val bottomNavItems = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePage(
+    settingsRepository: SettingsRepository?, // Accept SettingsRepository
     words: List<WordItem> = sampleWordList, // Default to sample data
     // onFilterClick: () -> Unit = {}, // Filter click is handled internally now
     onWordItemClick: (WordItem) -> Unit, // Changed: Make this non-optional for navigation
@@ -75,6 +81,14 @@ fun HomePage(
     var showFilterMenu by remember { mutableStateOf(false) }
     // State for selected filter options - Default to ALL
     var selectedFilters by remember { mutableStateOf(setOf(FilterOption.ALL)) }
+
+    // State for locale selection (New)
+    // Initialize locale from settings or use default if repository is null (for preview)
+    var currentLocale by remember {
+        mutableStateOf(settingsRepository?.getLocale() ?: "EN") // Read from settings
+    }
+    var showLocaleMenu by remember { mutableStateOf(false) } // Locale dropdown visibility
+
 
     // Logic to handle filter option toggles
     val onFilterOptionToggle = { option: FilterOption, isSelected: Boolean ->
@@ -106,8 +120,50 @@ fun HomePage(
             TopAppBar(
                 title = { Text("Browse") },
                 actions = {
-                    // Box to anchor the DropdownMenu
-                    androidx.compose.foundation.layout.Box {
+                    // Locale Selector (New)
+                    Box { // Box to anchor the dropdown
+                        IconButton(onClick = { showLocaleMenu = true }) {
+                            Text(
+                                currentLocale, // Display current locale state
+                                style = MaterialTheme.typography.labelLarge, // Or another suitable style
+                                color = MaterialTheme.colorScheme.onPrimary // Match TopAppBar text color (assuming primary is dark enough)
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showLocaleMenu,
+                            onDismissRequest = { showLocaleMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("English (EN)") },
+                                onClick = {
+                                    settingsRepository?.setLocale("EN") // Save to settings
+                                    currentLocale = "EN" // Update local state
+                                    showLocaleMenu = false
+                                    // TODO: Implement actual locale change logic
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("日本語 (JA)") },
+                                onClick = {
+                                    settingsRepository?.setLocale("JA") // Save to settings
+                                    currentLocale = "JA" // Update local state
+                                    showLocaleMenu = false
+                                    // TODO: Implement actual locale change logic
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("中文 (ZH)") },
+                                onClick = { settingsRepository?.setLocale("ZH") // Save to settings
+                                    currentLocale = "ZH" // Update local state
+                                    showLocaleMenu = false
+                                    // TODO: Implement actual locale change logic
+                                }
+                            )
+                        }
+                    }
+
+                    // Existing Filter Icon and Dropdown Menu
+                    Box { // Box to anchor the DropdownMenu
                         IconButton(onClick = { showFilterMenu = true }) { // Open the menu
                             Icon(
                                 imageVector = Icons.Filled.List,
@@ -209,7 +265,7 @@ fun WordList(
 @Composable
 fun HomePagePreview() {
     MaterialTheme { // Ensure MaterialTheme is applied for preview
-        // Provide a dummy lambda for the preview
-        HomePage(onWordItemClick = {})
+        // Provide a dummy lambda and null settings repository for the preview
+        HomePage(onWordItemClick = {}, settingsRepository = null)
     }
 }

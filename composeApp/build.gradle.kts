@@ -55,6 +55,9 @@ kotlin {
             // SQLDelight common
             implementation(libs.sqldelight.runtime)
 
+            // Multiplatform Settings
+            implementation(libs.multiplatform.settings)
+
             // Kotlin Logging (SLF4J API)
             implementation(libs.kotlin.logging)
             // SLF4J Simple Provider for common logging output (Console/Logcat)
