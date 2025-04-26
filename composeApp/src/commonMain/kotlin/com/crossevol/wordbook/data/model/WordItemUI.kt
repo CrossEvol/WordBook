@@ -17,5 +17,6 @@ data class WordItemUI(
     val pronunciation: String,
     val explanation: String,
     val rating: Long,
-    val sentences: List<String>
+    val sentences: List<String>,
+    val relatedWords: List<String>
 )

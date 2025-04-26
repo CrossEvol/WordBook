@@ -24,3 +24,6 @@ INSERT INTO word(text, create_at) VALUES (?, ?);
 
 deleteById:
 DELETE FROM word WHERE id = ?;
+
+countWords:
+SELECT count(*) FROM word;

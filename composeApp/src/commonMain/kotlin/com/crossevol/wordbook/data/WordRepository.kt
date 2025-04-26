@@ -23,7 +23,8 @@ class WordRepository(private val database: AppDatabase) {
             pronunciation = this.pronunciation ?: "", // Handle nullable
             explanation = this.explanation ?: "", // Handle nullable
             rating = this.review_progress, // Maps to review_progress
-            sentences = this.sentences?.split(";")?.filter { it.isNotBlank() } ?: emptyList() // Convert String to List
+            sentences = this.sentences?.split(";")?.filter { it.isNotBlank() } ?: emptyList(),
+            relatedWords = this.related_words?.split(";")?.filter { it.isNotBlank() } ?: emptyList() // Split related_words string
         )
     }
 
@@ -49,6 +50,7 @@ class WordRepository(private val database: AppDatabase) {
      * @param explanation Optional explanation.
      * @param sentences List of example sentences.
      * @param pronunciation Optional pronunciation guide.
+     * @param relatedWords List of related words.
      * @param rating Review progress rating.
      */
     fun saveWordDetails(
@@ -57,6 +59,7 @@ class WordRepository(private val database: AppDatabase) {
         explanation: String?,
         sentences: List<String>,
         pronunciation: String?,
+        relatedWords: List<String>, // Add relatedWords parameter
         rating: Long
     ) {
         database.transaction {
@@ -89,17 +92,17 @@ class WordRepository(private val database: AppDatabase) {
                     language_code = languageCode,
                     explanation = explanation,
                     sentences = sentences.joinToString(";"), // Convert List to String
-                    related_words = null, // Assuming related_words is not handled here yet
+                    related_words = relatedWords.joinToString(";"), // Convert List to String
                     pronunciation = pronunciation,
                     last_review_at = System.currentTimeMillis(), // Set initial review time
                     review_progress = rating
                 )
             } else {
                 // Update existing word detail
-                wordDetailQueries.updateDetail(
+                wordDetailQueries.updateDetail( // Pass related_words to update
                     explanation = explanation,
                     sentences = sentences.joinToString(";"),
-                    related_words = existingDetail.related_words, // Keep existing related words if not updated
+                    related_words = relatedWords.joinToString(";"), // Use the new relatedWords parameter
                     pronunciation = pronunciation,
                     last_review_at = System.currentTimeMillis(), // Update review time on save
                     review_progress = rating,

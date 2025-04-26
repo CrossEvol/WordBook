@@ -94,8 +94,8 @@ fun WordListItem(
             // Removed SpaceBetween to keep rating closer if altText is missing
         ) {
             // Left part: Title and AltText
-            Row(
-                verticalAlignment = Alignment.Bottom,
+            Column  (
+                horizontalAlignment = Alignment.Start,
                 modifier = Modifier.weight(1f)// Take available space
             ) {
                 Text(
@@ -169,6 +169,7 @@ val sampleWordItem = WordItemUI( // Changed from WordItem
         "The bright sun shines over the vast ocean, casting a golden glow on the waves today.",
         "The bright sun shines over the vast ocean, casting a golden glow on the waves today.",
     ),
+    relatedWords = listOf("welcome", "greeting")
 )
 
 @Preview

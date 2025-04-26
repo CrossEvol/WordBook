@@ -7,7 +7,7 @@ CREATE TABLE wordDetail (
     -- Language-specific content
     explanation TEXT,                       -- Translation/definition in this language
     sentences TEXT,                         -- Example sentences (stored as TEXT, conversion needed in Kotlin)
-    related_words TEXT,                     -- Related words/phrases (stored as TEXT, conversion needed in Kotlin)
+    related_words TEXT,                     -- Related words/phrases (stored as TEXT, join by ';')
     pronunciation TEXT,            -- Pronunciation information - VARCHAR(255) maps to TEXT
 
     -- Review progress for this specific language detail
@@ -36,12 +36,12 @@ insertDetail:
 INSERT INTO wordDetail(word_id, language_code, explanation, sentences, related_words, pronunciation, last_review_at, review_progress)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
-updateDetail:
+updateDetail: -- Added related_words to update
 UPDATE wordDetail SET
     explanation = ?,
     sentences = ?,
     related_words = ?,
-    pronunciation = ?,
+    pronunciation = ?, -- Added related_words to update
     last_review_at = ?,
     review_progress = ?
 WHERE id = ?;
@@ -59,8 +59,10 @@ SELECT
     w.text AS title,
     wd.explanation,
     wd.sentences,
+    wd.related_words, -- Select related_words
     wd.pronunciation,
     wd.review_progress
 FROM wordDetail AS wd
 JOIN word AS w ON w.id = wd.word_id
-WHERE wd.language_code = ?;
+WHERE wd.language_code = ?
+ORDER BY w.create_at DESC; -- Order by creation date of the word, newest first

@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import com.crossevol.wordbook.data.ApiKeyConfigRepository // Import repository
 import com.crossevol.wordbook.data.api.WordFetchApi // Import API client
 import com.crossevol.wordbook.data.SettingsRepository // Import SettingsRepository
+import com.crossevol.wordbook.data.WordRepository // Import WordRepository
 import com.crossevol.wordbook.data.model.WordItemUI
 import com.crossevol.wordbook.db.AppDatabase
 import com.crossevol.wordbook.db.createDatabase
@@ -68,18 +69,23 @@ fun App(
         database?.let { ApiKeyConfigRepository(it) }
     }
 
+    // Create Word Repository instance
+    val wordRepository: WordRepository? = remember(database) {
+        database?.let { WordRepository(it) }
+    }
+
     // Create Settings Repository instance
     val settingsRepository: SettingsRepository? = remember(settings) {
         settings?.let { SettingsRepository(it) }
     }
 
-    // Track when to refresh API keys list
+    // Track when to refresh API keys list (can be reused or have separate triggers if needed)
     var apiKeyListRefreshTrigger by remember { mutableStateOf(0) }
 
     // Initialize database with dummy data if empty, runs once
-    LaunchedEffect(database, apiKeyConfigRepository) {
-        if (database != null && apiKeyConfigRepository != null) {
-            initializeDatabase(database, apiKeyConfigRepository)
+    LaunchedEffect(database, apiKeyConfigRepository, wordRepository) { // Add wordRepository to key
+        if (database != null && apiKeyConfigRepository != null && wordRepository != null) { // Check wordRepository too
+            initializeDatabase(database, apiKeyConfigRepository, wordRepository) // Pass wordRepository
         }
     }
     // --- End Database Setup ---
@@ -101,6 +107,7 @@ fun App(
             is Screen.Home -> {
                 HomePage(
                     settingsRepository = settingsRepository, // Pass the settings repository
+                    wordRepository = wordRepository, // Pass the word repository
                     onWordItemClick = { word ->
                         logger.info { "Navigating to Detail for word: ${word.title}" } // Replaced println
                         currentScreen = Screen.Detail(word) // Navigate to Detail
