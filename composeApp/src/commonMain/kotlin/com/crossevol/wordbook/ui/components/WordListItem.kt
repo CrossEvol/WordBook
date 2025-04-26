@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.crossevol.wordbook.data.model.FilterOption // Import FilterOption
 import com.crossevol.wordbook.data.model.WordItemUI // Import the new UI model
+import com.crossevol.wordbook.data.mock.sampleWordItem
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
@@ -94,7 +95,7 @@ fun WordListItem(
             // Removed SpaceBetween to keep rating closer if altText is missing
         ) {
             // Left part: Title and AltText
-            Column  (
+            Column(
                 horizontalAlignment = Alignment.Start,
                 modifier = Modifier.weight(1f)// Take available space
             ) {
@@ -157,20 +158,6 @@ fun WordListItem(
         }
     }
 }
-
-// Update sample data to use UiWordItem
-val sampleWordItem = WordItemUI( // Changed from WordItem
-    id = 1L,
-    title = "Hello World",
-    explanation = "Say welcome to the world.",
-    pronunciation = "[ Nǐ hǎo shìjiè ]",
-    rating = 3,
-    sentences = listOf(
-        "The bright sun shines over the vast ocean, casting a golden glow on the waves today.",
-        "The bright sun shines over the vast ocean, casting a golden glow on the waves today.",
-    ),
-    relatedWords = listOf("welcome", "greeting")
-)
 
 @Preview
 @Composable

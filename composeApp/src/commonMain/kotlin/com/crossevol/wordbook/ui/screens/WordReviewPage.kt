@@ -13,9 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.crossevol.wordbook.data.mock.sampleWordItem
 import com.crossevol.wordbook.data.model.WordItemUI
 import com.crossevol.wordbook.ui.components.SimpleActionSheet // Import the action sheet
-import com.crossevol.wordbook.ui.components.sampleWordItem // Import sample data
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**

@@ -16,11 +16,11 @@ import com.crossevol.wordbook.data.ApiKeyConfigRepository // Import repository
 import com.crossevol.wordbook.data.api.WordFetchApi // Import API client
 import com.crossevol.wordbook.data.SettingsRepository // Import SettingsRepository
 import com.crossevol.wordbook.data.WordRepository // Import WordRepository
+import com.crossevol.wordbook.data.mock.sampleWordItem
 import com.crossevol.wordbook.data.model.WordItemUI
 import com.crossevol.wordbook.db.AppDatabase
 import com.crossevol.wordbook.db.createDatabase
 import com.crossevol.wordbook.db.initializeDatabase // Import initializer
-import com.crossevol.wordbook.ui.components.sampleWordItem
 import com.crossevol.wordbook.ui.screens.ApiKeyConfig
 import com.crossevol.wordbook.ui.screens.ApiKeyEditingPage // Import the editing page
 import com.crossevol.wordbook.ui.screens.ApiKeyListPage

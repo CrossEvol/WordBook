@@ -4,10 +4,10 @@ import com.crossevol.wordbook.data.ApiKeyConfigRepository
 import com.crossevol.wordbook.ui.screens.ApiKeyConfig
 import com.crossevol.wordbook.data.WordRepository // Import WordRepository
 // Import the sample lists (adjust path if necessary, assuming they are accessible)
-import com.crossevol.wordbook.ui.screens.sampleWordListEN
-import com.crossevol.wordbook.ui.screens.sampleWordListJA
-import com.crossevol.wordbook.ui.screens.sampleWordListZH
 import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
+import com.crossevol.wordbook.data.mock.sampleWordListEN
+import com.crossevol.wordbook.data.mock.sampleWordListJA
+import com.crossevol.wordbook.data.mock.sampleWordListZH
 
 private val logger = KotlinLogging.logger {} // Add logger instance
 

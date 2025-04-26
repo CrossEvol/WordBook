@@ -30,8 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.crossevol.wordbook.data.mock.sampleWordItem
 import com.crossevol.wordbook.data.model.WordItemUI
-import com.crossevol.wordbook.ui.components.sampleWordItem // For preview
 import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
