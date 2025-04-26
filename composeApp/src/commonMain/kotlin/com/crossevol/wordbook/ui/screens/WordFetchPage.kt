@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.crossevol.wordbook.data.ApiKeyConfigRepository // Import the real repository
 import com.crossevol.wordbook.data.api.WordFetchApi
 import com.crossevol.wordbook.data.api.WordFetchResultJson // Import the data class
 import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel // Import ViewModel
@@ -254,6 +255,14 @@ fun WordFetchPage(
 @Composable
 fun EnglishContent(result: WordFetchResultJson) {
     Column {
+        // Pronunciation Label
+        Text(
+            text = "Pronunciation",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+
         // Pronunciation
         Text(
             text = result.enPronunciation,
@@ -269,7 +278,7 @@ fun EnglishContent(result: WordFetchResultJson) {
 
         // Explanation Label
         Text(
-            text = "explanation",
+            text = "Explanation",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -308,6 +317,14 @@ fun EnglishContent(result: WordFetchResultJson) {
 @Composable
 fun JapaneseContent(result: WordFetchResultJson) {
     Column {
+        // Pronunciation Label
+        Text(
+            text = "Pronunciation",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+
         // Pronunciation
         Text(
             text = result.jaPronunciation,
@@ -323,7 +340,7 @@ fun JapaneseContent(result: WordFetchResultJson) {
 
         // Explanation Label
         Text(
-            text = "explanation",
+            text = "Explanation",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -362,6 +379,14 @@ fun JapaneseContent(result: WordFetchResultJson) {
 @Composable
 fun ChineseContent(result: WordFetchResultJson) {
     Column {
+        // Pronunciation Label
+        Text(
+            text = "Pronunciation",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        
         // Pronunciation
         Text(
             text = result.zhPronunciation,
@@ -377,7 +402,7 @@ fun ChineseContent(result: WordFetchResultJson) {
 
         // Explanation Label
         Text(
-            text = "explanation",
+            text = "Explanation",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -413,6 +438,32 @@ fun ChineseContent(result: WordFetchResultJson) {
     }
 }
 
+// --- Mock ApiKeyConfigRepository for Previews ---
+// This provides dummy data so the ViewModel can initialize modelOptions
+private class MockApiKeyConfigRepository : ApiKeyConfigRepository(
+    // Pass null or a mock database instance, as the repository methods
+    // used by the ViewModel init block (getAllApiKeyConfigs) are mocked below.
+    // In a real scenario, you might need a more sophisticated mock database.
+    database = null!! // Use null!! to satisfy non-nullable parameter for mocking purposes
+) {
+     override fun getAllApiKeyConfigs(): List<ApiKeyConfig> {
+        // Return a predefined list of dummy configs for preview
+        return listOf(
+            ApiKeyConfig(id = 1, alias = "Gemini Key 1", apiKey = "dummy_key_1", provider = "Google", model = "gemini-1.5-flash"),
+            ApiKeyConfig(id = 2, alias = "Gemini Key 2", apiKey = "dummy_key_2", provider = "Google", model = "gemini-1.5-pro"),
+            ApiKeyConfig(id = 3, alias = "OpenAI Key", apiKey = "dummy_key_3", provider = "OpenAI", model = "gpt-4o")
+        )
+    }
+
+    // Implement other methods with dummy logic or throw exceptions if they are not expected to be called in previews
+    override fun getApiKeyConfigById(id: Long): ApiKeyConfig? = null
+    override fun insertApiKeyConfig(config: ApiKeyConfig) {}
+    override fun updateApiKeyConfig(config: ApiKeyConfig) {}
+    override fun deleteApiKeyConfigById(id: Long) {}
+    override fun countConfigs(): Long = getAllApiKeyConfigs().size.toLong()
+}
+
+
 // --- Previews ---
 
 @Preview
@@ -421,8 +472,9 @@ fun WordFetchPagePreview_Initial() {
     MaterialTheme {
         Surface {
             // Create a dummy ViewModel for preview
-            val dummyApi = WordFetchApi(apiKey = "dummy_key") // Dummy key for preview
-            val dummyViewModel = WordFetchViewModel(api = dummyApi)
+            val dummyApi = WordFetchApi() // API client no longer needs key in constructor
+            val dummyRepo = MockApiKeyConfigRepository() // Create mock repository
+            val dummyViewModel = WordFetchViewModel(api = dummyApi, apiKeyConfigRepository = dummyRepo) // Pass mock repo
             // Set initial state explicitly for preview if needed, though default is initial
             dummyViewModel.resetPage()
 
@@ -440,8 +492,9 @@ fun WordFetchPagePreview_Loading() {
     MaterialTheme {
         Surface {
             // Create a dummy ViewModel for preview
-            val dummyApi = WordFetchApi(apiKey = "dummy_key") // Dummy key for preview
-            val dummyViewModel = WordFetchViewModel(api = dummyApi)
+            val dummyApi = WordFetchApi() // API client no longer needs key in constructor
+            val dummyRepo = MockApiKeyConfigRepository() // Create mock repository
+            val dummyViewModel = WordFetchViewModel(api = dummyApi, apiKeyConfigRepository = dummyRepo) // Pass mock repo
             // Simulate loading state
             dummyViewModel.isLoading = true
             dummyViewModel.onSearchQueryChange("test")
@@ -461,8 +514,9 @@ fun WordFetchPagePreview_Success() {
     MaterialTheme {
         Surface {
             // Create a dummy ViewModel for preview
-            val dummyApi = WordFetchApi(apiKey = "dummy_key") // Dummy key for preview
-            val dummyViewModel = WordFetchViewModel(api = dummyApi)
+            val dummyApi = WordFetchApi() // API client no longer needs key in constructor
+            val dummyRepo = MockApiKeyConfigRepository() // Create mock repository
+            val dummyViewModel = WordFetchViewModel(api = dummyApi, apiKeyConfigRepository = dummyRepo) // Pass mock repo
             // Simulate success state with dummy data
             dummyViewModel.fetchedResult = WordFetchResultJson(
                 text = "热情",
@@ -496,8 +550,9 @@ fun WordFetchPagePreview_Error() {
     MaterialTheme {
         Surface {
             // Create a dummy ViewModel for preview
-            val dummyApi = WordFetchApi(apiKey = "dummy_key") // Dummy key for preview
-            val dummyViewModel = WordFetchViewModel(api = dummyApi)
+            val dummyApi = WordFetchApi() // API client no longer needs key in constructor
+            val dummyRepo = MockApiKeyConfigRepository() // Create mock repository
+            val dummyViewModel = WordFetchViewModel(api = dummyApi, apiKeyConfigRepository = dummyRepo) // Pass mock repo
             // Simulate error state
             dummyViewModel.errorMessage = "Failed to connect to the API."
             dummyViewModel.onSearchQueryChange("test")

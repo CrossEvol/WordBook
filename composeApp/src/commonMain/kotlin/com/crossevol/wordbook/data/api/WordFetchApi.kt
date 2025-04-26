@@ -75,7 +75,7 @@ data class WordFetchResultJson(
 /**
  * API client for fetching word details from the LLM.
  */
-class WordFetchApi(private val apiKey: String) {
+class WordFetchApi() { // Removed apiKey from constructor
 
     private val client = HttpClient {
         install(ContentNegotiation) {
@@ -100,13 +100,14 @@ class WordFetchApi(private val apiKey: String) {
      * Fetches word details for a given query.
      *
      * @param query The word or phrase to fetch details for.
+     * @param apiKey The API key to use for the request.
      * @return The parsed WordFetchResultJson object.
      * @throws Exception if the API call or parsing fails.
      */
-    suspend fun fetchWordDetails(query: String): WordFetchResultJson {
+    suspend fun fetchWordDetails(query: String, apiKey: String): WordFetchResultJson { // Added apiKey parameter
         if (apiKey.isBlank() || apiKey == "YOUR_API_KEY_HERE") {
              logger.error { "API Key is not configured." } // Replaced println
-             throw IllegalStateException("API Key is not configured.")
+             throw IllegalStateException("API Key is not provided or is a placeholder.")
         }
         if (query.isBlank()) {
             logger.warn { "Attempted to fetch with empty query." } // Replaced println

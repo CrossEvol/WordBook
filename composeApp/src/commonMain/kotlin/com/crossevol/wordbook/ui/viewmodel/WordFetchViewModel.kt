@@ -1,49 +1,45 @@
 package com.crossevol.wordbook.ui.viewmodel
 
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.crossevol.wordbook.data.api.WordFetchApi
+import com.crossevol.wordbook.data.ApiKeyConfigRepository // Import repository
+import com.crossevol.wordbook.data.api.WordFetchApi // Dependency on the API client
 import com.crossevol.wordbook.data.api.WordFetchResultJson
-import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.launch
 
 private val logger = KotlinLogging.logger {} // Add logger instance
 
 class WordFetchViewModel(
-    private val api: WordFetchApi // Dependency on the API client
+    private val api: WordFetchApi, // Dependency on the API client
+    private val apiKeyConfigRepository: ApiKeyConfigRepository // Add repository dependency
 ) : ViewModel() {
 
-    // State for the input field
     var searchQuery by mutableStateOf("")
-        private set // Only ViewModel can change this directly
+    var modelOptions by mutableStateOf<List<String>>(emptyList()) // State for available models
+    var selectedModel by mutableStateOf("") // State for selected model
 
-    // State for the dropdown selection
-    val modelOptions = listOf(
-        "gemini-2.5-flash-preview-04-17", // Match the model in the PS script URL
-        "claude-sonnet-3.7", // Example other models
-        "gpt-4o-mini"
-    )
-    var selectedModel by mutableStateOf(modelOptions[0])
-        private set
-
-    // State for the language tabs
-    val languageTabs = listOf("EN", "JA", "ZH")
     var selectedLanguageTabIndex by mutableStateOf(0)
+    val languageTabs = listOf("EN", "JA", "ZH") // Language tabs
 
-    // State for loading indicator
     var isLoading by mutableStateOf(false)
+    var fetchedResult by mutableStateOf<WordFetchResultJson?>(null) // Use specific type
+    var errorMessage by mutableStateOf<String?>(null)
 
-    // State for fetched data
-    var fetchedResult: WordFetchResultJson? by mutableStateOf(null)
+    init {
+        // Load available models from the repository when the ViewModel is created
+        loadModelOptions()
+    }
 
-    // State for error message (null means no error)
-    var errorMessage: String? by mutableStateOf(null)
-
-    // --- Event Handlers ---
+    private fun loadModelOptions() {
+        val configs = apiKeyConfigRepository.getAllApiKeyConfigs()
+        modelOptions = configs.map { it.model }.distinct() // Get unique models
+        selectedModel = modelOptions.firstOrNull() ?: "" // Select the first available model, or empty
+        logger.debug { "Loaded model options: $modelOptions, selected: $selectedModel" }
+    }
 
     fun onSearchQueryChange(query: String) {
         searchQuery = query
@@ -52,7 +48,6 @@ class WordFetchViewModel(
     fun onModelSelect(model: String) {
         selectedModel = model
         // TODO: If the API URL changes based on model, update the API client or logic here
-        // For now, the API client is hardcoded to gemini-2.5-flash-preview-04-17
         logger.debug { "Model selected: $model" } // Replaced println
     }
 
@@ -72,17 +67,34 @@ class WordFetchViewModel(
             return // Prevent multiple requests
         }
 
-        logger.info { "Fetching word details for query: '$searchQuery'" } // Replaced println
+        // Find the API key for the selected model
+        val apiKeyConfig = apiKeyConfigRepository.getAllApiKeyConfigs().find { it.model == selectedModel }
+
+        if (apiKeyConfig == null) {
+            errorMessage = "No API key configured for the selected model: $selectedModel"
+            logger.warn { "Fetch attempt failed: No API key for model '$selectedModel'." }
+            return
+        }
+
+        val apiKey = apiKeyConfig.apiKey
+
+        if (apiKey.isBlank() || apiKey == "YOUR_API_KEY_HERE") {
+             errorMessage = "The API key for model '$selectedModel' is not configured."
+             logger.warn { "Fetch attempt failed: API key for model '$selectedModel' is blank or placeholder." }
+             return
+        }
+
+        logger.info { "Fetching word details for query: '$searchQuery' using model '$selectedModel'." }
         isLoading = true
         errorMessage = null // Clear previous errors
         fetchedResult = null // Clear previous results
 
         viewModelScope.launch {
             try {
-                // Call the API using the current search query
-                val result = api.fetchWordDetails(searchQuery)
+                // Call the API using the current search query and the fetched API key
+                val result = api.fetchWordDetails(searchQuery, apiKey) // Pass query and dynamic apiKey
                 fetchedResult = result
-                logger.info { "Successfully fetched word details for '$searchQuery'" } // Replaced println
+                logger.info { "Successfully fetched word details for '$searchQuery'." } // Replaced println
                 // Automatically switch to the language tab that matches the input language?
                 // Or just stay on the current tab. Let's stay on the current tab for now.
 
@@ -98,7 +110,7 @@ class WordFetchViewModel(
 
     fun resetPage() {
         searchQuery = ""
-        selectedModel = modelOptions[0]
+        selectedModel = modelOptions.firstOrNull() ?: "" // Reset to first available model or empty
         selectedLanguageTabIndex = 0
         isLoading = false
         fetchedResult = null

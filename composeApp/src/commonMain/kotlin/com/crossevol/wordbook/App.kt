@@ -1,12 +1,17 @@
 package com.crossevol.wordbook
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import com.crossevol.wordbook.data.ApiKeyConfigRepository // Import repository
 import com.crossevol.wordbook.data.api.WordFetchApi // Import API client
 import com.crossevol.wordbook.data.SettingsRepository // Import SettingsRepository
@@ -80,15 +85,15 @@ fun App(
     // --- End Database Setup ---
 
 
-    // TODO: Securely obtain API Key here or pass it from platform-specific code
-    // This is a placeholder. Do NOT commit your actual API key.
-    // You need to implement platform-specific logic to read this securely (e.g., from .env, secrets manager, etc.)
-    // For now, we'll use a placeholder or fetch the *active* key from the DB later.
-    val apiKey = "YOUR_API_KEY_HERE" // <<< REPLACE WITH SECURELY OBTAINED KEY
-
     // Create API client instance (can be singleton or managed by DI)
-    // TODO: Update this to use the *active* API key from the database once implemented
-    val wordFetchApi = remember { WordFetchApi(apiKey) }
+    // The API key will now be fetched dynamically in the ViewModel
+    val wordFetchApi = remember { WordFetchApi() }
+
+    // Create ViewModel for WordFetchPage, passing the API client and the repository
+    val wordFetchViewModel = remember(wordFetchApi, apiKeyConfigRepository) {
+        // Ensure repository is not null before passing
+        apiKeyConfigRepository?.let { WordFetchViewModel(api = wordFetchApi, apiKeyConfigRepository = it) }
+    }
 
 
     MaterialTheme {
@@ -216,14 +221,21 @@ fun App(
 
             is Screen.WordFetch -> {
                 // Create ViewModel using the proper androidx.lifecycle.viewmodel.compose.viewModel function
-                val wordFetchViewModel = WordFetchViewModel(api = wordFetchApi)
-                WordFetchPage(
-                    viewModel = wordFetchViewModel, // Pass the ViewModel
-                    onBack = {
-                        logger.info { "Navigating back to Home from WordFetch." } // Replaced println
-                        currentScreen = Screen.Home
-                    } // Navigate back to Home (or previous screen)
-                )
+                // Ensure ViewModel is not null before using
+                if (wordFetchViewModel != null) {
+                    WordFetchPage( // Use the ViewModel instance created above
+                        viewModel = wordFetchViewModel, // Pass the ViewModel
+                        onBack = {
+                            logger.info { "Navigating back to Home from WordFetch." } // Replaced println
+                            currentScreen = Screen.Home
+                        } // Navigate back to Home (or previous screen)
+                    )
+                } else {
+                    // Handle the case where the repository/ViewModel is not available (e.g., in preview)
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Error: API Key Repository not initialized.")
+                    }
+                }
             }
 
             is Screen.ApiKeyEdit -> { // Handle the ApiKeyEdit screen state

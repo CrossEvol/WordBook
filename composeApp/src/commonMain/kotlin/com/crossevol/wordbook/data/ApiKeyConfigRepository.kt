@@ -12,14 +12,14 @@ private val logger = KotlinLogging.logger {} // Add logger instance
  * This is a basic stub. You will need to implement full CRUD operations
  * and mapping logic between database entities and your UI models (like ApiKeyConfig).
  */
-class ApiKeyConfigRepository(private val database: AppDatabase) {
+open class ApiKeyConfigRepository(private val database: AppDatabase) {
 
     private val apiKeyConfigQueries = database.apiKeyConfigQueries
 
     /**
      * Get all API key configurations.
      */
-    fun getAllApiKeyConfigs(): List<UiApiKeyConfig> {
+    open fun getAllApiKeyConfigs(): List<UiApiKeyConfig> {
         logger.debug { "Fetching all API key configurations." } // Replaced println
         return apiKeyConfigQueries.selectAll().executeAsList().map { dbConfig ->
             // Map the generated database entity to your UI model
@@ -38,7 +38,7 @@ class ApiKeyConfigRepository(private val database: AppDatabase) {
     /**
      * Get an API key configuration by its ID.
      */
-    fun getApiKeyConfigById(id: Long): UiApiKeyConfig? {
+    open fun getApiKeyConfigById(id: Long): UiApiKeyConfig? {
         logger.debug { "Fetching API key configuration by ID: $id" } // Replaced println
         return apiKeyConfigQueries.selectById(id).executeAsOneOrNull()?.let { dbConfig ->
             UiApiKeyConfig(
@@ -60,7 +60,7 @@ class ApiKeyConfigRepository(private val database: AppDatabase) {
     /**
      * Insert a new API key configuration.
      */
-    fun insertApiKeyConfig(config: UiApiKeyConfig) {
+    open fun insertApiKeyConfig(config: UiApiKeyConfig) {
         logger.info { "Inserting new API key configuration: ${config.alias}" } // Replaced println
         apiKeyConfigQueries.insertConfig(
             alias = config.alias,
@@ -74,7 +74,7 @@ class ApiKeyConfigRepository(private val database: AppDatabase) {
     /**
      * Update an existing API key configuration.
      */
-    fun updateApiKeyConfig(config: UiApiKeyConfig) {
+    open fun updateApiKeyConfig(config: UiApiKeyConfig) {
         // Ensure the config has a valid ID for update
         if (config.id == 0L) {
             logger.error { "Cannot update config without a valid ID." } // Replaced println
@@ -94,7 +94,7 @@ class ApiKeyConfigRepository(private val database: AppDatabase) {
     /**
      * Delete an API key configuration by its ID.
      */
-    fun deleteApiKeyConfigById(id: Long) {
+    open fun deleteApiKeyConfigById(id: Long) {
         logger.info { "Deleting API key configuration by ID: $id" } // Replaced println
         apiKeyConfigQueries.deleteById(id)
         logger.debug { "Delete successful for API key ID: $id" } // Replaced println
@@ -103,7 +103,7 @@ class ApiKeyConfigRepository(private val database: AppDatabase) {
     /**
      * Count the number of API key configurations in the database.
      */
-    fun countConfigs(): Long {
+    open fun countConfigs(): Long {
         val count = apiKeyConfigQueries.countConfigs().executeAsOne()
         logger.debug { "Counted $count API key configurations." } // Replaced println
         return count
