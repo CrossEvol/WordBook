@@ -31,15 +31,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color // Import Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.crossevol.wordbook.data.model.FilterOption // Import FilterOption
-import com.crossevol.wordbook.data.model.WordItem
+import com.crossevol.wordbook.data.model.WordItemDB
 import com.crossevol.wordbook.ui.components.FilterDropdownMenu // Import FilterDropdownMenu
 import com.crossevol.wordbook.ui.components.WordListItem
 import com.crossevol.wordbook.ui.components.sampleWordItem
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import com.crossevol.wordbook.data.SettingsRepository // Import SettingsRepository
+import com.crossevol.wordbook.data.model.WordItemUI
 
 
 // Sample data for the home page list
@@ -70,9 +70,9 @@ val bottomNavItems = listOf(
 @Composable
 fun HomePage(
     settingsRepository: SettingsRepository?, // Accept SettingsRepository
-    words: List<WordItem> = sampleWordList, // Default to sample data
+    words: List<WordItemUI> = sampleWordList, // Default to sample data
     // onFilterClick: () -> Unit = {}, // Filter click is handled internally now
-    onWordItemClick: (WordItem) -> Unit, // Changed: Make this non-optional for navigation
+    onWordItemClick: (WordItemUI) -> Unit, // Changed: Make this non-optional for navigation
     onNavigate: (String) -> Unit = {} // Callback for bottom navigation
 ) {
     // State for tracking the selected bottom navigation item index
@@ -236,16 +236,16 @@ fun HomePage(
 /**
  * Displays the list of word items using a LazyColumn.
  *
- * @param words The list of [WordItem] to display.
+ * @param words The list of [WordItemDB] to display.
  * @param visibleFilters The set of [FilterOption] to apply to each item.
  * @param onWordItemClick Callback invoked when a word item is clicked.
  * @param modifier Modifier for the LazyColumn.
  */
 @Composable
 fun WordList(
-    words: List<WordItem>,
+    words: List<WordItemUI>,
     visibleFilters: Set<FilterOption>,
-    onWordItemClick: (WordItem) -> Unit, // Pass the click handler down
+    onWordItemClick: (WordItemUI) -> Unit, // Pass the click handler down
     modifier: Modifier = Modifier
 ) {
     LazyColumn(modifier = modifier) {

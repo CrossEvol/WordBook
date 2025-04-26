@@ -23,7 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.crossevol.wordbook.data.model.FilterOption // Import FilterOption
-import com.crossevol.wordbook.data.model.WordItem
+import com.crossevol.wordbook.data.model.WordItemUI // Import the new UI model
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
@@ -61,13 +61,13 @@ fun RatingBar(
  * A composable function that displays a single word item based on the design.
  * Uses Material 3 components.
  *
- * @param item The [WordItem] data to display.
+ * @param item The [WordItemUI] data to display. // Changed from WordItem
  * @param visibleFilters A set of [FilterOption] indicating which parts should be visible.
  * @param modifier Modifier for this composable.
  */
 @Composable
 fun WordListItem(
-    item: WordItem,
+    item: WordItemUI, // Changed from WordItem
     visibleFilters: Set<FilterOption>,
     modifier: Modifier = Modifier
 ) {
@@ -158,15 +158,13 @@ fun WordListItem(
     }
 }
 
-
-val sampleWordItem = WordItem(
+// Update sample data to use UiWordItem
+val sampleWordItem = WordItemUI( // Changed from WordItem
     id = 1L,
     title = "Hello World",
     explanation = "Say welcome to the world.",
     pronunciation = "[ Nǐ hǎo shìjiè ]",
     rating = 3,
-    languageCode = "",
-    wordDetailId = 1,
     sentences = listOf(
         "The bright sun shines over the vast ocean, casting a golden glow on the waves today.",
         "The bright sun shines over the vast ocean, casting a golden glow on the waves today.",

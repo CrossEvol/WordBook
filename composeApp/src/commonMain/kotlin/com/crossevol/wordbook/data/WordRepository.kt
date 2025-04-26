@@ -1,13 +1,12 @@
 package com.crossevol.wordbook.data
 
-import com.crossevol.wordbook.data.model.WordItem
+import com.crossevol.wordbook.data.model.WordItemUI // Import the new UI model
 import com.crossevol.wordbook.db.AppDatabase
+import com.crossevol.wordbook.db.SelectWordItemsForLanguage // SQLDelight generated class
 
 /**
  * Repository class for interacting with the word and wordDetail tables in the database.
- *
- * This is a basic stub. You will need to implement full CRUD operations
- * and mapping logic between database entities and your UI models (like WordItem).
+ * Handles mapping between database entities and UI models.
  */
 class WordRepository(private val database: AppDatabase) {
 
@@ -15,79 +14,110 @@ class WordRepository(private val database: AppDatabase) {
     private val wordDetailQueries = database.wordDetailQueries
 
     /**
-     * Example: Get all words and their English details.
-     * This is a simplified example and assumes English details exist.
-     * A real implementation would handle missing details and potentially
-     * fetch details for a configurable language.
+     * Maps a SQLDelight generated SelectWordItemsForLanguage object to a UiWordItem.
      */
-    fun getAllWordsWithEnglishDetails(): List<WordItem> {
-        // This requires a join or fetching separately and combining.
-        // SQLDelight supports joins in .sq files for more efficient queries.
-        // For simplicity here, we'll fetch words and then details (less efficient).
-
-        val words = wordQueries.selectAll().executeAsList()
-        val wordItems = mutableListOf<WordItem>()
-
-        words.forEach { dbWord ->
-            val englishDetail = wordDetailQueries.selectDetailForWordAndLanguage(
-                word_id = dbWord.id,
-                language_code = "en" // Assuming 'en' for English
-            ).executeAsOneOrNull() // Get the single English detail or null
-
-            // Map database entities to your UI WordItem model
-            val wordItem = WordItem(
-                id = dbWord.id,
-                title = dbWord.text,
-                pronunciation = englishDetail?.pronunciation ?: "", // Handle nullable fields
-                explanation = englishDetail?.explanation ?: "",
-                rating = englishDetail?.review_progress ?: 0,
-                sentences = englishDetail?.sentences?.split(";")?.filter { it.isNotBlank() } ?: emptyList(), // Convert String to List
-                languageCode = "en", // This WordItem represents English details
-                wordDetailId = englishDetail?.id
-            )
-            wordItems.add(wordItem)
-        }
-
-        return wordItems
+    private fun SelectWordItemsForLanguage.toUiWordItem(): WordItemUI {
+        return WordItemUI(
+            id = this.id, // word.id
+            title = this.title, // word.text
+            pronunciation = this.pronunciation ?: "", // Handle nullable
+            explanation = this.explanation ?: "", // Handle nullable
+            rating = this.review_progress, // Maps to review_progress
+            sentences = this.sentences?.split(";")?.filter { it.isNotBlank() } ?: emptyList() // Convert String to List
+        )
     }
 
     /**
-     * Example: Insert a new word and its details for a specific language.
-     * This is a simplified example. A real implementation might first check
-     * if the word exists, insert it if not, and then insert/update the detail.
+     * Get all word items with details for a specific language, mapped for UI display.
+     *
+     * @param languageCode The language code (e.g., "en", "ja", "zh").
+     * @return A list of UiWordItem objects.
      */
-    fun insertWordWithDetail(wordItem: WordItem) {
-        database.transaction { // Use transaction for multiple inserts/updates
-            // Insert the core word. Handle potential UNIQUE constraint violation if word already exists.
-            // A better approach might be to select by text first.
-            wordQueries.insertWord(
-                text = wordItem.title,
-                create_at = System.currentTimeMillis() // Use current time
-            )
+    fun getWordItemsForLanguage(languageCode: String): List<WordItemUI> {
+        // Use the new SQLDelight query and map results to UiWordItem
+        return wordDetailQueries.selectWordItemsForLanguage(languageCode)
+            .executeAsList()
+            .map { it.toUiWordItem() }
+    }
 
-            // Get the ID of the newly inserted word
-            val wordId = wordQueries.selectByText(wordItem.title).executeAsOne().id
+    /**
+     * Saves word details for a specific language.
+     * Inserts the core word if it doesn't exist, then inserts or updates the word detail.
+     *
+     * @param title The main word or phrase.
+     * @param languageCode The language code for the details.
+     * @param explanation Optional explanation.
+     * @param sentences List of example sentences.
+     * @param pronunciation Optional pronunciation guide.
+     * @param rating Review progress rating.
+     */
+    fun saveWordDetails(
+        title: String,
+        languageCode: String,
+        explanation: String?,
+        sentences: List<String>,
+        pronunciation: String?,
+        rating: Long
+    ) {
+        database.transaction {
+            // Check if the word already exists
+            val existingWord = wordQueries.selectByText(title).executeAsOneOrNull()
 
-            // Insert the word detail for the specific language
-            wordDetailQueries.insertDetail(
+            val wordId = if (existingWord == null) {
+                // Insert the core word if it doesn't exist
+                wordQueries.insertWord(
+                    text = title,
+                    create_at = System.currentTimeMillis()
+                )
+                // Get the ID of the newly inserted word
+                wordQueries.selectByText(title).executeAsOne().id
+            } else {
+                // Use the ID of the existing word
+                existingWord.id
+            }
+
+            // Check if detail for this language already exists for this word
+            val existingDetail = wordDetailQueries.selectDetailForWordAndLanguage(
                 word_id = wordId,
-                language_code = wordItem.languageCode,
-                explanation = wordItem.explanation,
-                sentences = wordItem.sentences.joinToString(";"), // Convert List to String
-                related_words = null, // Assuming related_words is not in WordItem yet
-                pronunciation = wordItem.pronunciation,
-                last_review_at = null, // Set initial review time
-                review_progress = wordItem.rating
-            )
+                language_code = languageCode
+            ).executeAsOneOrNull()
+
+            if (existingDetail == null) {
+                // Insert new word detail
+                wordDetailQueries.insertDetail(
+                    word_id = wordId,
+                    language_code = languageCode,
+                    explanation = explanation,
+                    sentences = sentences.joinToString(";"), // Convert List to String
+                    related_words = null, // Assuming related_words is not handled here yet
+                    pronunciation = pronunciation,
+                    last_review_at = System.currentTimeMillis(), // Set initial review time
+                    review_progress = rating
+                )
+            } else {
+                // Update existing word detail
+                wordDetailQueries.updateDetail(
+                    explanation = explanation,
+                    sentences = sentences.joinToString(";"),
+                    related_words = existingDetail.related_words, // Keep existing related words if not updated
+                    pronunciation = pronunciation,
+                    last_review_at = System.currentTimeMillis(), // Update review time on save
+                    review_progress = rating,
+                    id = existingDetail.id // Update by detail ID
+                )
+            }
         }
     }
 
+    // The old insertWordWithDetail method is replaced by saveWordDetails
+    // You can remove or refactor the old method if it's no longer needed.
+    // For now, I've replaced its logic with the new saveWordDetails function.
+
     // TODO: Add methods for:
-    // - getWordById(id: Long): dbWord?
-    // - getWordDetailById(id: Long): wordDetail?
-    // - getWordDetailForWordAndLanguage(wordId: Long, languageCode: String): wordDetail?
-    // - updateWordDetail(wordDetail: wordDetail)
-    // - deleteWordById(id: Long) (ON DELETE CASCADE handles details)
+    // - getWordById(id: Long): word? (SQLDelight generated)
+    // - getWordDetailById(id: Long): wordDetail? (SQLDelight generated)
+    // - getWordDetailForWordAndLanguage(wordId: Long, languageCode: String): wordDetail? (SQLDelight generated)
+    // - deleteWordById(id: Long)
     // - deleteWordDetailById(id: Long)
-    // - Mapping functions (dbWord + wordDetail -> WordItem, WordItem -> dbWord + wordDetail)
+    // - Mapping functions (SelectWordItemsForLanguage -> UiWordItem) - Added as private extension function
 }

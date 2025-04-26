@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import com.crossevol.wordbook.data.ApiKeyConfigRepository // Import repository
 import com.crossevol.wordbook.data.api.WordFetchApi // Import API client
 import com.crossevol.wordbook.data.SettingsRepository // Import SettingsRepository
-import com.crossevol.wordbook.data.model.WordItem
+import com.crossevol.wordbook.data.model.WordItemUI
 import com.crossevol.wordbook.db.AppDatabase
 import com.crossevol.wordbook.db.createDatabase
 import com.crossevol.wordbook.db.initializeDatabase // Import initializer
@@ -39,8 +39,8 @@ private val logger = KotlinLogging.logger {} // Add logger instance
 // Define screen states for navigation
 sealed class Screen {
     object Home : Screen()
-    data class Detail(val word: WordItem) : Screen()
-    data class Review(val word: WordItem) : Screen()
+    data class Detail(val word: WordItemUI) : Screen()
+    data class Review(val word: WordItemUI) : Screen()
     object Settings : Screen()
     object EditProfile : Screen()
     object ApiKeyList : Screen()

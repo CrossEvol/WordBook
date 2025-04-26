@@ -1,6 +1,5 @@
 package com.crossevol.wordbook.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.crossevol.wordbook.data.model.WordItem
+import com.crossevol.wordbook.data.model.WordItemUI
 import com.crossevol.wordbook.ui.components.SimpleActionSheet // Import the action sheet
 import com.crossevol.wordbook.ui.components.sampleWordItem // Import sample data
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -32,7 +31,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WordReviewPage(
-    wordItem: WordItem,
+    wordItem: WordItemUI,
     onAction: () -> Unit, // Single callback for any action sheet dismissal
     onBack: () -> Unit   // Separate callback for explicit back navigation
 ) {

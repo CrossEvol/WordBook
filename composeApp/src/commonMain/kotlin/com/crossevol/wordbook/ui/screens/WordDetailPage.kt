@@ -30,7 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.crossevol.wordbook.data.model.WordItem
+import com.crossevol.wordbook.data.model.WordItemUI
 import com.crossevol.wordbook.ui.components.sampleWordItem // For preview
 import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -47,7 +47,7 @@ private val logger = KotlinLogging.logger {} // Add logger instance
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WordDetailPage(
-    wordItem: WordItem,
+    wordItem: WordItemUI,
     onBack: () -> Unit
 ) {
     Scaffold(

@@ -51,3 +51,16 @@ DELETE FROM wordDetail WHERE id = ?;
 
 deleteDetailsForWord:
 DELETE FROM wordDetail WHERE word_id = ?;
+
+-- Query to select word items with details for a specific language, mapped for UI display
+selectWordItemsForLanguage:
+SELECT
+    w.id AS id,
+    w.text AS title,
+    wd.explanation,
+    wd.sentences,
+    wd.pronunciation,
+    wd.review_progress
+FROM wordDetail AS wd
+JOIN word AS w ON w.id = wd.word_id
+WHERE wd.language_code = ?;

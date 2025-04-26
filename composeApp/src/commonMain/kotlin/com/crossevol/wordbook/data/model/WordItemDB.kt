@@ -12,7 +12,7 @@ package com.crossevol.wordbook.data.model
  * @property languageCode The language code for the details (e.g., "en", "ja", "zh").
  * @property wordDetailId Unique identifier for the specific word detail entry (can be null if detail doesn't exist).
  */
-data class WordItem(
+data class WordItemDB(
     val id: Long, // Assuming a Long ID from the database (core word ID)
     val title: String,
     val pronunciation: String,
