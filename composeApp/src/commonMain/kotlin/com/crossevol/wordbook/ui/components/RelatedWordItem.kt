@@ -8,10 +8,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.crossevol.wordbook.data.mock.sampleWordListZH
-import com.crossevol.wordbook.data.model.FilterOption
-import com.crossevol.wordbook.ui.screens.WordList
-import de.drick.compose.hotpreview.HotPreview
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
@@ -37,7 +33,7 @@ fun RelatedWordItem(
     )
 }
 
-@HotPreview
+@Preview
 @Composable
 fun RelatedWordItemPreview() {
     MaterialTheme {

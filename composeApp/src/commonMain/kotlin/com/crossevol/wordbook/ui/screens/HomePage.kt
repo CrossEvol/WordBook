@@ -45,7 +45,6 @@ import com.crossevol.wordbook.data.mock.sampleWordListEN
 import com.crossevol.wordbook.data.mock.sampleWordListJA
 import com.crossevol.wordbook.data.mock.sampleWordListZH
 import com.crossevol.wordbook.data.model.WordItemUI
-import de.drick.compose.hotpreview.HotPreview
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {} // Add logger instance

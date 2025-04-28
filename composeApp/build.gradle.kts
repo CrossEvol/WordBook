@@ -70,8 +70,6 @@ kotlin {
             // SLF4J Simple Provider for common logging output (Console/Logcat)
             implementation(libs.slf4j.simple) // Added slf4j-simple provider
 
-            // Common hotpreview dependency
-            implementation(libs.hotpreview)
             // Removed: implementation(libs.compose.hotpreview.jvm) // Moved to desktopMain
         }
         desktopMain.dependencies {
@@ -80,8 +78,6 @@ kotlin {
             implementation(libs.ktor.client.okhttp) // Ensure Ktor OkHttp is here
             implementation(libs.sqldelight.sqlite.driver)
 
-            // Desktop-specific hotpreview dependency
-            implementation(libs.compose.hotpreview.jvm)
         }
     }
 }
