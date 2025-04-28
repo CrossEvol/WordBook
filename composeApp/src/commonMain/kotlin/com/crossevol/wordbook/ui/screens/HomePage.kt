@@ -45,20 +45,36 @@ import com.crossevol.wordbook.data.mock.sampleWordListEN
 import com.crossevol.wordbook.data.mock.sampleWordListJA
 import com.crossevol.wordbook.data.mock.sampleWordListZH
 import com.crossevol.wordbook.data.model.WordItemUI
+import de.drick.compose.hotpreview.HotPreview
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {} // Add logger instance
 
 
-
 // Data class to represent bottom navigation items
-data class BottomNavItem(val label: String, val icon: ImageVector, val route: String)
+data class BottomNavItem(
+    val label: String,
+    val icon: ImageVector,
+    val route: String
+)
 
 // Define bottom navigation items
 val bottomNavItems = listOf(
-    BottomNavItem("Browse", Icons.Filled.Home, "home"),
-    BottomNavItem("Review", Icons.Filled.Notifications, "review"), // Placeholder icon
-    BottomNavItem("Settings", Icons.Filled.Settings, "settings")
+    BottomNavItem(
+        "Browse",
+        Icons.Filled.Home,
+        "home"
+    ),
+    BottomNavItem(
+        "Review",
+        Icons.Filled.Notifications,
+        "review"
+    ), // Placeholder icon
+    BottomNavItem(
+        "Settings",
+        Icons.Filled.Settings,
+        "settings"
+    )
 )
 
 
@@ -100,7 +116,10 @@ fun HomePage(
     var wordsToDisplay by remember { mutableStateOf<List<WordItemUI>>(emptyList()) }
 
     // Fetch words when locale or repository changes
-    LaunchedEffect(currentLocale, wordRepository) {
+    LaunchedEffect(
+        currentLocale,
+        wordRepository
+    ) {
         if (wordRepository != null) {
             logger.debug { "HomePage: Fetching words for locale: $currentLocale" }
             wordsToDisplay = wordRepository.getWordItemsForLanguage(currentLocale)
@@ -131,11 +150,11 @@ fun HomePage(
                 }
                 // If all individuals are selected, maybe switch to ALL? (Optional enhancement)
                 // If no individuals are selected, maybe switch to NONE? (Optional enhancement)
-                 if (currentFilters.isEmpty()) setOf(FilterOption.NONE) else currentFilters // Default to NONE if empty
+                if (currentFilters.isEmpty()) setOf(FilterOption.NONE) else currentFilters // Default to NONE if empty
             }
         }
-         // Close the menu after selection? Maybe not, allow multiple toggles.
-         // showFilterMenu = false
+        // Close the menu after selection? Maybe not, allow multiple toggles.
+        // showFilterMenu = false
     }
 
 
@@ -177,7 +196,8 @@ fun HomePage(
                             )
                             DropdownMenuItem(
                                 text = { Text("中文 (ZH)") },
-                                onClick = { settingsRepository?.setLocale("ZH") // Save to settings
+                                onClick = {
+                                    settingsRepository?.setLocale("ZH") // Save to settings
                                     currentLocale = "ZH" // Update local state
                                     showLocaleMenu = false
                                     // TODO: Implement actual locale change logic if needed elsewhere
@@ -218,7 +238,12 @@ fun HomePage(
             ) {
                 bottomNavItems.forEachIndexed { index, item ->
                     NavigationBarItem(
-                        icon = { Icon(item.icon, contentDescription = item.label) },
+                        icon = {
+                            Icon(
+                                item.icon,
+                                contentDescription = item.label
+                            )
+                        },
                         label = { Text(item.label) },
                         selected = selectedItemIndex == index,
                         onClick = {
@@ -243,7 +268,10 @@ fun HomePage(
                 containerColor = MaterialTheme.colorScheme.secondary, // Example color
                 contentColor = MaterialTheme.colorScheme.onSecondary
             ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add new word")
+                Icon(
+                    Icons.Filled.Add,
+                    contentDescription = "Add new word"
+                )
             }
         }
     ) { innerPadding ->
@@ -278,7 +306,9 @@ fun WordList(
     modifier: Modifier = Modifier
 ) {
     LazyColumn(modifier = modifier) {
-        items(words, key = { it.id }) { word -> // Use word id as key for better performance
+        items(
+            words,
+            key = { it.id }) { word -> // Use word id as key for better performance
             WordListItem(
                 item = word,
                 visibleFilters = visibleFilters, // Pass the selected filters

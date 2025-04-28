@@ -26,11 +26,18 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.sqldelight.android.driver)
+            // Moved Android-specific dependencies here from the removed block
+            implementation(libs.androidx.material3.android)
+            implementation(libs.androidx.foundation.layout.android)
+            implementation(libs.androidx.ui.android)
+            implementation(libs.androidx.ui.tooling.preview.android)
+            implementation(compose.uiTooling)
+            implementation(libs.ktor.client.android) // Ensure Ktor Android is here
         }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(compose.material)
+            implementation(compose.material) // This is Compose Material 2, keep if needed, otherwise remove
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
@@ -40,13 +47,14 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.androidx.lifecycle.viewmodel.compose) // Added dependency for getViewModel
 
+            // Common Material 3 dependency (correct for common code)
             implementation(libs.androidx.material3)
-            implementation(libs.androidx.material3.android)
+            // Removed: implementation(libs.androidx.material3.android) // This was the problem!
 
             // Kotlinx Serialization
             implementation(libs.kotlinx.serialization.json)
 
-            // Ktor
+            // Ktor common
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
@@ -61,16 +69,19 @@ kotlin {
             implementation(libs.kotlin.logging)
             // SLF4J Simple Provider for common logging output (Console/Logcat)
             implementation(libs.slf4j.simple) // Added slf4j-simple provider
+
+            // Common hotpreview dependency
+            implementation(libs.hotpreview)
+            // Removed: implementation(libs.compose.hotpreview.jvm) // Moved to desktopMain
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.ktor.client.okhttp)
+            implementation(libs.ktor.client.okhttp) // Ensure Ktor OkHttp is here
             implementation(libs.sqldelight.sqlite.driver)
-        }
 
-        androidMain.dependencies {
-            implementation(libs.ktor.client.android)
+            // Desktop-specific hotpreview dependency
+            implementation(libs.compose.hotpreview.jvm)
         }
     }
 }
@@ -110,13 +121,19 @@ android {
     }
 }
 
+// Removed the redundant dependencies block here
+/*
 dependencies {
     implementation(libs.androidx.material3.android)
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.ui.android)
     implementation(libs.androidx.ui.tooling.preview.android)
     debugImplementation(compose.uiTooling)
+    // https://mvnrepository.com/artifact/de.drick.compose/hotpreview
+    implementation(libs.hotpreview)
 }
+*/
+
 
 compose.desktop {
     application {

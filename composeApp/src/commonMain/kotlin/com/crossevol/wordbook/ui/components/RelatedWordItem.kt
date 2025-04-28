@@ -8,6 +8,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.crossevol.wordbook.data.mock.sampleWordListZH
+import com.crossevol.wordbook.data.model.FilterOption
+import com.crossevol.wordbook.ui.screens.WordList
+import de.drick.compose.hotpreview.HotPreview
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
  * A simpler styled item for displaying a related word.
@@ -25,6 +30,21 @@ fun RelatedWordItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 4.dp) // Add padding
+            .padding(
+                horizontal = 16.dp,
+                vertical = 4.dp
+            ) // Add padding
     )
 }
+
+@HotPreview
+@Composable
+fun RelatedWordItemPreview() {
+    MaterialTheme {
+        RelatedWordItem(
+            text = "abc",
+            onClick = {},
+        )
+    }
+}
+
