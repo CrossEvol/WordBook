@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.crossevol.wordbook.data.mock.sampleWordItem
 import com.crossevol.wordbook.data.model.WordItemUI
+import com.crossevol.wordbook.ui.components.RelatedWordItem // Import RelatedWordItem
 import com.crossevol.wordbook.ui.components.SimpleActionSheet // Import the action sheet
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -98,6 +99,25 @@ fun WordReviewPage(
                         SentenceItemReview(text = sentence)
                     }
                 }
+                Spacer(modifier = Modifier.height(24.dp)) // Add space before Related Words
+
+                // Related Words Label
+                Text(
+                    text = "Related Words",
+                    style = MaterialTheme.typography.titleMedium, // Match Sentences label style
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Related Words List
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) { // Slightly less space than sentences
+                    wordItem.relatedWords.forEach { relatedWord ->
+                        // Use the standard RelatedWordItem, clicks are blocked by the overlay
+                        RelatedWordItem(text = relatedWord) {
+                            // Click handler is present but won't be triggered due to overlay
+                        }
+                    }
+                }
             }
         }
 
@@ -165,7 +185,8 @@ fun WordReviewPagePreview() {
     MaterialTheme {
         WordReviewPage(
             wordItem = sampleWordItem.copy(
-                sentences = listOf("First sentence.", "Second sentence.")
+                sentences = listOf("First sentence.", "Second sentence."),
+                relatedWords = listOf("Related A", "Related B")
             ),
             onAction = {},
             onBack = {}

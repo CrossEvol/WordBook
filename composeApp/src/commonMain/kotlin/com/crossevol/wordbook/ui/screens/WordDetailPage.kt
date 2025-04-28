@@ -32,6 +32,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.crossevol.wordbook.data.mock.sampleWordItem
 import com.crossevol.wordbook.data.model.WordItemUI
+import com.crossevol.wordbook.ui.components.RelatedWordItem // Import RelatedWordItem
+import com.crossevol.wordbook.ui.components.SentenceItem // Import SentenceItem
 import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -123,46 +125,25 @@ fun WordDetailPage(
                     }
                 }
             }
-        }
-    }
-}
+            Spacer(modifier = Modifier.height(24.dp)) // Add space before Related Words
 
-/**
- * A styled item for displaying a sentence, matching the design.
- */
-@Composable
-fun SentenceItem(
-    text: String,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(8.dp), // Rounded corners
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f) // Light background
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // No shadow
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween // Push arrow to the end
-        ) {
+            // Related Words Label
             Text(
-                text = text,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f) // Allow text to take space
+                text = "Related Words",
+                style = MaterialTheme.typography.titleMedium, // Match Sentences label style
+                fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "View sentence detail", // Accessibility
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Related Words List
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) { // Slightly less space than sentences
+                wordItem.relatedWords.forEach { relatedWord ->
+                    RelatedWordItem(text = relatedWord) {
+                        // Handle related word click if needed
+                        logger.debug { "Related Word clicked: $relatedWord" }
+                    }
+                }
+            }
         }
     }
 }
@@ -178,6 +159,11 @@ fun WordDetailPagePreview() {
                     sentences = listOf(
                         "First sentence example.",
                         "Second sentence which might be a bit longer to see how it wraps."
+                    ),
+                    relatedWords = listOf(
+                        "Related 1",
+                        "Related 2",
+                        "Related 3"
                     )
                 ),
                 onBack = {}

@@ -8,6 +8,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ExposedDropdownMenuBox
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Refresh // Use Refresh icon for reset
 import androidx.compose.material.icons.filled.Search
@@ -20,9 +21,13 @@ import androidx.compose.ui.unit.dp
 import com.crossevol.wordbook.data.ApiKeyConfigRepository // Import the real repository
 import com.crossevol.wordbook.data.api.WordFetchApi
 import com.crossevol.wordbook.data.api.WordFetchResultJson // Import the data class
+import com.crossevol.wordbook.ui.components.RelatedWordItem // Import RelatedWordItem
+import com.crossevol.wordbook.ui.components.SentenceItem // Import SentenceItem
 import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel // Import ViewModel
 import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.foundation.shape.RoundedCornerShape
+
 
 private val logger = KotlinLogging.logger {} // Add logger instance
 
@@ -240,7 +245,7 @@ fun WordFetchPage(
         AlertDialog(
             onDismissRequest = { viewModel.dismissErrorDialog() },
             title = { Text("Error") },
-            text = { Text(errorMessage!!) },
+            text = { Text(errorMessage) },
             confirmButton = {
                 Button(onClick = { viewModel.dismissErrorDialog() }) {
                     Text("OK")
@@ -310,7 +315,25 @@ fun EnglishContent(result: WordFetchResultJson) {
                 }
             }
         }
-        // TODO: Add Related Words if needed
+        Spacer(modifier = Modifier.height(24.dp)) // Add space before Related Words
+
+        // Related Words Label
+        Text(
+            text = "Related Words",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Related Words List
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) { // Slightly less space than sentences
+            result.getEnRelatedWordsList().forEach { relatedWord ->
+                RelatedWordItem(text = relatedWord) {
+                    // Handle related word click if needed
+                    logger.debug { "EN Related Word clicked: $relatedWord" }
+                }
+            }
+        }
     }
 }
 
@@ -372,7 +395,25 @@ fun JapaneseContent(result: WordFetchResultJson) {
                 }
             }
         }
-        // TODO: Add Related Words if needed
+        Spacer(modifier = Modifier.height(24.dp)) // Add space before Related Words
+
+        // Related Words Label
+        Text(
+            text = "Related Words",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Related Words List
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) { // Slightly less space than sentences
+            result.getJaRelatedWordsList().forEach { relatedWord ->
+                RelatedWordItem(text = relatedWord) {
+                    // Handle related word click if needed
+                    logger.debug { "JA Related Word clicked: $relatedWord" }
+                }
+            }
+        }
     }
 }
 
@@ -386,7 +427,7 @@ fun ChineseContent(result: WordFetchResultJson) {
             color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(4.dp))
-        
+
         // Pronunciation
         Text(
             text = result.zhPronunciation,
@@ -434,7 +475,25 @@ fun ChineseContent(result: WordFetchResultJson) {
                 }
             }
         }
-        // TODO: Add Related Words if needed
+        Spacer(modifier = Modifier.height(24.dp)) // Add space before Related Words
+
+        // Related Words Label
+        Text(
+            text = "Related Words",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Related Words List
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) { // Slightly less space than sentences
+            result.getZhRelatedWordsList().forEach { relatedWord ->
+                RelatedWordItem(text = relatedWord) {
+                    // Handle related word click if needed
+                    logger.debug { "ZH Related Word clicked: $relatedWord" }
+                }
+            }
+        }
     }
 }
 
