@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Refresh // Use Refresh icon for reset
+import androidx.compose.material.icons.filled.Save // Import Save icon
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -78,6 +79,17 @@ fun WordFetchPage(
                     }
                 },
             )
+        },
+        floatingActionButton = {
+            // Show FAB only when content is fetched
+            if (showFetchedContent) {
+                FloatingActionButton(onClick = {
+                    // TODO: Implement save functionality
+                    logger.debug { "Save FAB clicked" }
+                }) {
+                    Icon(Icons.Filled.Save, "Save Word")
+                }
+            }
         }
     ) { innerPadding ->
         Column(
