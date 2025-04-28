@@ -26,7 +26,8 @@ mvvmCore = "0.16.1"
 slf4jSimple = "2.0.13"
 sqldelight = "2.0.2"
 foundationLayoutAndroid = "1.8.0"
-uiAndroid = "1.8.0" # Added SQLDelight version
+uiAndroid = "1.8.0"
+uiToolingPreviewAndroid = "1.8.0" # Added SQLDelight version
 
 [libraries]
 androidx-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3Android" }
@@ -55,13 +56,13 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatform-settings" } # Added multiplatform-settings library
 lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "lifecycleViewmodel" }
 mvvm-compose = { module = "dev.icerock.moko:mvvm-compose", version.ref = "mvvmCore" }
-mvvm-core = { module = "dev.icerock.moko:mvvm-core", version.ref = "mvvmCore" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4jSimple" }
 sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" } # Added SQLDelight runtime
 sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" } # Added Android driver
 sqldelight-sqlite-driver = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
 androidx-foundation-layout-android = { group = "androidx.compose.foundation", name = "foundation-layout-android", version.ref = "foundationLayoutAndroid" }
-androidx-ui-android = { group = "androidx.compose.ui", name = "ui-android", version.ref = "uiAndroid" } # Added JVM/Desktop driver
+androidx-ui-android = { group = "androidx.compose.ui", name = "ui-android", version.ref = "uiAndroid" }
+androidx-ui-tooling-preview-android = { group = "androidx.compose.ui", name = "ui-tooling-preview-android", version.ref = "uiToolingPreviewAndroid" } # Added JVM/Desktop driver
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

@@ -1,33 +1,60 @@
 package com.crossevol.wordbook.ui.screens
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ExposedDropdownMenuBox
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Refresh // Use Refresh icon for reset
-import androidx.compose.material.icons.filled.Save // Import Save icon
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.crossevol.wordbook.data.ApiKeyConfigRepository // Import the real repository
+import com.crossevol.wordbook.data.ApiKeyConfigRepository
 import com.crossevol.wordbook.data.api.WordFetchApi
-import com.crossevol.wordbook.data.api.WordFetchResultJson // Import the data class
-import com.crossevol.wordbook.ui.components.RelatedWordItem // Import RelatedWordItem
-import com.crossevol.wordbook.ui.components.SentenceItem // Import SentenceItem
-import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel // Import ViewModel
-import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
+import com.crossevol.wordbook.data.api.WordFetchResultJson
+import com.crossevol.wordbook.ui.components.RelatedWordItem
+import com.crossevol.wordbook.ui.components.SentenceItem
+import com.crossevol.wordbook.ui.svgicons.MyIconPack
+import com.crossevol.wordbook.ui.svgicons.myiconpack.Save
+import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import androidx.compose.foundation.shape.RoundedCornerShape
 
 
 private val logger = KotlinLogging.logger {} // Add logger instance
@@ -87,7 +114,7 @@ fun WordFetchPage(
                     // TODO: Implement save functionality
                     logger.debug { "Save FAB clicked" }
                 }) {
-                    Icon(Icons.Filled.Save, "Save Word")
+                    Icon(MyIconPack.Save, "Save Word")
                 }
             }
         }
