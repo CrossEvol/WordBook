@@ -22,6 +22,7 @@ import androidx.compose.material3.NavigationBar // Use NavigationBar for M3 bott
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -86,6 +87,7 @@ val bottomNavItems = listOf(
 fun HomePage(
     settingsRepository: SettingsRepository?, // Accept SettingsRepository
     wordRepository: WordRepository?, // Inject WordRepository (make nullable for previews)
+    snackbarHostState: SnackbarHostState, // Accept SnackbarHostState
     // words: List<WordItemUI> = sampleWordList, // Removed hardcoded sample list
     // onFilterClick: () -> Unit = {}, // Filter click is handled internally now
     onWordItemClick: (WordItemUI) -> Unit, // Changed: Make this non-optional for navigation
@@ -323,12 +325,15 @@ fun WordList(
 @Composable
 fun HomePagePreview() {
     MaterialTheme { // Ensure MaterialTheme is applied for preview
+        val dummySnackbarHostState = SnackbarHostState() // Create mock SnackbarHostState
+
         // Provide dummy lambda, null settings repo, and null word repo for preview.
         // The LaunchedEffect won't run with a null repo in preview.
         // The WordList call inside HomePage is modified to show sample EN data in this case.
         HomePage(
             settingsRepository = null,
             wordRepository = null, // Pass null for preview
+            snackbarHostState = dummySnackbarHostState,
             onWordItemClick = {}
         )
     }

@@ -31,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -57,6 +58,8 @@ import com.crossevol.wordbook.ui.svgicons.myiconpack.Save
 import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.LaunchedEffect // Import LaunchedEffect
+import kotlinx.coroutines.flow.collectLatest // Import collectLatest
 
 
 private val logger = KotlinLogging.logger {} // Add logger instance
@@ -69,6 +72,7 @@ private val logger = KotlinLogging.logger {} // Add logger instance
 @Composable
 fun WordFetchPage(
     viewModel: WordFetchViewModel, // Accept ViewModel as parameter
+    snackbarHostState: SnackbarHostState, // Accept SnackbarHostState
     onBack: () -> Unit,
 ) {
     // Observe state from ViewModel
@@ -92,6 +96,14 @@ fun WordFetchPage(
 
     // Determine if there are unsaved changes
     val hasUnsavedChanges = showFetchedContent && !isResultSaved
+
+    // Collect Snackbar events from the ViewModel
+    LaunchedEffect(viewModel.snackbarEvent) {
+        viewModel.snackbarEvent.collectLatest { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
 
     Scaffold(
         topBar = {
@@ -204,33 +216,6 @@ fun WordFetchPage(
                             }
                         )
                     }
- 
-                    // Confirmation Dialog for Back Navigation
-                    if (showConfirmBackDialog) {
-                        AlertDialog(
-                            onDismissRequest = { showConfirmBackDialog = false }, // Dismiss on outside click or back press
-                            title = { Text("Unsaved Changes") },
-                            text = { Text("Do you want to save the fetched word before leaving?") },
-                            confirmButton = {
-                                Button(onClick = {
-                                    viewModel.saveFetchedWord() // Attempt to save
-                                    // Ideally, wait for save to finish, but for simplicity now:
-                                    showConfirmBackDialog = false
-                                    onBack() // Navigate back after initiating save
-                                }) {
-                                    Text("Save")
-                                }
-                            },
-                            dismissButton = {
-                                Button(onClick = {
-                                    showConfirmBackDialog = false
-                                    onBack() // Discard changes and navigate back
-                                }) {
-                                    Text("Discard")
-                                }
-                            }
-                        )
-                    }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -337,6 +322,36 @@ fun WordFetchPage(
             confirmButton = {
                 Button(onClick = { viewModel.dismissErrorDialog() }) {
                     Text("OK")
+                }
+            }
+        )
+    }
+
+    // Confirmation Dialog for Back Navigation
+    if (showConfirmBackDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmBackDialog = false }, // Dismiss on outside click or back press
+            title = { Text("Unsaved Changes") },
+            text = { Text("Do you want to save the fetched word before leaving?") },
+            confirmButton = {
+                Button(onClick = {
+                    // Trigger save and then navigate back
+                    viewModel.saveFetchedWord()
+                    showConfirmBackDialog = false // Dismiss dialog immediately
+                    // Navigation back will happen after save completes and updates isResultSaved,
+                    // or you might need a separate mechanism if navigation should wait for save completion.
+                    // For now, let's navigate back immediately after triggering save.
+                    onBack()
+                }) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    showConfirmBackDialog = false
+                    onBack() // Discard changes and navigate back
+                }) {
+                    Text("Discard")
                 }
             }
         )
@@ -609,7 +624,7 @@ private class MockApiKeyConfigRepository : ApiKeyConfigRepository(
     override fun deleteApiKeyConfigById(id: Long) {}
     override fun countConfigs(): Long = getAllApiKeyConfigs().size.toLong()
 }
- 
+
 // --- Mock WordRepository for Previews ---
 // Needed because WordFetchViewModel now depends on it.
 private class MockWordRepository : WordRepository(database = null!!) { // Use null!! for mocking
@@ -627,7 +642,8 @@ private class MockWordRepository : WordRepository(database = null!!) { // Use nu
     }
     // Implement other methods if needed by previews, otherwise leave empty or throw
 }
- 
+
+
 // --- Previews ---
 
 @Preview
@@ -644,11 +660,14 @@ fun WordFetchPagePreview_Initial() {
                 apiKeyConfigRepository = dummyRepo,
                 wordRepository = dummyWordRepo // Pass mock word repo
             )
+            val dummySnackbarHostState = SnackbarHostState() // Create mock SnackbarHostState
+
             // Set initial state explicitly for preview if needed, though default is initial
             dummyViewModel.resetPage()
 
             WordFetchPage(
                 viewModel = dummyViewModel,
+                snackbarHostState = dummySnackbarHostState, // Pass mock SnackbarHostState
                 onBack = {}
             )
         }
@@ -669,12 +688,15 @@ fun WordFetchPagePreview_Loading() {
                 apiKeyConfigRepository = dummyRepo,
                 wordRepository = dummyWordRepo // Pass mock word repo
             )
+            val dummySnackbarHostState = SnackbarHostState() // Create mock SnackbarHostState
+
             // Simulate loading state
             dummyViewModel.isLoading = true
             dummyViewModel.onSearchQueryChange("test")
 
             WordFetchPage(
                 viewModel = dummyViewModel,
+                snackbarHostState = dummySnackbarHostState, // Pass mock SnackbarHostState
                 onBack = {}
             )
         }
@@ -696,6 +718,8 @@ fun WordFetchPagePreview_Success() {
                 apiKeyConfigRepository = dummyRepo,
                 wordRepository = dummyWordRepo // Pass mock word repo
             )
+            val dummySnackbarHostState = SnackbarHostState() // Create mock SnackbarHostState
+
             // Simulate success state with dummy data
             dummyViewModel.fetchedResult = WordFetchResultJson(
                 text = "热情",
@@ -717,6 +741,7 @@ fun WordFetchPagePreview_Success() {
 
             WordFetchPage(
                 viewModel = dummyViewModel,
+                snackbarHostState = dummySnackbarHostState, // Pass mock SnackbarHostState
                 onBack = {}
             )
         }
@@ -737,12 +762,15 @@ fun WordFetchPagePreview_Error() {
                 apiKeyConfigRepository = dummyRepo,
                 wordRepository = dummyWordRepo // Pass mock word repo
             )
+            val dummySnackbarHostState = SnackbarHostState() // Create mock SnackbarHostState
+
             // Simulate error state
             dummyViewModel.errorMessage = "Failed to connect to the API."
             dummyViewModel.onSearchQueryChange("test")
 
             WordFetchPage(
                 viewModel = dummyViewModel,
+                snackbarHostState = dummySnackbarHostState, // Pass mock SnackbarHostState
                 onBack = {}
             )
         }

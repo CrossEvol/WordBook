@@ -13,6 +13,8 @@ import com.crossevol.wordbook.data.api.WordFetchApi // Dependency on the API cli
 import com.crossevol.wordbook.data.api.WordFetchResultJson
 import com.crossevol.wordbook.data.WordRepository // Import WordRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableStateOf // Ensure correct import
 
@@ -52,6 +54,10 @@ class WordFetchViewModel(
     // State to track if a save operation is in progress
     var isSaving by mutableStateOf(false)
         private set // Only ViewModel can set this internally
+
+    // Channel for sending one-time events to the UI (like Snackbar messages)
+    private val _snackbarEvent = Channel<String>(Channel.BUFFERED)
+    val snackbarEvent = _snackbarEvent.receiveAsFlow()
 
 
     init {
@@ -170,6 +176,7 @@ class WordFetchViewModel(
         if (wordRepository == null) {
             logger.error { "WordRepository is null. Cannot save word." }
             errorMessage = "Database not available. Cannot save." // Inform user
+            viewModelScope.launch { _snackbarEvent.send("Error: Database not available.") } // Send snackbar event
             return
         }
 
@@ -210,9 +217,12 @@ class WordFetchViewModel(
                 )
                 isResultSaved = true // Mark as saved successfully
                 logger.info { "Successfully saved word: ${result.text}" }
+                _snackbarEvent.send("Word '${result.text}' saved successfully!") // Send success message
+
             } catch (e: Exception) {
                 logger.error(e) { "Failed to save word: ${result.text}" }
                 errorMessage = "Failed to save word. Please try again." // Inform user
+                _snackbarEvent.send("Failed to save word.") // Send error message
             } finally {
                 isSaving = false // Indicate saving process finished (success or fail)
             }
