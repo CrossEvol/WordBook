@@ -94,13 +94,15 @@ fun App(
     // Create API client instance (can be singleton or managed by DI)
     // The API key will now be fetched dynamically in the ViewModel
     val wordFetchApi = remember { WordFetchApi() }
-
+ 
     // Create ViewModel for WordFetchPage, passing the API client and the repository
-    val wordFetchViewModel = remember(wordFetchApi, apiKeyConfigRepository) {
-        // Ensure repository is not null before passing
-        apiKeyConfigRepository?.let { WordFetchViewModel(api = wordFetchApi, apiKeyConfigRepository = it) }
+    val wordFetchViewModel = remember(wordFetchApi, apiKeyConfigRepository, wordRepository) {
+        // Ensure repositories are not null before passing
+        if (apiKeyConfigRepository != null) { // wordRepository can be null for previews
+             WordFetchViewModel(api = wordFetchApi, apiKeyConfigRepository = apiKeyConfigRepository, wordRepository = wordRepository)
+        } else null // Return null if dependencies aren't ready
     }
-
+ 
 
     MaterialTheme {
         when (val screen = currentScreen) {
@@ -243,8 +245,12 @@ fun App(
                         Text("Error: API Key Repository not initialized.")
                     }
                 }
+                // Add a check for wordRepository as well if saving is critical even in error state
+                // else if (wordRepository == null) { ... show different error ... }
             }
-
+ 
+ 
+ 
             is Screen.ApiKeyEdit -> { // Handle the ApiKeyEdit screen state
                 ApiKeyEditingPage(
                     config = screen.config, // Pass the config from the screen state

@@ -8,7 +8,7 @@ import com.crossevol.wordbook.db.SelectWordItemsForLanguage // SQLDelight genera
  * Repository class for interacting with the word and wordDetail tables in the database.
  * Handles mapping between database entities and UI models.
  */
-class WordRepository(private val database: AppDatabase) {
+open class WordRepository(private val database: AppDatabase) {
 
     private val wordQueries = database.wordQueries
     private val wordDetailQueries = database.wordDetailQueries
@@ -53,7 +53,7 @@ class WordRepository(private val database: AppDatabase) {
      * @param relatedWords List of related words.
      * @param rating Review progress rating.
      */
-    fun saveWordDetails(
+    open fun saveWordDetails(
         title: String,
         languageCode: String,
         explanation: String?,

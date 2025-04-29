@@ -42,6 +42,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,7 @@ import com.crossevol.wordbook.data.ApiKeyConfigRepository
 import com.crossevol.wordbook.data.api.WordFetchApi
 import com.crossevol.wordbook.data.api.WordFetchResultJson
 import com.crossevol.wordbook.ui.components.RelatedWordItem
+import com.crossevol.wordbook.data.WordRepository // Import for Mock
 import com.crossevol.wordbook.ui.components.SentenceItem
 import com.crossevol.wordbook.ui.svgicons.MyIconPack
 import com.crossevol.wordbook.ui.svgicons.myiconpack.Save
@@ -60,7 +62,8 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 private val logger = KotlinLogging.logger {} // Add logger instance
 
 @OptIn(
-    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3Api::class, // Keep for Scaffold etc.
+    ExperimentalComposeUiApi::class, // Might be needed for focus or other interactions later
     ExperimentalMaterialApi::class
 )
 @Composable
@@ -75,19 +78,34 @@ fun WordFetchPage(
     val isLoading = viewModel.isLoading
     val fetchedResult = viewModel.fetchedResult
     val errorMessage = viewModel.errorMessage
+    val isResultSaved = viewModel.isResultSaved
+    val isSaving = viewModel.isSaving
 
     // State for dropdown menu
     var isDropdownExpanded by remember { mutableStateOf(false) }
 
+    // State for the confirmation dialog when navigating back
+    var showConfirmBackDialog by remember { mutableStateOf(false) }
+
     // Determine if fetched content should be shown (based on whether result is available)
     val showFetchedContent = fetchedResult != null
+
+    // Determine if there are unsaved changes
+    val hasUnsavedChanges = showFetchedContent && !isResultSaved
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Solicit") }, // Title from image
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = {
+                        // Check for unsaved changes before navigating back
+                        if (hasUnsavedChanges) {
+                            showConfirmBackDialog = true // Show confirmation dialog
+                        } else {
+                            onBack() // Navigate back directly
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
@@ -108,13 +126,17 @@ fun WordFetchPage(
             )
         },
         floatingActionButton = {
-            // Show FAB only when content is fetched
-            if (showFetchedContent) {
-                FloatingActionButton(onClick = {
-                    // TODO: Implement save functionality
-                    logger.debug { "Save FAB clicked" }
-                }) {
-                    Icon(MyIconPack.Save, "Save Word")
+            // Show FAB only when content is fetched AND not yet saved AND not currently saving
+            if (showFetchedContent && !isResultSaved) {
+                FloatingActionButton(
+                    onClick = {
+                        if (!isSaving) { // Prevent multiple clicks while saving
+                            viewModel.saveFetchedWord()
+                        }
+                    },
+                    // Optionally change appearance when saving, but disabling is clearer
+                ) {
+                    Icon(MyIconPack.Save, contentDescription = "Save Word")
                 }
             }
         }
@@ -179,6 +201,33 @@ fun WordFetchPage(
                             onClick = {
                                 viewModel.onModelSelect(option) // Update ViewModel state
                                 isDropdownExpanded = false
+                            }
+                        )
+                    }
+ 
+                    // Confirmation Dialog for Back Navigation
+                    if (showConfirmBackDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showConfirmBackDialog = false }, // Dismiss on outside click or back press
+                            title = { Text("Unsaved Changes") },
+                            text = { Text("Do you want to save the fetched word before leaving?") },
+                            confirmButton = {
+                                Button(onClick = {
+                                    viewModel.saveFetchedWord() // Attempt to save
+                                    // Ideally, wait for save to finish, but for simplicity now:
+                                    showConfirmBackDialog = false
+                                    onBack() // Navigate back after initiating save
+                                }) {
+                                    Text("Save")
+                                }
+                            },
+                            dismissButton = {
+                                Button(onClick = {
+                                    showConfirmBackDialog = false
+                                    onBack() // Discard changes and navigate back
+                                }) {
+                                    Text("Discard")
+                                }
                             }
                         )
                     }
@@ -560,8 +609,25 @@ private class MockApiKeyConfigRepository : ApiKeyConfigRepository(
     override fun deleteApiKeyConfigById(id: Long) {}
     override fun countConfigs(): Long = getAllApiKeyConfigs().size.toLong()
 }
-
-
+ 
+// --- Mock WordRepository for Previews ---
+// Needed because WordFetchViewModel now depends on it.
+private class MockWordRepository : WordRepository(database = null!!) { // Use null!! for mocking
+    override fun saveWordDetails(
+        title: String,
+        languageCode: String,
+        explanation: String?,
+        sentences: List<String>,
+        pronunciation: String?,
+        relatedWords: List<String>,
+        rating: Long
+    ) {
+        logger.debug { "[Preview Mock] Saving word: $title ($languageCode)" }
+        // No actual DB interaction in mock
+    }
+    // Implement other methods if needed by previews, otherwise leave empty or throw
+}
+ 
 // --- Previews ---
 
 @Preview
@@ -572,7 +638,12 @@ fun WordFetchPagePreview_Initial() {
             // Create a dummy ViewModel for preview
             val dummyApi = WordFetchApi() // API client no longer needs key in constructor
             val dummyRepo = MockApiKeyConfigRepository() // Create mock repository
-            val dummyViewModel = WordFetchViewModel(api = dummyApi, apiKeyConfigRepository = dummyRepo) // Pass mock repo
+            val dummyWordRepo = MockWordRepository() // Create mock word repository
+            val dummyViewModel = WordFetchViewModel(
+                api = dummyApi,
+                apiKeyConfigRepository = dummyRepo,
+                wordRepository = dummyWordRepo // Pass mock word repo
+            )
             // Set initial state explicitly for preview if needed, though default is initial
             dummyViewModel.resetPage()
 
@@ -592,7 +663,12 @@ fun WordFetchPagePreview_Loading() {
             // Create a dummy ViewModel for preview
             val dummyApi = WordFetchApi() // API client no longer needs key in constructor
             val dummyRepo = MockApiKeyConfigRepository() // Create mock repository
-            val dummyViewModel = WordFetchViewModel(api = dummyApi, apiKeyConfigRepository = dummyRepo) // Pass mock repo
+            val dummyWordRepo = MockWordRepository() // Create mock word repository
+            val dummyViewModel = WordFetchViewModel(
+                api = dummyApi,
+                apiKeyConfigRepository = dummyRepo,
+                wordRepository = dummyWordRepo // Pass mock word repo
+            )
             // Simulate loading state
             dummyViewModel.isLoading = true
             dummyViewModel.onSearchQueryChange("test")
@@ -614,7 +690,12 @@ fun WordFetchPagePreview_Success() {
             // Create a dummy ViewModel for preview
             val dummyApi = WordFetchApi() // API client no longer needs key in constructor
             val dummyRepo = MockApiKeyConfigRepository() // Create mock repository
-            val dummyViewModel = WordFetchViewModel(api = dummyApi, apiKeyConfigRepository = dummyRepo) // Pass mock repo
+            val dummyWordRepo = MockWordRepository() // Create mock word repository
+            val dummyViewModel = WordFetchViewModel(
+                api = dummyApi,
+                apiKeyConfigRepository = dummyRepo,
+                wordRepository = dummyWordRepo // Pass mock word repo
+            )
             // Simulate success state with dummy data
             dummyViewModel.fetchedResult = WordFetchResultJson(
                 text = "热情",
@@ -650,7 +731,12 @@ fun WordFetchPagePreview_Error() {
             // Create a dummy ViewModel for preview
             val dummyApi = WordFetchApi() // API client no longer needs key in constructor
             val dummyRepo = MockApiKeyConfigRepository() // Create mock repository
-            val dummyViewModel = WordFetchViewModel(api = dummyApi, apiKeyConfigRepository = dummyRepo) // Pass mock repo
+            val dummyWordRepo = MockWordRepository() // Create mock word repository
+            val dummyViewModel = WordFetchViewModel(
+                api = dummyApi,
+                apiKeyConfigRepository = dummyRepo,
+                wordRepository = dummyWordRepo // Pass mock word repo
+            )
             // Simulate error state
             dummyViewModel.errorMessage = "Failed to connect to the API."
             dummyViewModel.onSearchQueryChange("test")
