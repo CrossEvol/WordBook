@@ -4,6 +4,7 @@ CREATE TABLE word (
     text TEXT NOT NULL UNIQUE,            -- The word or phrase being learned
     create_at INTEGER NOT NULL, -- When the word was added (assuming epoch milliseconds)
     last_review_at INTEGER, -- When the word (or any of its details) was last reviewed (assuming epoch milliseconds, nullable)
+    next_review_at INTEGER, -- When the word is scheduled for the next review (assuming epoch milliseconds, nullable) - NEW COLUMN
     review_progress INTEGER NOT NULL DEFAULT 0 -- Progress metric (e.g., level in spaced repetition) - MOVED FROM wordDetail
 );
 
@@ -11,6 +12,8 @@ CREATE TABLE word (
 CREATE INDEX idx_word_text ON word(text);
 -- Optional: Index on last_review_at for querying words needing review
 CREATE INDEX idx_word_last_review ON word(last_review_at);
+-- Optional: Index on next_review_at for querying words needing review
+CREATE INDEX idx_word_next_review ON word(next_review_at);
 -- Optional: Index on review_progress for querying words by progress
 CREATE INDEX idx_word_review_progress ON word(review_progress);
 
@@ -26,13 +29,16 @@ SELECT * FROM word WHERE id = ?;
 selectByText:
 SELECT * FROM word WHERE text = ?;
 
-insertWord: -- Added review_progress
-INSERT INTO word(text, create_at, last_review_at, review_progress) VALUES (?, ?, ?, ?);
+insertWord: -- Added next_review_at
+INSERT INTO word(text, create_at, last_review_at, next_review_at, review_progress) VALUES (?, ?, ?, ?, ?);
 
 updateLastReviewTime:
 UPDATE word SET last_review_at = ? WHERE id = ?;
 
-updateReviewProgress: -- New query to update review progress
+updateNextReviewTime: -- New query to update next review time
+UPDATE word SET next_review_at = ? WHERE id = ?;
+
+updateReviewProgress: -- Query to update review progress
 UPDATE word SET review_progress = ? WHERE id = ?;
 
 deleteById:

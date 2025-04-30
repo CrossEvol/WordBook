@@ -76,6 +76,7 @@ open class WordRepository(private val database: AppDatabase) {
                     text = title,
                     create_at = currentTime,
                     last_review_at = currentTime, // Set initial review time on the word
+                    next_review_at = null, // Set initial next_review_at to null
                     review_progress = rating // Save rating on the word table
                 )
                 // Get the ID of the newly inserted word
@@ -93,6 +94,8 @@ open class WordRepository(private val database: AppDatabase) {
                     review_progress = rating,
                     id = existingWordId
                 )
+                // Note: next_review_at is not updated here by default.
+                // Spaced repetition logic would determine when to update this.
                 existingWordId
             }
 
@@ -138,4 +141,5 @@ open class WordRepository(private val database: AppDatabase) {
     // - deleteWordById(id: Long)
     // - deleteWordDetailById(id: Long)
     // - Mapping functions (SelectWordItemsForLanguage -> UiWordItem) - Added as private extension function
+    // - A method to update next_review_at based on spaced repetition logic
 }
