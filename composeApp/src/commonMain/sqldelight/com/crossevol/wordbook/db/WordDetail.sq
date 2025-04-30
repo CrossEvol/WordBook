@@ -10,9 +10,8 @@ CREATE TABLE wordDetail (
     related_words TEXT,                     -- Related words/phrases (stored as TEXT, join by ';')
     pronunciation TEXT,            -- Pronunciation information - VARCHAR(255) maps to TEXT
 
-    -- Review progress for this specific language detail
-    -- last_review_at INTEGER,               -- Moved to 'word' table
-    review_progress INTEGER NOT NULL DEFAULT 0, -- Progress metric (e.g., level in spaced repetition)
+    -- Review progress for this specific language detail - MOVED TO 'word' TABLE
+    -- review_progress INTEGER NOT NULL DEFAULT 0,
 
     -- Constraints
     FOREIGN KEY (word_id) REFERENCES word(id) ON DELETE CASCADE, -- If a word is deleted, delete its details
@@ -22,7 +21,6 @@ CREATE TABLE wordDetail (
 -- Optional: Indexes for faster joins and lookups
 CREATE INDEX idx_word_detail_word_id ON wordDetail(word_id);
 CREATE INDEX idx_word_detail_language_code ON wordDetail(language_code);
--- CREATE INDEX idx_word_detail_review ON wordDetail(last_review_at, review_progress); -- Index moved/removed
 
 -- Basic Queries for 'wordDetail' table
 
@@ -32,18 +30,16 @@ SELECT * FROM wordDetail WHERE word_id = ?;
 selectDetailForWordAndLanguage:
 SELECT * FROM wordDetail WHERE word_id = ? AND language_code = ?;
 
-insertDetail:
-INSERT INTO wordDetail(word_id, language_code, explanation, sentences, related_words, pronunciation, review_progress)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+insertDetail: -- Removed review_progress
+INSERT INTO wordDetail(word_id, language_code, explanation, sentences, related_words, pronunciation)
+VALUES (?, ?, ?, ?, ?, ?);
 
-updateDetail: -- Added related_words to update
+updateDetail: -- Removed review_progress
 UPDATE wordDetail SET
     explanation = ?,
     sentences = ?,
     related_words = ?,
-    pronunciation = ?, -- Added related_words to update
-    -- last_review_at = ?, -- Moved to 'word' table
-    review_progress = ?
+    pronunciation = ?
 WHERE id = ?;
 
 deleteDetailById:
@@ -53,6 +49,7 @@ deleteDetailsForWord:
 DELETE FROM wordDetail WHERE word_id = ?;
 
 -- Query to select word items with details for a specific language, mapped for UI display
+-- Selects review_progress from the 'word' table (w.review_progress)
 selectWordItemsForLanguage:
 SELECT
     w.id AS id,
@@ -61,7 +58,7 @@ SELECT
     wd.sentences,
     wd.related_words, -- Select related_words
     wd.pronunciation,
-    wd.review_progress
+    w.review_progress -- Select review_progress from the word table
 FROM wordDetail AS wd
 JOIN word AS w ON w.id = wd.word_id
 WHERE wd.language_code = ?

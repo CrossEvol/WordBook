@@ -15,6 +15,7 @@ open class WordRepository(private val database: AppDatabase) {
 
     /**
      * Maps a SQLDelight generated SelectWordItemsForLanguage object to a UiWordItem.
+     * review_progress is now sourced from the 'word' table via the updated SQL query.
      */
     private fun SelectWordItemsForLanguage.toUiWordItem(): WordItemUI {
         return WordItemUI(
@@ -22,7 +23,7 @@ open class WordRepository(private val database: AppDatabase) {
             title = this.title, // word.text
             pronunciation = this.pronunciation ?: "", // Handle nullable
             explanation = this.explanation ?: "", // Handle nullable
-            rating = this.review_progress, // Maps to review_progress
+            rating = this.review_progress, // Maps to review_progress (now from word table)
             sentences = this.sentences?.split(";")?.filter { it.isNotBlank() } ?: emptyList(),
             relatedWords = this.related_words?.split(";")?.filter { it.isNotBlank() } ?: emptyList() // Split related_words string
         )
@@ -44,7 +45,7 @@ open class WordRepository(private val database: AppDatabase) {
     /**
      * Saves word details for a specific language.
      * Inserts the core word if it doesn't exist, then inserts or updates the word detail.
-     * Also updates the last_review_at timestamp on the core word entry.
+     * Also updates the last_review_at timestamp and review_progress on the core word entry.
      *
      * @param title The main word or phrase.
      * @param languageCode The language code for the details.
@@ -52,7 +53,7 @@ open class WordRepository(private val database: AppDatabase) {
      * @param sentences List of example sentences.
      * @param pronunciation Optional pronunciation guide.
      * @param relatedWords List of related words.
-     * @param rating Review progress rating.
+     * @param rating Review progress rating (now saved on the word table).
      */
     open fun saveWordDetails(
         title: String,
@@ -61,7 +62,7 @@ open class WordRepository(private val database: AppDatabase) {
         sentences: List<String>,
         pronunciation: String?,
         relatedWords: List<String>, // Add relatedWords parameter
-        rating: Long
+        rating: Long // This rating will now be saved on the 'word' table
     ) {
         database.transaction {
             val currentTime = System.currentTimeMillis()
@@ -74,7 +75,8 @@ open class WordRepository(private val database: AppDatabase) {
                 wordQueries.insertWord(
                     text = title,
                     create_at = currentTime,
-                    last_review_at = currentTime // Set initial review time on the word
+                    last_review_at = currentTime, // Set initial review time on the word
+                    review_progress = rating // Save rating on the word table
                 )
                 // Get the ID of the newly inserted word
                 wordQueries.selectByText(title).executeAsOne().id
@@ -84,6 +86,11 @@ open class WordRepository(private val database: AppDatabase) {
                 // Update the last_review_at timestamp on the existing word
                 wordQueries.updateLastReviewTime(
                     last_review_at = currentTime,
+                    id = existingWordId
+                )
+                // Update the review_progress on the existing word
+                wordQueries.updateReviewProgress(
+                    review_progress = rating,
                     id = existingWordId
                 )
                 existingWordId
@@ -96,27 +103,25 @@ open class WordRepository(private val database: AppDatabase) {
             ).executeAsOneOrNull()
 
             if (existingDetail == null) {
-                // Insert new word detail
+                // Insert new word detail (review_progress is NOT included here)
                 wordDetailQueries.insertDetail(
                     word_id = wordId,
                     language_code = languageCode,
                     explanation = explanation,
                     sentences = sentences.joinToString(";"), // Convert List to String
                     related_words = relatedWords.joinToString(";"), // Convert List to String
-                    pronunciation = pronunciation,
-                    // last_review_at = currentTime, // Moved to 'word' table
-                    review_progress = rating
+                    pronunciation = pronunciation
+                    // review_progress is no longer in wordDetail
                 )
             } else {
-                // Update existing word detail
-                wordDetailQueries.updateDetail( // Pass related_words to update
+                // Update existing word detail (review_progress is NOT included here)
+                wordDetailQueries.updateDetail(
                     explanation = explanation,
                     sentences = sentences.joinToString(";"),
                     related_words = relatedWords.joinToString(";"), // Use the new relatedWords parameter
                     pronunciation = pronunciation,
-                    // last_review_at = currentTime, // Moved to 'word' table
-                    review_progress = rating,
                     id = existingDetail.id // Update by detail ID
+                    // review_progress is no longer in wordDetail
                 )
             }
         }
