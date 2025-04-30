@@ -29,7 +29,7 @@ import com.crossevol.wordbook.ui.screens.HomePage
 import com.crossevol.wordbook.ui.screens.SettingsPage
 import com.crossevol.wordbook.ui.screens.WordDetailPage
 import com.crossevol.wordbook.ui.screens.WordFetchPage
-import com.crossevol.wordbook.ui.screens.WordReviewPage
+import com.crossevol.wordbook.ui.screens.WordDetailSummaryPage // Import the new summary page
 import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel // Import ViewModel
 import com.russhwolf.settings.Settings // Import Settings
 import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
@@ -47,12 +47,12 @@ private val logger = KotlinLogging.logger {} // Add logger instance
 sealed class Screen {
     data object Home : Screen()
     data class Detail(val word: WordItemUI) : Screen()
-    data class Review(val word: WordItemUI) : Screen()
     data object Settings : Screen()
     data object EditProfile : Screen()
     data object ApiKeyList : Screen()
     data class ApiKeyEdit(val config: ApiKeyConfig? = null) : Screen() // config is optional for adding
     data object WordFetch : Screen() // Add WordFetch screen state
+    data object WordDetailSummary : Screen() // Add state for the new summary page
 }
 
 @Composable
@@ -133,7 +133,7 @@ fun App(
                             when (route) {
                                 "home" -> currentScreen = Screen.Home // Stay home or return home
                                 "review" -> currentScreen =
-                                    Screen.Review(sampleWordItem) // Navigate to Review (using sample for now)
+                                    Screen.WordDetailSummary // Navigate to the new summary page
                                 "settings" -> currentScreen = Screen.Settings // Navigate to Settings
                                 "fetch" -> currentScreen =
                                     Screen.WordFetch // Navigate to WordFetch via FAB
@@ -148,22 +148,6 @@ fun App(
                         onBack = {
                             logger.info { "Navigating back to Home from Detail." } // Replaced println
                             currentScreen = Screen.Home // Navigate back to Home from Detail
-                        }
-                    )
-                }
-
-                is Screen.Review -> {
-                    WordReviewPage(
-                        wordItem = screen.word, // Use the word passed in the state (currently sampleWordItem)
-                        onAction = {
-                            // Action taken (Edit, Delete, Cancel), dismiss overlay and go back home
-                            currentScreen = Screen.Home
-                            logger.info { "Review action taken, returning home." } // Replaced println
-                        },
-                        onBack = {
-                            // Explicit back navigation from Review screen, go back home
-                            currentScreen = Screen.Home
-                            logger.info { "Review back pressed, returning home." } // Replaced println
                         }
                     )
                 }
@@ -299,6 +283,26 @@ fun App(
                             }
                             currentScreen = Screen.ApiKeyList // Go back to the list after saving
                             logger.info { "Navigating back to ApiKeyList after saving API key." } // Replaced println
+                        }
+                    )
+                }
+
+                is Screen.WordDetailSummary -> { // Add case for the new summary page
+                    // Fetch words to review (replace with actual logic later)
+                    val wordsToReview = remember(wordRepository) {
+                        wordRepository?.getWordItemsForLanguage("EN") ?: emptyList() // Example: Get English words
+                    }
+                    WordDetailSummaryPage(
+                        wordsToReview = wordsToReview, // Pass the list of words
+                        onStart = {
+                            // TODO: Implement navigation to the actual review/flashcard screen
+                            logger.info { "Start review process..." }
+                            // Example: Navigate to a hypothetical Flashcard screen
+                            // currentScreen = Screen.Flashcard(wordsToReview.first())
+                        },
+                        onBack = {
+                            logger.info { "Navigating back to Home from WordDetailSummary." }
+                            currentScreen = Screen.Home // Navigate back to Home
                         }
                     )
                 }
