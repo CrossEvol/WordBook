@@ -34,6 +34,7 @@ import com.crossevol.wordbook.data.mock.sampleWordItem
 import com.crossevol.wordbook.data.model.WordItemUI
 import com.crossevol.wordbook.ui.components.RelatedWordItem // Import RelatedWordItem
 import com.crossevol.wordbook.ui.components.SentenceItem // Import SentenceItem
+import com.crossevol.wordbook.ui.components.WordDetailsContent // Import the new component
 import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -71,80 +72,22 @@ fun WordDetailPage(
             )
         }
     ) { innerPadding ->
-        Column(
+        // Use the extracted WordDetailsContent component
+        WordDetailsContent(
+            wordItem = wordItem,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp) // Add horizontal padding for content
-        ) {
-            // Word Name (Title)
-            Text(
-                text = wordItem.title,
-                style = MaterialTheme.typography.headlineLarge, // Larger headline
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Pronunciation (like "[ Hello, world ]")
-            Text(
-                text = wordItem.pronunciation,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Explanation Label
-            Text(
-                text = "Explanation", // "explanation" in design, capitalized here
-                style = MaterialTheme.typography.titleSmall, // Smaller title for label
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Explanation Text
-            Text(
-                text = wordItem.explanation,
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Sentences Label
-            Text(
-                text = "Sentences",
-                style = MaterialTheme.typography.titleMedium, // Slightly larger title for section
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Sentences List
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                wordItem.sentences.forEach { sentence ->
-                    SentenceItem(text = sentence) {
-                        // Handle sentence click if needed in the future
-                        logger.debug { "Sentence clicked: $sentence" } // Replaced println
-                    }
-                }
+                .padding(horizontal = 16.dp), // Add horizontal padding for content
+            onSentenceClick = { sentence ->
+                // Handle sentence click if needed in the future
+                logger.debug { "Sentence clicked: $sentence" }
+            },
+            onRelatedWordClick = { relatedWord ->
+                // Handle related word click if needed
+                logger.debug { "Related Word clicked: $relatedWord" }
             }
-            Spacer(modifier = Modifier.height(24.dp)) // Add space before Related Words
-
-            // Related Words Label
-            Text(
-                text = "Related Words",
-                style = MaterialTheme.typography.titleMedium, // Match Sentences label style
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Related Words List
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) { // Slightly less space than sentences
-                wordItem.relatedWords.forEach { relatedWord ->
-                    RelatedWordItem(text = relatedWord) {
-                        // Handle related word click if needed
-                        logger.debug { "Related Word clicked: $relatedWord" }
-                    }
-                }
-            }
-        }
+        )
     }
 }
 

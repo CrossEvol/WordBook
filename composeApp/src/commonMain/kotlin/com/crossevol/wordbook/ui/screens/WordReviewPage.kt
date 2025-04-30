@@ -17,6 +17,7 @@ import com.crossevol.wordbook.data.mock.sampleWordItem
 import com.crossevol.wordbook.data.model.WordItemUI
 import com.crossevol.wordbook.ui.components.RelatedWordItem // Import RelatedWordItem
 import com.crossevol.wordbook.ui.components.SimpleActionSheet // Import the action sheet
+import com.crossevol.wordbook.ui.components.WordDetailsContent // Import the new component
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
@@ -58,67 +59,17 @@ fun WordReviewPage(
                 )
             }
         ) { innerPadding ->
-            Column(
+            // Use the extracted WordDetailsContent component
+            // Pass empty lambdas for clicks as the overlay prevents interaction
+            WordDetailsContent(
+                wordItem = wordItem,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(horizontal = 16.dp)
-            ) {
-                Text(
-                    text = wordItem.title,
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = wordItem.pronunciation,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Explanation",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = wordItem.explanation,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                Text(
-                    text = "Sentences",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    wordItem.sentences.forEach { sentence ->
-                        // Reusing SentenceItem structure locally for simplicity
-                        SentenceItemReview(text = sentence)
-                    }
-                }
-                Spacer(modifier = Modifier.height(24.dp)) // Add space before Related Words
-
-                // Related Words Label
-                Text(
-                    text = "Related Words",
-                    style = MaterialTheme.typography.titleMedium, // Match Sentences label style
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Related Words List
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) { // Slightly less space than sentences
-                    wordItem.relatedWords.forEach { relatedWord ->
-                        // Use the standard RelatedWordItem, clicks are blocked by the overlay
-                        RelatedWordItem(text = relatedWord) {
-                            // Click handler is present but won't be triggered due to overlay
-                        }
-                    }
-                }
-            }
+                    .padding(horizontal = 16.dp),
+                onSentenceClick = {}, // Clicks are disabled by the overlay
+                onRelatedWordClick = {} // Clicks are disabled by the overlay
+            )
         }
 
         // 2. Semi-Transparent Overlay
@@ -145,38 +96,8 @@ fun WordReviewPage(
     }
 }
 
-// Simplified Sentence Item for Review Page (non-clickable, matches visual)
-@Composable
-private fun SentenceItemReview(text: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null, // Not interactive in review overlay
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
+// Removed the local SentenceItemReview composable as WordDetailsContent uses the standard SentenceItem
+// and clickability is controlled via the callback parameter.
 
 
 @Preview
