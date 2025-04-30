@@ -44,6 +44,7 @@ open class WordRepository(private val database: AppDatabase) {
     /**
      * Saves word details for a specific language.
      * Inserts the core word if it doesn't exist, then inserts or updates the word detail.
+     * Also updates the last_review_at timestamp on the core word entry.
      *
      * @param title The main word or phrase.
      * @param languageCode The language code for the details.
@@ -63,6 +64,8 @@ open class WordRepository(private val database: AppDatabase) {
         rating: Long
     ) {
         database.transaction {
+            val currentTime = System.currentTimeMillis()
+
             // Check if the word already exists
             val existingWord = wordQueries.selectByText(title).executeAsOneOrNull()
 
@@ -70,13 +73,20 @@ open class WordRepository(private val database: AppDatabase) {
                 // Insert the core word if it doesn't exist
                 wordQueries.insertWord(
                     text = title,
-                    create_at = System.currentTimeMillis()
+                    create_at = currentTime,
+                    last_review_at = currentTime // Set initial review time on the word
                 )
                 // Get the ID of the newly inserted word
                 wordQueries.selectByText(title).executeAsOne().id
             } else {
                 // Use the ID of the existing word
-                existingWord.id
+                val existingWordId = existingWord.id
+                // Update the last_review_at timestamp on the existing word
+                wordQueries.updateLastReviewTime(
+                    last_review_at = currentTime,
+                    id = existingWordId
+                )
+                existingWordId
             }
 
             // Check if detail for this language already exists for this word
@@ -94,7 +104,7 @@ open class WordRepository(private val database: AppDatabase) {
                     sentences = sentences.joinToString(";"), // Convert List to String
                     related_words = relatedWords.joinToString(";"), // Convert List to String
                     pronunciation = pronunciation,
-                    last_review_at = System.currentTimeMillis(), // Set initial review time
+                    // last_review_at = currentTime, // Moved to 'word' table
                     review_progress = rating
                 )
             } else {
@@ -104,7 +114,7 @@ open class WordRepository(private val database: AppDatabase) {
                     sentences = sentences.joinToString(";"),
                     related_words = relatedWords.joinToString(";"), // Use the new relatedWords parameter
                     pronunciation = pronunciation,
-                    last_review_at = System.currentTimeMillis(), // Update review time on save
+                    // last_review_at = currentTime, // Moved to 'word' table
                     review_progress = rating,
                     id = existingDetail.id // Update by detail ID
                 )

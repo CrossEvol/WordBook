@@ -11,7 +11,7 @@ CREATE TABLE wordDetail (
     pronunciation TEXT,            -- Pronunciation information - VARCHAR(255) maps to TEXT
 
     -- Review progress for this specific language detail
-    last_review_at INTEGER,               -- When this specific language detail was last reviewed (assuming epoch milliseconds, nullable)
+    -- last_review_at INTEGER,               -- Moved to 'word' table
     review_progress INTEGER NOT NULL DEFAULT 0, -- Progress metric (e.g., level in spaced repetition)
 
     -- Constraints
@@ -22,7 +22,7 @@ CREATE TABLE wordDetail (
 -- Optional: Indexes for faster joins and lookups
 CREATE INDEX idx_word_detail_word_id ON wordDetail(word_id);
 CREATE INDEX idx_word_detail_language_code ON wordDetail(language_code);
-CREATE INDEX idx_word_detail_review ON wordDetail(last_review_at, review_progress); -- Useful for querying review items
+-- CREATE INDEX idx_word_detail_review ON wordDetail(last_review_at, review_progress); -- Index moved/removed
 
 -- Basic Queries for 'wordDetail' table
 
@@ -33,8 +33,8 @@ selectDetailForWordAndLanguage:
 SELECT * FROM wordDetail WHERE word_id = ? AND language_code = ?;
 
 insertDetail:
-INSERT INTO wordDetail(word_id, language_code, explanation, sentences, related_words, pronunciation, last_review_at, review_progress)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO wordDetail(word_id, language_code, explanation, sentences, related_words, pronunciation, review_progress)
+VALUES (?, ?, ?, ?, ?, ?, ?);
 
 updateDetail: -- Added related_words to update
 UPDATE wordDetail SET
@@ -42,7 +42,7 @@ UPDATE wordDetail SET
     sentences = ?,
     related_words = ?,
     pronunciation = ?, -- Added related_words to update
-    last_review_at = ?,
+    -- last_review_at = ?, -- Moved to 'word' table
     review_progress = ?
 WHERE id = ?;
 

@@ -2,11 +2,14 @@
 CREATE TABLE word (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, -- Unique identifier for the word
     text TEXT NOT NULL UNIQUE,            -- The word or phrase being learned
-    create_at INTEGER NOT NULL -- When the word was added (assuming epoch milliseconds)
+    create_at INTEGER NOT NULL, -- When the word was added (assuming epoch milliseconds)
+    last_review_at INTEGER -- When the word (or any of its details) was last reviewed (assuming epoch milliseconds, nullable)
 );
 
 -- Optional: Index on text for faster lookup by word
 CREATE INDEX idx_word_text ON word(text);
+-- Optional: Index on last_review_at for querying words needing review
+CREATE INDEX idx_word_last_review ON word(last_review_at);
 
 -- Basic Queries for 'word' table
 
@@ -20,7 +23,10 @@ selectByText:
 SELECT * FROM word WHERE text = ?;
 
 insertWord:
-INSERT INTO word(text, create_at) VALUES (?, ?);
+INSERT INTO word(text, create_at, last_review_at) VALUES (?, ?, ?);
+
+updateLastReviewTime:
+UPDATE word SET last_review_at = ? WHERE id = ?;
 
 deleteById:
 DELETE FROM word WHERE id = ?;
