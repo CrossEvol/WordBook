@@ -8,6 +8,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -62,6 +63,18 @@ fun FilterDropdownMenu(
         specialOptions.forEach { option ->
             val isSelected = selectedOptions.contains(option)
 
+            // Define custom colors for the 'None' switch when checked
+            val switchColors = if (option == FilterOption.NONE) {
+                SwitchDefaults.colors(
+                    checkedTrackColor = MaterialTheme.colorScheme.error,
+                    checkedThumbColor = MaterialTheme.colorScheme.onError // Use onError for contrast on the error track
+                    // Unchecked colors will use defaults
+                )
+            } else {
+                // Use default colors for other options like 'All'
+                SwitchDefaults.colors()
+            }
+
             DropdownMenuItem(
                 text = { Text(option.displayName) },
                 onClick = {
@@ -80,7 +93,8 @@ fun FilterDropdownMenu(
                                 checked
                             )
                         },
-                        enabled = true
+                        enabled = true,
+                        colors = switchColors // Apply the conditionally defined colors
                     )
                 }
             )
