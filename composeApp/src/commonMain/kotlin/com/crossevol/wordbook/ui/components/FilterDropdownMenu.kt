@@ -60,6 +60,8 @@ fun FilterDropdownMenu(
 
         // Special options (All/None) - treated like radio buttons conceptually
         specialOptions.forEach { option ->
+            val isSelected = selectedOptions.contains(option)
+
             DropdownMenuItem(
                 text = { Text(option.displayName) },
                 onClick = {
@@ -70,10 +72,16 @@ fun FilterDropdownMenu(
                     ) // Inform parent about the selection
                 },
                 trailingIcon = {
-                    // Indicate selection (could use RadioButton or Checkbox if preferred)
-                    if (selectedOptions.contains(option)) {
-                        // Maybe add a checkmark or visual cue later if needed
-                    }
+                    Switch(
+                        checked = isSelected,
+                        onCheckedChange = { checked ->
+                            onOptionToggle(
+                                option,
+                                checked
+                            )
+                        },
+                        enabled = true
+                    )
                 }
             )
         }
@@ -83,32 +91,25 @@ fun FilterDropdownMenu(
         // Toggleable options
         toggleableOptions.forEach { option ->
             val isSelected = selectedOptions.contains(option)
-            // Disable individual toggles if ALL or NONE is selected
-            val enabled =
-                !selectedOptions.contains(FilterOption.ALL) && !selectedOptions.contains(FilterOption.NONE)
 
             DropdownMenuItem(
                 text = { Text(option.displayName) },
                 onClick = {
-                    if (enabled) { // Only toggle if not ALL/NONE
                         onOptionToggle(
                             option,
                             !isSelected
                         )
-                    }
                 },
                 trailingIcon = {
                     Switch(
                         checked = isSelected,
                         onCheckedChange = { checked ->
-                            if (enabled) { // Only toggle if not ALL/NONE
                                 onOptionToggle(
                                     option,
                                     checked
                                 )
-                            }
                         },
-                        enabled = enabled
+                        enabled = true
                     )
                 }
             )
