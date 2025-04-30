@@ -45,14 +45,14 @@ private val logger = KotlinLogging.logger {} // Add logger instance
 
 // Define screen states for navigation
 sealed class Screen {
-    object Home : Screen()
+    data object Home : Screen()
     data class Detail(val word: WordItemUI) : Screen()
     data class Review(val word: WordItemUI) : Screen()
-    object Settings : Screen()
-    object EditProfile : Screen()
-    object ApiKeyList : Screen()
+    data object Settings : Screen()
+    data object EditProfile : Screen()
+    data object ApiKeyList : Screen()
     data class ApiKeyEdit(val config: ApiKeyConfig? = null) : Screen() // config is optional for adding
-    object WordFetch : Screen() // Add WordFetch screen state
+    data object WordFetch : Screen() // Add WordFetch screen state
 }
 
 @Composable
