@@ -310,7 +310,7 @@ fun App(
                     val reviewState = screen as Screen.WordReview
                     val words = reviewState.words
                     val currentIndex = reviewState.currentIndex
-                    
+
                     if (currentIndex < words.size) {
                         WordReviewPage(
                             wordItem = words[currentIndex],
@@ -318,47 +318,32 @@ fun App(
                             onRemember = {
                                 // Update word progress (remembered)
                                 wordReviewViewModel.updateWordReviewProgress(words[currentIndex].id, true)
-                                
-                                // Navigate to next word or back to summary if done
-                                if (currentIndex + 1 < words.size) {
-                                    currentScreen = Screen.WordReview(words, currentIndex + 1)
-                                } else {
-                                    // All words reviewed, refresh data and go back to summary
-                                    wordReviewViewModel.loadWordsForReview() // Refresh data
-                                    currentScreen = Screen.WordDetailSummary
-                                }
+                                // Navigation logic is now in onNext
                             },
                             onForget = {
                                 // Update word progress (forgotten)
                                 wordReviewViewModel.updateWordReviewProgress(words[currentIndex].id, false)
-                                
-                                // Navigate to next word or back to summary if done
-                                if (currentIndex + 1 < words.size) {
-                                    currentScreen = Screen.WordReview(words, currentIndex + 1)
-                                } else {
-                                    // All words reviewed, refresh data and go back to summary
-                                    wordReviewViewModel.loadWordsForReview() // Refresh data
-                                    currentScreen = Screen.WordDetailSummary
-                                }
+                                // Navigation logic is now in onNext
                             },
                             onSkip = {
                                 // Skip this word without updating progress
                                 wordReviewViewModel.skipWordReview(words[currentIndex].id)
-                                
-                                // Navigate to next word or back to summary if done
-                                if (currentIndex + 1 < words.size) {
-                                    currentScreen = Screen.WordReview(words, currentIndex + 1)
-                                } else {
-                                    // All words reviewed, refresh data and go back to summary
-                                    wordReviewViewModel.loadWordsForReview() // Refresh data
-                                    currentScreen = Screen.WordDetailSummary
-                                }
+                                // Navigation logic is now in onNext
                             },
                             onBack = {
                                 // Cancel review and go back to summary
                                 currentScreen = Screen.WordDetailSummary
                             },
-                            onNext ={},
+                            onNext = {
+                                // Navigation logic: move to next word or back to summary if done
+                                if (currentIndex + 1 < words.size) {
+                                    currentScreen = Screen.WordReview(words, currentIndex + 1)
+                                } else {
+                                    // All words reviewed, refresh data and go back to summary
+                                    wordReviewViewModel.loadWordsForReview() // Refresh data
+                                    currentScreen = Screen.WordDetailSummary
+                                }
+                            },
                         )
                     } else {
                         // Safety check - if no more words, go back to summary
