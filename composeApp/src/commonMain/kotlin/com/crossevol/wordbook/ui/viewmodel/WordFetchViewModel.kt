@@ -3,12 +3,9 @@ package com.crossevol.wordbook.ui.viewmodel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.crossevol.wordbook.data.ApiKeyConfigRepository // Import repository
+import com.crossevol.wordbook.data.ApiKeyConfigRepository // Import repository - Keep for Mock
 import com.crossevol.wordbook.data.api.WordFetchApi // Dependency on the API client
 import com.crossevol.wordbook.data.api.WordFetchResultJson
 import com.crossevol.wordbook.data.WordRepository // Import WordRepository
@@ -16,14 +13,17 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.mutableStateOf // Ensure correct import
+import kotlinx.coroutines.flow.firstOrNull // Import firstOrNull for StateFlow
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers // Import Dispatchers
 
 private val logger = KotlinLogging.logger {} // Add logger instance
 
 
 class WordFetchViewModel(
     private val api: WordFetchApi, // Dependency on the API client
-    private val apiKeyConfigRepository: ApiKeyConfigRepository, // Add repository dependency
+    // Removed ApiKeyConfigRepository dependency
+    private val apiKeyViewModel: ApiKeyViewModel, // Add dependency on ApiKeyViewModel
     private val wordRepository: WordRepository? // Add WordRepository dependency (nullable for previews)
 ) : ViewModel() {
 
@@ -32,9 +32,12 @@ class WordFetchViewModel(
     // UI State for the search query input
     var searchQuery by mutableStateOf("")
 
-    // State for model selection dropdown
-    var modelOptions by mutableStateOf<List<String>>(emptyList()) // State for available models
-    var selectedModel by mutableStateOf("") // State for selected model
+    // State for model selection dropdown options
+    // modelOptions is now sourced from ApiKeyViewModel, so it's removed here.
+    // var modelOptions by mutableStateOf<List<String>>(emptyList()) // State for model options
+
+    // State for selected model
+    var selectedModel by mutableStateOf("")
 
     var selectedLanguageTabIndex by mutableStateOf(0)
     val languageTabs = listOf(
@@ -61,17 +64,14 @@ class WordFetchViewModel(
 
 
     init {
-        // Load available models from the repository when the ViewModel is created
-        loadModelOptions()
+        // Initialize selectedModel based on the current state of ApiKeyViewModel's configs
+        // Note: This only sets the initial value. The UI will observe ApiKeyViewModel's
+        // apiKeyConfigs flow for updates to the list of available models.
+        selectedModel = apiKeyViewModel.apiKeyConfigs.value.firstOrNull()?.model ?: ""
+        logger.debug { "WordFetchViewModel initialized. Initial selected model: $selectedModel" }
     }
 
-    private fun loadModelOptions() {
-        val configs = apiKeyConfigRepository.getAllApiKeyConfigs()
-        modelOptions = configs.map { it.model }.distinct() // Get unique models
-        selectedModel =
-            modelOptions.firstOrNull() ?: "" // Select the first available model, or empty
-        logger.debug { "Loaded model options: $modelOptions, selected: $selectedModel" }
-    }
+    // Removed loadModelOptions function
 
     fun onSearchQueryChange(query: String) {
         searchQuery = query
@@ -107,9 +107,9 @@ class WordFetchViewModel(
         isSaving = false // Reset saving state
 
 
-        // Find the API key for the selected model
+        // Find the API key for the selected model from ApiKeyViewModel's current state
         val apiKeyConfig =
-            apiKeyConfigRepository.getAllApiKeyConfigs().find { it.model == selectedModel }
+            apiKeyViewModel.apiKeyConfigs.value.find { it.model == selectedModel }
 
         if (apiKeyConfig == null) {
             errorMessage = "No API key configured for the selected model: $selectedModel"
@@ -152,7 +152,8 @@ class WordFetchViewModel(
 
     fun resetPage() {
         searchQuery = ""
-        selectedModel = modelOptions.firstOrNull() ?: "" // Reset to first available model or empty
+        // Reset selectedModel based on the current state of ApiKeyViewModel's configs
+        selectedModel = apiKeyViewModel.apiKeyConfigs.value.firstOrNull()?.model ?: ""
         selectedLanguageTabIndex = 0
         isLoading = false
         fetchedResult = null

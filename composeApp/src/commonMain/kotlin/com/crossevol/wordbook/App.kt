@@ -16,7 +16,6 @@ import com.crossevol.wordbook.data.ApiKeyConfigRepository // Import repository
 import com.crossevol.wordbook.data.api.WordFetchApi // Import API client
 import com.crossevol.wordbook.data.SettingsRepository // Import SettingsRepository
 import com.crossevol.wordbook.data.WordRepository // Import WordRepository
-import com.crossevol.wordbook.data.mock.sampleWordItem
 import com.crossevol.wordbook.data.model.WordItemUI
 import com.crossevol.wordbook.db.AppDatabase
 import com.crossevol.wordbook.db.createDatabase
@@ -33,6 +32,7 @@ import com.crossevol.wordbook.ui.screens.WordDetailSummaryPage // Import the new
 import com.crossevol.wordbook.ui.screens.WordReviewPage
 import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel // Import ViewModel
 import com.crossevol.wordbook.ui.viewmodel.WordReviewViewModel // Import the new ViewModel
+import com.crossevol.wordbook.ui.viewmodel.ApiKeyViewModel // Import the new ApiKeyViewModel
 import com.russhwolf.settings.Settings // Import Settings
 import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -91,9 +91,6 @@ fun App(
         settings?.let { SettingsRepository(it) }
     }
 
-    // Track when to refresh API keys list (can be reused or have separate triggers if needed)
-    var apiKeyListRefreshTrigger by remember { mutableStateOf(0) }
-
     // Initialize database with dummy data if empty, runs once
     LaunchedEffect(database, apiKeyConfigRepository, wordRepository) { // Add wordRepository to key
         if (database != null && apiKeyConfigRepository != null && wordRepository != null) { // Check wordRepository too
@@ -107,18 +104,26 @@ fun App(
     // The API key will now be fetched dynamically in the ViewModel
     val wordFetchApi = remember { WordFetchApi() }
 
-    // Create ViewModel for WordFetchPage, passing the API client and the repository
-    val wordFetchViewModel = remember(wordFetchApi, apiKeyConfigRepository, wordRepository) {
-        // Ensure repositories are not null before passing
-        if (apiKeyConfigRepository != null) { // wordRepository can be null for previews
-             WordFetchViewModel(api = wordFetchApi, apiKeyConfigRepository = apiKeyConfigRepository, wordRepository = wordRepository)
+    // Create ViewModel for API Key management
+    // Use remember to create the ViewModel, handling the nullable repository
+    val apiKeyViewModel = remember(apiKeyConfigRepository) {
+        apiKeyConfigRepository?.let { ApiKeyViewModel(it) } // Return null if repository is null
+    }
+
+    // Create ViewModel for WordFetchPage, passing the API client and the *ApiKeyViewModel*
+    val wordFetchViewModel = remember(wordFetchApi, apiKeyViewModel, wordRepository) { // Dependency on apiKeyViewModel
+        // Ensure dependencies are not null before passing
+        if (apiKeyViewModel != null) { // wordRepository can be null for previews
+             WordFetchViewModel(api = wordFetchApi, apiKeyViewModel = apiKeyViewModel, wordRepository = wordRepository) // Pass apiKeyViewModel
         } else null // Return null if dependencies aren't ready
     }
 
     // Create ViewModel for WordReviewPage
     val wordReviewViewModel = remember(wordRepository) {
-        WordReviewViewModel(wordRepository = wordRepository!!)
+        // Ensure wordRepository is not null before creating ViewModel
+        wordRepository?.let { WordReviewViewModel(it) } // Return null if repository is null
     }
+
 
     MaterialTheme {
         // Wrap the screen content with Scaffold to provide SnackbarHost
@@ -185,60 +190,39 @@ fun App(
                     )
                 }
 
-                is Screen.EditProfile -> {
-                    EditProfilePage(
-                        onNavigateBack = {
-                            logger.info { "Navigating back to Settings from EditProfile." } // Replaced println
-                            currentScreen = Screen.Settings
-                        }, // Go back to Settings
-                        onSaveChanges = { name, city, state, bio ->
-                            logger.info { "Saving Profile: Name=$name, City=$city, State=$state, Bio=$bio" } // Replaced println
-                            // Add actual save logic here
-                            currentScreen = Screen.Settings // Navigate back to Settings after save
-                            logger.info { "Navigating back to Settings after saving profile." } // Replaced println
-                        }
-                    )
-                }
-
                 is Screen.ApiKeyList -> { // New case for the API Key List page
-                    // Fetch the list of API keys from the repository whenever we navigate to this screen
-                    // or when the refresh trigger changes
-                    val apiKeyConfigs = remember(apiKeyConfigRepository, apiKeyListRefreshTrigger) {
-                        apiKeyConfigRepository?.getAllApiKeyConfigs() ?: emptyList<ApiKeyConfig>().also {
-                            logger.warn { "ApiKeyConfigRepository is null or returned empty list." } // Replaced println
-                        }
+                    // Pass the ViewModel to the list page, handling the nullable case
+                    if (apiKeyViewModel != null) {
+                        ApiKeyListPage(
+                            viewModel = apiKeyViewModel, // Provide the ViewModel
+                            onNavigateBack = {
+                                logger.info { "Navigating back to Settings from ApiKeyList." } // Replaced println
+                                currentScreen = Screen.Settings
+                            }, // Go back to Settings
+                            onAddApiKey = {
+                                logger.info { "Navigating to ApiKeyEdit (Add mode)." } // Replaced println
+                                currentScreen = Screen.ApiKeyEdit(null)
+                            }, // Navigate to Edit page for adding (config is null)
+                            onEditApiKey = { config ->
+                                logger.info { "Navigating to ApiKeyEdit (Edit mode) for ID: ${config.id}" } // Replaced println
+                                currentScreen = Screen.ApiKeyEdit(config)
+                            } // Navigate to Edit page with config
+                            // onDeleteApiKey is now handled inside ApiKeyListPage by calling the ViewModel
+                        )
+                    } else {
+                         // Handle the case where the repository/ViewModel is not available (e.g., in preview)
+                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                             Text("Error: API Key Repository not initialized.")
+                         }
                     }
-
-                    ApiKeyListPage(
-                        apiKeyConfigs = apiKeyConfigs, // Provide actual list from DB
-                        onNavigateBack = {
-                            logger.info { "Navigating back to Settings from ApiKeyList." } // Replaced println
-                            currentScreen = Screen.Settings
-                        }, // Go back to Settings
-                        onAddApiKey = {
-                            logger.info { "Navigating to ApiKeyEdit (Add mode)." } // Replaced println
-                            currentScreen = Screen.ApiKeyEdit(null)
-                        }, // Navigate to Edit page for adding (config is null)
-                        onEditApiKey = { config ->
-                            logger.info { "Navigating to ApiKeyEdit (Edit mode) for ID: ${config.id}" } // Replaced println
-                            currentScreen = Screen.ApiKeyEdit(config)
-                        }, // Navigate to Edit page with config
-                        onDeleteApiKey = { config ->
-                            // Handle delete action using the repository
-                            apiKeyConfigRepository?.deleteApiKeyConfigById(config.id)
-                            logger.info { "Deleted API Key: ${config.alias} (ID: ${config.id})" } // Replaced println
-                            // After deleting, increment the refresh trigger to force refresh
-                            apiKeyListRefreshTrigger++
-                        }
-                    )
                 }
 
                 is Screen.WordFetch -> {
-                    // Create ViewModel using the proper androidx.lifecycle.viewmodel.compose.viewModel function
-                    // Ensure ViewModel is not null before using
-                    if (wordFetchViewModel != null) {
+                    // Ensure ViewModels are not null before using
+                    if (wordFetchViewModel != null && apiKeyViewModel != null) { // Check both ViewModels
                         WordFetchPage( // Use the ViewModel instance created above
-                            viewModel = wordFetchViewModel, // Pass the ViewModel
+                            viewModel = wordFetchViewModel, // Pass the WordFetchViewModel
+                            apiKeyViewModel = apiKeyViewModel, // Pass the ApiKeyViewModel
                             snackbarHostState = snackbarHostState, // Pass SnackbarHostState
                             onBack = {
                                 logger.info { "Navigating back to Home from WordFetch." } // Replaced println
@@ -248,62 +232,51 @@ fun App(
                     } else {
                         // Handle the case where the repository/ViewModel is not available (e.g., in preview)
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("Error: API Key Repository not initialized.")
+                            Text("Error: Required ViewModels not initialized.")
                         }
                     }
-                    // Add a check for wordRepository as well if saving is critical even in error state
-                    // else if (wordRepository == null) { ... show different error ... }
                 }
 
                 is Screen.ApiKeyEdit -> { // Handle the ApiKeyEdit screen state
-                    ApiKeyEditingPage(
-                        config = screen.config, // Pass the config from the screen state
-                        onNavigateBack = {
-                            logger.info { "Navigating back to ApiKeyList from ApiKeyEdit." } // Replaced println
-                            currentScreen = Screen.ApiKeyList
-                        }, // Go back to the list
-                        onSaveChanges = { alias, key, provider, model ->
-                            // Implement actual saving logic here (e.g., to database/preferences)
-                            if (apiKeyConfigRepository != null) {
-                                val configToSave = ApiKeyConfig(
-                                    id = screen.config?.id ?: 0L, // Use existing ID if editing, 0L for new
-                                    alias = alias,
-                                    apiKey = key, // Use the entered key
-                                    provider = provider,
-                                    model = model
-                                )
-                                if (configToSave.id == 0L) {
-                                    // Insert new config
-                                    apiKeyConfigRepository.insertApiKeyConfig(configToSave)
-                                    logger.info { "Inserted new API Key: $alias" } // Replaced println
-                                } else {
-                                    // Update existing config
-                                    apiKeyConfigRepository.updateApiKeyConfig(configToSave)
-                                    logger.info { "Updated API Key: $alias (ID: ${configToSave.id})" } // Replaced println
-                                }
-                                // Increment the refresh trigger to force refresh when returning to list
-                                apiKeyListRefreshTrigger++
-                            } else {
-                                logger.error { "ApiKeyConfigRepository is not initialized. Cannot save API key." } // Replaced println
-                            }
-                            currentScreen = Screen.ApiKeyList // Go back to the list after saving
-                            logger.info { "Navigating back to ApiKeyList after saving API key." } // Replaced println
+                    // Pass the ViewModel to the editing page, handling the nullable case
+                    if (apiKeyViewModel != null) {
+                        ApiKeyEditingPage(
+                            viewModel = apiKeyViewModel, // Provide the ViewModel
+                            config = screen.config, // Pass the config from the screen state
+                            onNavigateBack = {
+                                logger.info { "Navigating back to ApiKeyList from ApiKeyEdit." } // Replaced println
+                                currentScreen = Screen.ApiKeyList
+                            } // Go back to the list after saving (handled inside the page now)
+                            // onSaveChanges is now handled inside ApiKeyEditingPage by calling the ViewModel
+                        )
+                    } else {
+                        // Handle the case where the repository/ViewModel is not available (e.g., in preview)
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Error: API Key Repository not initialized.")
                         }
-                    )
+                    }
                 }
 
                 is Screen.WordDetailSummary -> { // Add case for the new summary page
-                    WordDetailSummaryPage(
-                        viewModel = wordReviewViewModel,
-                        onStart = { wordList ->
-                            logger.info { "Starting review with ${wordList.size} words" }
-                            currentScreen = Screen.WordReview(wordList) // Navigate to review page with words
-                        },
-                        onBack = {
-                            logger.info { "Navigating back to Home from WordDetailSummary." }
-                            currentScreen = Screen.Home // Navigate back to Home
-                        }
-                    )
+                    // Pass the ViewModel to the summary page, handling the nullable case
+                    if (wordReviewViewModel != null) {
+                        WordDetailSummaryPage(
+                            viewModel = wordReviewViewModel,
+                            onStart = { wordList ->
+                                logger.info { "Starting review with ${wordList.size} words" }
+                                currentScreen = Screen.WordReview(wordList) // Navigate to review page with words
+                            },
+                            onBack = {
+                                logger.info { "Navigating back to Home from WordDetailSummary." }
+                                currentScreen = Screen.Home // Navigate back to Home
+                            }
+                        )
+                    } else {
+                         // Handle the case where the repository/ViewModel is not available (e.g., in preview)
+                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                             Text("Error: Word Repository not initialized.")
+                         }
+                    }
                 }
 
                 is Screen.WordReview -> {
@@ -311,46 +284,56 @@ fun App(
                     val words = reviewState.words
                     val currentIndex = reviewState.currentIndex
 
-                    if (currentIndex < words.size) {
-                        WordReviewPage(
-                            wordItem = words[currentIndex],
-                            remainingWordsCount = words.size - currentIndex, // Pass the count of remaining words
-                            onRemember = {
-                                // Update word progress (remembered)
-                                wordReviewViewModel.updateWordReviewProgress(words[currentIndex].id, true)
-                                // Navigation logic is now in onNext
-                            },
-                            onForget = {
-                                // Update word progress (forgotten)
-                                wordReviewViewModel.updateWordReviewProgress(words[currentIndex].id, false)
-                                // Navigation logic is now in onNext
-                            },
-                            onSkip = {
-                                // Skip this word without updating progress
-                                wordReviewViewModel.skipWordReview(words[currentIndex].id)
-                                // Navigation logic is now in onNext
-                            },
-                            onBack = {
-                                // Cancel review and go back to summary
-                                currentScreen = Screen.WordDetailSummary
-                            },
-                            onNext = {
-                                // Navigation logic: move to next word or back to summary if done
-                                if (currentIndex + 1 < words.size) {
-                                    currentScreen = Screen.WordReview(words, currentIndex + 1)
-                                } else {
-                                    // All words reviewed, refresh data and go back to summary
-                                    wordReviewViewModel.loadWordsForReview() // Refresh data
+                    // Ensure ViewModel is not null before using
+                    if (wordReviewViewModel != null) {
+                        if (currentIndex < words.size) {
+                            WordReviewPage(
+                                wordItem = words[currentIndex],
+                                remainingWordsCount = words.size - currentIndex, // Pass the count of remaining words
+                                onRemember = {
+                                    // Update word progress (remembered)
+                                    wordReviewViewModel.updateWordReviewProgress(words[currentIndex].id, true)
+                                    // Navigation logic is now in onNext
+                                },
+                                onForget = {
+                                    // Update word progress (forgotten)
+                                    wordReviewViewModel.updateWordReviewProgress(words[currentIndex].id, false)
+                                    // Navigation logic is now in onNext
+                                },
+                                onSkip = {
+                                    // Skip this word without updating progress
+                                    wordReviewViewModel.skipWordReview(words[currentIndex].id)
+                                    // Navigation logic is now in onNext
+                                },
+                                onBack = {
+                                    // Cancel review and go back to summary
                                     currentScreen = Screen.WordDetailSummary
-                                }
-                            },
-                        )
+                                },
+                                onNext = {
+                                    // Navigation logic: move to next word or back to summary if done
+                                    if (currentIndex + 1 < words.size) {
+                                        currentScreen = Screen.WordReview(words, currentIndex + 1)
+                                    } else {
+                                        // All words reviewed, refresh data and go back to summary
+                                        wordReviewViewModel.loadWordsForReview() // Refresh data
+                                        currentScreen = Screen.WordDetailSummary
+                                    }
+                                },
+                            )
+                        } else {
+                            // Safety check - if no more words, go back to summary
+                            wordReviewViewModel.loadWordsForReview() // Refresh data
+                            currentScreen = Screen.WordDetailSummary
+                        }
                     } else {
-                        // Safety check - if no more words, go back to summary
-                        wordReviewViewModel.loadWordsForReview() // Refresh data
-                        currentScreen = Screen.WordDetailSummary
+                         // Handle the case where the repository/ViewModel is not available (e.g., in preview)
+                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                             Text("Error: Word Repository not initialized.")
+                         }
                     }
                 }
+
+                Screen.EditProfile   -> TODO()
             }
         }
     }

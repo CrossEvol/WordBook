@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.crossevol.wordbook.ui.viewmodel.ApiKeyViewModel // Import ViewModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 // Define data structure for LLM providers and models
@@ -151,9 +152,9 @@ val llmProviders = listOf(
  * Page for adding or editing an API Key configuration.
  * Based on design/settings/ApiKeySetting.png (conceptually, though the image shows a list)
  *
+ * @param viewModel The ViewModel handling the save operation.
  * @param config The ApiKeyConfig to edit, or null for adding a new one.
  * @param onNavigateBack Callback to navigate back.
- * @param onSaveChanges Callback when save button is clicked.
  */
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -161,10 +162,10 @@ val llmProviders = listOf(
 )
 @Composable
 fun ApiKeyEditingPage(
+    viewModel: ApiKeyViewModel, // Receive ViewModel
     config: ApiKeyConfig? = null, // Optional config for editing
     onNavigateBack: () -> Unit,
-    // Updated signature to pass alias, apiKey, provider, and model
-    onSaveChanges: (alias: String, apiKey: String, provider: String, model: String) -> Unit
+    // onSaveChanges callback is now handled internally by calling the ViewModel
 ) {
     // State for the input fields, initialized with config data if editing
     var alias by remember { mutableStateOf(config?.alias ?: "") }
@@ -316,13 +317,18 @@ fun ApiKeyEditingPage(
                 // Save Button
                 Button(
                     onClick = {
-                        // Pass all relevant data to the updated callback
-                        onSaveChanges(
-                            alias,
-                            apiKey,
-                            selectedProviderName,
-                            selectedModelName // Pass the selected model
+                        // Create the ApiKeyConfig object
+                        val configToSave = ApiKeyConfig(
+                            id = config?.id ?: 0L, // Use existing ID if editing, 0L for new
+                            alias = alias,
+                            apiKey = apiKey,
+                            provider = selectedProviderName,
+                            model = selectedModelName
                         )
+                        // Call the ViewModel's save function
+                        viewModel.saveApiKeyConfig(configToSave)
+                        // Navigate back after saving
+                        onNavigateBack()
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -340,34 +346,3 @@ fun ApiKeyEditingPage(
     }
 }
 
-@Preview
-@Composable
-fun ApiKeyEditingPagePreview() {
-    MaterialTheme {
-        // Preview for adding a new key
-        ApiKeyEditingPage(
-            onNavigateBack = {},
-            onSaveChanges = { _, _, _, _ -> }
-        )
-    }
-}
-
-@Preview
-@Composable
-fun ApiKeyEditingPagePreviewEdit() {
-    MaterialTheme {
-        // Preview for editing an existing key
-        val sampleConfig = ApiKeyConfig(
-            id = 1, // Add ID for preview context
-            alias = "My Gemini Key",
-            apiKey = "sk-...", // Include a dummy key for preview
-            provider = "Google",
-            model = "gemini-1.5-pro-preview-0514"
-        )
-        ApiKeyEditingPage(
-            config = sampleConfig,
-            onNavigateBack = {},
-            onSaveChanges = { _, _, _, _ -> }
-        )
-    }
-}

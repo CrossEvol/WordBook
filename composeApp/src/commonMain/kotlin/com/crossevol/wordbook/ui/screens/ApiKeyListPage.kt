@@ -12,12 +12,15 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.crossevol.wordbook.ui.viewmodel.ApiKeyViewModel // Import ViewModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 // Data class to represent a saved API Key configuration
@@ -36,21 +39,23 @@ data class ApiKeyConfig(
  * Page for listing saved API Key configurations.
  * Based on design/settings/ApiKeySetting.png
  *
- * @param apiKeyConfigs The list of saved API key configurations.
+ * @param viewModel The ViewModel providing the list of API keys and handling actions.
  * @param onNavigateBack Callback to navigate back.
  * @param onAddApiKey Callback to navigate to the Add API Key page.
  * @param onEditApiKey Callback when an API key item's Edit button is clicked.
- * @param onDeleteApiKey Callback when an API key item's Delete button is clicked.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ApiKeyListPage(
-    apiKeyConfigs: List<ApiKeyConfig>, // List is now required, comes from outside
+    viewModel: ApiKeyViewModel, // Receive ViewModel
     onNavigateBack: () -> Unit,
     onAddApiKey: () -> Unit,
     onEditApiKey: (ApiKeyConfig) -> Unit,
-    onDeleteApiKey: (ApiKeyConfig) -> Unit
+    // onDeleteApiKey is now handled by the ViewModel directly from the item composable
 ) {
+    // Collect the list of API keys from the ViewModel's StateFlow
+    val apiKeyConfigs by viewModel.apiKeyConfigs.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -93,7 +98,7 @@ fun ApiKeyListPage(
                 ApiKeyItem(
                     config = config,
                     onEditClick = { onEditApiKey(config) },
-                    onDeleteClick = { onDeleteApiKey(config) }
+                    onDeleteClick = { viewModel.deleteApiKeyConfig(config) } // Call ViewModel delete
                 )
             }
         }
@@ -188,40 +193,3 @@ fun ApiKeyItem(
 }
 
 
-@Preview
-@Composable
-fun ApiKeyListPagePreview() {
-    MaterialTheme {
-        // Provide a sample list for the preview
-        val sampleApiKeyConfigs = listOf(
-            ApiKeyConfig(
-                1,
-                "My Gemini Key",
-                apiKey = "",
-                "Google",
-                "gemini-2.5-flash-preview-04-17"
-            ),
-            ApiKeyConfig(
-                2,
-                "My Claude Key",
-                apiKey = "",
-                "Anthropic",
-                "claude-3-sonnet-20240229"
-            ),
-            ApiKeyConfig(
-                3,
-                "My OpenAI Key",
-                apiKey = "",
-                "OpenAI",
-                "gpt-4o"
-            ),
-        )
-        ApiKeyListPage(
-            apiKeyConfigs = sampleApiKeyConfigs, // Use sample data for preview
-            onNavigateBack = {},
-            onAddApiKey = {},
-            onEditApiKey = {},
-            onDeleteApiKey = {}
-        )
-    }
-}

@@ -43,47 +43,55 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.crossevol.wordbook.data.ApiKeyConfigRepository
-import com.crossevol.wordbook.data.api.WordFetchApi
+import com.crossevol.wordbook.data.ApiKeyConfigRepository // Keep for Mock
+import com.crossevol.wordbook.data.api.WordFetchApi // Keep for Mock
 import com.crossevol.wordbook.data.api.WordFetchResultJson
 import com.crossevol.wordbook.ui.components.RelatedWordItem
 import com.crossevol.wordbook.data.WordRepository // Import for Mock
 import com.crossevol.wordbook.ui.components.SentenceItem
 import com.crossevol.wordbook.ui.svgicons.MyIconPack
 import com.crossevol.wordbook.ui.svgicons.myiconpack.Save
-import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel
+import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel // Import ViewModel
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.LaunchedEffect // Import LaunchedEffect
 import kotlinx.coroutines.flow.collectLatest // Import collectLatest
+import androidx.compose.runtime.collectAsState // Import collectAsState
+import com.crossevol.wordbook.ui.viewmodel.ApiKeyViewModel // Import ApiKeyViewModel
 
 
 private val logger = KotlinLogging.logger {} // Add logger instance
 
 @OptIn(
     ExperimentalMaterial3Api::class, // Keep for Scaffold etc.
-    ExperimentalComposeUiApi::class, // Might be needed for focus or other interactions later
     ExperimentalMaterialApi::class
 )
 @Composable
 fun WordFetchPage(
-    viewModel: WordFetchViewModel, // Accept ViewModel as parameter
+    viewModel: WordFetchViewModel, // Accept WordFetchViewModel as parameter
+    apiKeyViewModel: ApiKeyViewModel, // Add apiKeyViewModel parameter back
     snackbarHostState: SnackbarHostState, // Accept SnackbarHostState
     onBack: () -> Unit,
 ) {
-    // Observe state from ViewModel
+    // Observe state from ViewModels
     val searchQuery = viewModel.searchQuery
-    val selectedModel = viewModel.selectedModel
+    val selectedModel = viewModel.selectedModel // Still managed by WordFetchViewModel
     val selectedLanguageTabIndex = viewModel.selectedLanguageTabIndex
     val isLoading = viewModel.isLoading
     val fetchedResult = viewModel.fetchedResult
     val errorMessage = viewModel.errorMessage
     val isResultSaved = viewModel.isResultSaved
     val isSaving = viewModel.isSaving
+
+    // Observe API key configurations from ApiKeyViewModel
+    val apiKeyConfigs by apiKeyViewModel.apiKeyConfigs.collectAsState()
+    val modelOptions = remember(apiKeyConfigs) {
+        apiKeyConfigs.map { it.model }.distinct() // Derive model options from configs
+    }
+
 
     // State for dropdown menu
     var isDropdownExpanded by remember { mutableStateOf(false) }
@@ -207,11 +215,11 @@ fun WordFetchPage(
                     expanded = isDropdownExpanded,
                     onDismissRequest = { isDropdownExpanded = false }
                 ) {
-                    viewModel.modelOptions.forEach { option -> // Use options from ViewModel
+                    modelOptions.forEach { option -> // Use derived modelOptions
                         DropdownMenuItem(
                             text = { Text(option) },
                             onClick = {
-                                viewModel.onModelSelect(option) // Update ViewModel state
+                                viewModel.onModelSelect(option) // Update WordFetchViewModel state
                                 isDropdownExpanded = false
                             }
                         )
@@ -643,6 +651,19 @@ private class MockWordRepository : WordRepository(database = null!!) { // Use nu
     // Implement other methods if needed by previews, otherwise leave empty or throw
 }
 
+// Add MockApiKeyViewModel back for previews
+private class MockApiKeyViewModel(repository: ApiKeyConfigRepository) : ApiKeyViewModel(repository) {
+    // Override the StateFlow to provide dummy data for previews
+    override val apiKeyConfigs = kotlinx.coroutines.flow.MutableStateFlow(
+        listOf(
+            ApiKeyConfig(id = 1, alias = "Gemini Key 1", apiKey = "dummy_key_1", provider = "Google", model = "gemini-1.5-flash"),
+            ApiKeyConfig(id = 2, alias = "Gemini Key 2", apiKey = "dummy_key_2", provider = "Google", model = "gemini-1.5-pro"),
+            ApiKeyConfig(id = 3, alias = "OpenAI Key", apiKey = "dummy_key_3", provider = "OpenAI", model = "gpt-4o")
+        )
+    )
+    // Other methods can remain as is or be mocked if needed by preview scenarios
+}
+
 
 // --- Previews ---
 
@@ -651,23 +672,27 @@ private class MockWordRepository : WordRepository(database = null!!) { // Use nu
 fun WordFetchPagePreview_Initial() {
     MaterialTheme {
         Surface {
-            // Create a dummy ViewModel for preview
-            val dummyApi = WordFetchApi() // API client no longer needs key in constructor
-            val dummyRepo = MockApiKeyConfigRepository() // Create mock repository
-            val dummyWordRepo = MockWordRepository() // Create mock word repository
-            val dummyViewModel = WordFetchViewModel(
+            // Create dummy dependencies for preview
+            val dummyApi = WordFetchApi()
+            val dummyApiKeyRepo = MockApiKeyConfigRepository() // Use mock repository
+            val dummyWordRepo = MockWordRepository()
+            val dummyApiKeyViewModel = MockApiKeyViewModel(dummyApiKeyRepo) // Use mock ApiKeyViewModel
+            val dummySnackbarHostState = SnackbarHostState()
+
+            // Create a dummy WordFetchViewModel for preview, passing the mock ApiKeyViewModel
+            val dummyWordFetchViewModel = WordFetchViewModel(
                 api = dummyApi,
-                apiKeyConfigRepository = dummyRepo,
-                wordRepository = dummyWordRepo // Pass mock word repo
+                apiKeyViewModel = dummyApiKeyViewModel, // Pass mock ApiKeyViewModel
+                wordRepository = dummyWordRepo
             )
-            val dummySnackbarHostState = SnackbarHostState() // Create mock SnackbarHostState
 
             // Set initial state explicitly for preview if needed, though default is initial
-            dummyViewModel.resetPage()
+            dummyWordFetchViewModel.resetPage()
 
             WordFetchPage(
-                viewModel = dummyViewModel,
-                snackbarHostState = dummySnackbarHostState, // Pass mock SnackbarHostState
+                viewModel = dummyWordFetchViewModel,
+                apiKeyViewModel = dummyApiKeyViewModel, // Pass mock ApiKeyViewModel to the page
+                snackbarHostState = dummySnackbarHostState,
                 onBack = {}
             )
         }
@@ -679,24 +704,28 @@ fun WordFetchPagePreview_Initial() {
 fun WordFetchPagePreview_Loading() {
     MaterialTheme {
         Surface {
-            // Create a dummy ViewModel for preview
-            val dummyApi = WordFetchApi() // API client no longer needs key in constructor
-            val dummyRepo = MockApiKeyConfigRepository() // Create mock repository
-            val dummyWordRepo = MockWordRepository() // Create mock word repository
-            val dummyViewModel = WordFetchViewModel(
+            // Create dummy dependencies for preview
+            val dummyApi = WordFetchApi()
+            val dummyApiKeyRepo = MockApiKeyConfigRepository() // Use mock repository
+            val dummyWordRepo = MockWordRepository()
+            val dummyApiKeyViewModel = MockApiKeyViewModel(dummyApiKeyRepo) // Use mock ApiKeyViewModel
+            val dummySnackbarHostState = SnackbarHostState()
+
+            // Create a dummy WordFetchViewModel for preview, passing the mock ApiKeyViewModel
+            val dummyWordFetchViewModel = WordFetchViewModel(
                 api = dummyApi,
-                apiKeyConfigRepository = dummyRepo,
-                wordRepository = dummyWordRepo // Pass mock word repo
+                apiKeyViewModel = dummyApiKeyViewModel, // Pass mock ApiKeyViewModel
+                wordRepository = dummyWordRepo
             )
-            val dummySnackbarHostState = SnackbarHostState() // Create mock SnackbarHostState
 
             // Simulate loading state
-            dummyViewModel.isLoading = true
-            dummyViewModel.onSearchQueryChange("test")
+            dummyWordFetchViewModel.isLoading = true
+            dummyWordFetchViewModel.onSearchQueryChange("test")
 
             WordFetchPage(
-                viewModel = dummyViewModel,
-                snackbarHostState = dummySnackbarHostState, // Pass mock SnackbarHostState
+                viewModel = dummyWordFetchViewModel,
+                apiKeyViewModel = dummyApiKeyViewModel, // Pass mock ApiKeyViewModel to the page
+                snackbarHostState = dummySnackbarHostState,
                 onBack = {}
             )
         }
@@ -709,19 +738,22 @@ fun WordFetchPagePreview_Loading() {
 fun WordFetchPagePreview_Success() {
     MaterialTheme {
         Surface {
-            // Create a dummy ViewModel for preview
-            val dummyApi = WordFetchApi() // API client no longer needs key in constructor
-            val dummyRepo = MockApiKeyConfigRepository() // Create mock repository
-            val dummyWordRepo = MockWordRepository() // Create mock word repository
-            val dummyViewModel = WordFetchViewModel(
+            // Create dummy dependencies for preview
+            val dummyApi = WordFetchApi()
+            val dummyApiKeyRepo = MockApiKeyConfigRepository() // Use mock repository
+            val dummyWordRepo = MockWordRepository()
+            val dummyApiKeyViewModel = MockApiKeyViewModel(dummyApiKeyRepo) // Use mock ApiKeyViewModel
+            val dummySnackbarHostState = SnackbarHostState()
+
+            // Create a dummy WordFetchViewModel for preview, passing the mock ApiKeyViewModel
+            val dummyWordFetchViewModel = WordFetchViewModel(
                 api = dummyApi,
-                apiKeyConfigRepository = dummyRepo,
-                wordRepository = dummyWordRepo // Pass mock word repo
+                apiKeyViewModel = dummyApiKeyViewModel, // Pass mock ApiKeyViewModel
+                wordRepository = dummyWordRepo
             )
-            val dummySnackbarHostState = SnackbarHostState() // Create mock SnackbarHostState
 
             // Simulate success state with dummy data
-            dummyViewModel.fetchedResult = WordFetchResultJson(
+            dummyWordFetchViewModel.fetchedResult = WordFetchResultJson(
                 text = "热情",
                 enExplanation = "Enthusiasm; passion; warmth; fervent; cordial",
                 enSentences = "They welcomed us with great warmth and hospitaly.;She is full of enthusiasm for her work.",
@@ -736,12 +768,13 @@ fun WordFetchPagePreview_Success() {
                 zhRelatedWords = "热心(rèxīn);激情(jīqíng);积极(jījí);热烈g",
                 zhPronunciation = "rèqíng",
             )
-            dummyViewModel.onSearchQueryChange("热情")
-            dummyViewModel.selectedLanguageTabIndex = 0 // Start with EN tab
+            dummyWordFetchViewModel.onSearchQueryChange("热情")
+            dummyWordFetchViewModel.selectedLanguageTabIndex = 0 // Start with EN tab
 
             WordFetchPage(
-                viewModel = dummyViewModel,
-                snackbarHostState = dummySnackbarHostState, // Pass mock SnackbarHostState
+                viewModel = dummyWordFetchViewModel,
+                apiKeyViewModel = dummyApiKeyViewModel, // Pass mock ApiKeyViewModel to the page
+                snackbarHostState = dummySnackbarHostState,
                 onBack = {}
             )
         }
@@ -753,24 +786,28 @@ fun WordFetchPagePreview_Success() {
 fun WordFetchPagePreview_Error() {
     MaterialTheme {
         Surface {
-            // Create a dummy ViewModel for preview
-            val dummyApi = WordFetchApi() // API client no longer needs key in constructor
-            val dummyRepo = MockApiKeyConfigRepository() // Create mock repository
-            val dummyWordRepo = MockWordRepository() // Create mock word repository
-            val dummyViewModel = WordFetchViewModel(
+            // Create dummy dependencies for preview
+            val dummyApi = WordFetchApi()
+            val dummyApiKeyRepo = MockApiKeyConfigRepository() // Use mock repository
+            val dummyWordRepo = MockWordRepository()
+            val dummyApiKeyViewModel = MockApiKeyViewModel(dummyApiKeyRepo) // Use mock ApiKeyViewModel
+            val dummySnackbarHostState = SnackbarHostState()
+
+            // Create a dummy WordFetchViewModel for preview, passing the mock ApiKeyViewModel
+            val dummyWordFetchViewModel = WordFetchViewModel(
                 api = dummyApi,
-                apiKeyConfigRepository = dummyRepo,
-                wordRepository = dummyWordRepo // Pass mock word repo
+                apiKeyViewModel = dummyApiKeyViewModel, // Pass mock ApiKeyViewModel
+                wordRepository = dummyWordRepo
             )
-            val dummySnackbarHostState = SnackbarHostState() // Create mock SnackbarHostState
 
             // Simulate error state
-            dummyViewModel.errorMessage = "Failed to connect to the API."
-            dummyViewModel.onSearchQueryChange("test")
+            dummyWordFetchViewModel.errorMessage = "Failed to connect to the API."
+            dummyWordFetchViewModel.onSearchQueryChange("test")
 
             WordFetchPage(
-                viewModel = dummyViewModel,
-                snackbarHostState = dummySnackbarHostState, // Pass mock SnackbarHostState
+                viewModel = dummyWordFetchViewModel,
+                apiKeyViewModel = dummyApiKeyViewModel, // Pass mock ApiKeyViewModel to the page
+                snackbarHostState = dummySnackbarHostState,
                 onBack = {}
             )
         }
