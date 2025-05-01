@@ -18,13 +18,13 @@ private val logger = KotlinLogging.logger {}
  * ViewModel for managing API Key configurations.
  * Handles fetching, saving (add/edit), and deleting API keys.
  */
-class ApiKeyViewModel(
+open class ApiKeyViewModel(
     private val repository: ApiKeyConfigRepository
 ) : ViewModel() {
 
     // StateFlow to hold the list of API key configurations
     private val _apiKeyConfigs = MutableStateFlow<List<ApiKeyConfig>>(emptyList())
-    val apiKeyConfigs: StateFlow<List<ApiKeyConfig>> = _apiKeyConfigs.asStateFlow()
+    open val apiKeyConfigs: StateFlow<List<ApiKeyConfig>> = _apiKeyConfigs.asStateFlow()
 
     init {
         // Load initial data when the ViewModel is created
