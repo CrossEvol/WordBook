@@ -19,6 +19,82 @@ val sampleWordItem = WordItemUI( // Changed from WordItem
     )
 )
 
+// --- Added mock data for words that need review ---
+// These will be used in the DatabaseInitializer
+val mockWordsForReview = listOf(
+    WordItemUI(
+        id = 101L,
+        title = "Procrastination",
+        explanation = "The act of delaying or postponing tasks, often despite knowing that such delay may have negative consequences.",
+        pronunciation = "/prəˌkræstɪˈneɪʃən/",
+        rating = 0, // Lowest rating - needs immediate review
+        sentences = listOf(
+            "His procrastination led to missing the important deadline.",
+            "She's trying to overcome her habit of procrastination by using time management techniques."
+        ),
+        relatedWords = listOf(
+            "delay",
+            "postpone",
+            "defer",
+            "hesitate"
+        )
+    ),
+    WordItemUI(
+        id = 102L,
+        title = "Serendipity",
+        explanation = "The occurrence and development of events by chance in a happy or beneficial way.",
+        pronunciation = "/ˌsɛrənˈdɪpɪti/",
+        rating = 0, // Low rating - needs review soon
+        sentences = listOf(
+            "Meeting my business partner was pure serendipity—we were seated next to each other on a flight.",
+            "Scientific discoveries are often the result of serendipity rather than methodical planning."
+        ),
+        relatedWords = listOf(
+            "chance",
+            "fortune",
+            "luck",
+            "happenstance",
+            "coincidence"
+        )
+    ),
+    WordItemUI(
+        id = 103L,
+        title = "Eloquent",
+        explanation = "Fluent or persuasive in speaking or writing, able to express oneself clearly and effectively.",
+        pronunciation = "/ˈɛləkwənt/",
+        rating = 0, // Medium-low rating
+        sentences = listOf(
+            "Her eloquent speech moved the audience to tears.",
+            "He made an eloquent argument for environmental conservation."
+        ),
+        relatedWords = listOf(
+            "articulate",
+            "fluent",
+            "expressive",
+            "silver-tongued",
+            "persuasive"
+        )
+    ),
+    WordItemUI(
+        id = 104L,
+        title = "Ephemeral",
+        explanation = "Lasting for a very short time, temporary or transient.",
+        pronunciation = "/ɪˈfɛmərəl/",
+        rating = 0, // Medium rating
+        sentences = listOf(
+            "The beauty of cherry blossoms is ephemeral, lasting only a few days each year.",
+            "Fashion trends are often ephemeral, quickly replaced by new styles."
+        ),
+        relatedWords = listOf(
+            "fleeting",
+            "transitory",
+            "momentary",
+            "brief",
+            "short-lived"
+        )
+    )
+)
+
 // Sample data for the home page list (Manually extracted from JSONs)
 val sampleWordListEN = listOf(
     WordItemUI(

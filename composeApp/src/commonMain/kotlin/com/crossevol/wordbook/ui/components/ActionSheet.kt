@@ -24,9 +24,12 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 /**
  * A simple action sheet composable based on the design image Action2SheetSimple.png.
  *
- * @param onEdit Callback for the "Edit" action.
- * @param onDelete Callback for the "Delete" action.
- * @param onCancel Callback for the "Cancel" action.
+ * @param onEdit Callback for the "Remember" action.
+ * @param onDelete Callback for the "Forget" action.
+ * @param onCancel Callback for the "Skip" action.
+ * @param editLabel Custom label for the edit button (default: "Remember").
+ * @param deleteLabel Custom label for the delete button (default: "Forget").
+ * @param cancelLabel Custom label for the cancel button (default: "Skip").
  * @param modifier Modifier for the Column layout.
  */
 @Composable
@@ -34,6 +37,9 @@ fun SimpleActionSheet(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onCancel: () -> Unit,
+    editLabel: String = "Remember",
+    deleteLabel: String = "Forget",
+    cancelLabel: String = "Skip",
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -41,51 +47,69 @@ fun SimpleActionSheet(
             .fillMaxWidth()
             .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)), // Rounded top corners
         color = MaterialTheme.colorScheme.surface, // Or a specific background color if needed
-        shadowElevation = 4.dp // Add some elevation
+        shadowElevation = 8.dp // Increased elevation for more prominence
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp), // Padding around the buttons
+                .padding(24.dp), // Increased padding for larger sheet
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp) // Space between buttons
+            verticalArrangement = Arrangement.spacedBy(16.dp) // Increased space between buttons
         ) {
-            // Edit Button (Teal color)
+            // Remember Button (Teal color)
             Button(
                 onClick = onEdit,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp), // Taller buttons
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF4DB6AC) // Teal color from image
                 )
             ) {
-                Text("Edit Post") // Text from image
+                Text(
+                    editLabel, 
+                    style = MaterialTheme.typography.titleMedium // Larger text
+                )
             }
 
-            // Delete Button (Red color)
+            // Forget Button (Red color)
             Button(
                 onClick = onDelete,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp), // Taller buttons
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFF06292) // Pink/Red color from image
                 )
             ) {
-                Text("Delete Story") // Text from image
+                Text(
+                    deleteLabel, 
+                    style = MaterialTheme.typography.titleMedium // Larger text
+                )
             }
 
-            // Cancel Button (Light Gray color)
+            // Skip Button (Light Gray color)
             Button(
                 onClick = onCancel,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp), // Taller buttons
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFE0E0E0), // Light gray from image
                     contentColor = Color.Black.copy(alpha = 0.7f) // Darker text for contrast
                 )
             ) {
-                Text("Cancel") // Text from image
+                Text(
+                    cancelLabel, 
+                    style = MaterialTheme.typography.titleMedium // Larger text
+                )
             }
+            
+            // Add some space at the bottom
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

@@ -8,6 +8,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
 import com.crossevol.wordbook.data.mock.sampleWordListEN
 import com.crossevol.wordbook.data.mock.sampleWordListJA
 import com.crossevol.wordbook.data.mock.sampleWordListZH
+import com.crossevol.wordbook.data.mock.mockWordsForReview // Import the new mock data
 
 private val logger = KotlinLogging.logger {} // Add logger instance
 
@@ -59,7 +60,22 @@ fun initializeDatabase(
     val wordCount = database.wordQueries.countWords().executeAsOne()
     if (wordCount == 0L) {
         logger.info { "DatabaseInitializer: word table is empty, inserting sample word data." }
+        
         database.transaction { // Use a transaction for efficiency
+            // First add the mock review words (words that need review)
+            logger.info { "DatabaseInitializer: adding ${mockWordsForReview.size} words for review." }
+            mockWordsForReview.forEach { word ->
+                wordRepository.saveWordDetails(
+                    title = word.title,
+                    languageCode = "EN", // All mock review words are in English
+                    explanation = word.explanation,
+                    sentences = word.sentences,
+                    pronunciation = word.pronunciation,
+                    relatedWords = word.relatedWords,
+                    rating = word.rating
+                )
+            }
+            
             // Seed English words
             sampleWordListEN.forEach { item ->
                 wordRepository.saveWordDetails(
@@ -86,7 +102,15 @@ fun initializeDatabase(
             }
             // Seed Chinese words
             sampleWordListZH.forEach { item ->
-                wordRepository.saveWordDetails( /* ... same pattern as above ... */ title = item.title, languageCode = "ZH", explanation = item.explanation, sentences = item.sentences, pronunciation = item.pronunciation, relatedWords = item.relatedWords, rating = item.rating)
+                wordRepository.saveWordDetails(
+                    title = item.title,
+                    languageCode = "ZH",
+                    explanation = item.explanation,
+                    sentences = item.sentences,
+                    pronunciation = item.pronunciation,
+                    relatedWords = item.relatedWords,
+                    rating = item.rating
+                )
             }
         }
         logger.info { "DatabaseInitializer: Sample word data inserted." }

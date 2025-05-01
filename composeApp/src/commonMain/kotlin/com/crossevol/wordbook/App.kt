@@ -30,7 +30,9 @@ import com.crossevol.wordbook.ui.screens.SettingsPage
 import com.crossevol.wordbook.ui.screens.WordDetailPage
 import com.crossevol.wordbook.ui.screens.WordFetchPage
 import com.crossevol.wordbook.ui.screens.WordDetailSummaryPage // Import the new summary page
+import com.crossevol.wordbook.ui.screens.WordReviewPage
 import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel // Import ViewModel
+import com.crossevol.wordbook.ui.viewmodel.WordReviewViewModel // Import the new ViewModel
 import com.russhwolf.settings.Settings // Import Settings
 import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -53,6 +55,7 @@ sealed class Screen {
     data class ApiKeyEdit(val config: ApiKeyConfig? = null) : Screen() // config is optional for adding
     data object WordFetch : Screen() // Add WordFetch screen state
     data object WordDetailSummary : Screen() // Add state for the new summary page
+    data class WordReview(val words: List<WordItemUI>, val currentIndex: Int = 0) : Screen() // Add state for review process
 }
 
 @Composable
@@ -112,6 +115,10 @@ fun App(
         } else null // Return null if dependencies aren't ready
     }
 
+    // Create ViewModel for WordReviewPage
+    val wordReviewViewModel = remember(wordRepository) {
+        WordReviewViewModel(wordRepository = wordRepository!!)
+    }
 
     MaterialTheme {
         // Wrap the screen content with Scaffold to provide SnackbarHost
@@ -248,8 +255,6 @@ fun App(
                     // else if (wordRepository == null) { ... show different error ... }
                 }
 
-
-
                 is Screen.ApiKeyEdit -> { // Handle the ApiKeyEdit screen state
                     ApiKeyEditingPage(
                         config = screen.config, // Pass the config from the screen state
@@ -288,23 +293,78 @@ fun App(
                 }
 
                 is Screen.WordDetailSummary -> { // Add case for the new summary page
-                    // Fetch words to review (replace with actual logic later)
-                    val wordsToReview = remember(wordRepository) {
-                        wordRepository?.getWordItemsForLanguage("EN") ?: emptyList() // Example: Get English words
-                    }
                     WordDetailSummaryPage(
-                        wordsToReview = wordsToReview, // Pass the list of words
-                        onStart = {
-                            // TODO: Implement navigation to the actual review/flashcard screen
-                            logger.info { "Start review process..." }
-                            // Example: Navigate to a hypothetical Flashcard screen
-                            // currentScreen = Screen.Flashcard(wordsToReview.first())
+                        viewModel = wordReviewViewModel,
+                        onStart = { wordList ->
+                            logger.info { "Starting review with ${wordList.size} words" }
+                            currentScreen = Screen.WordReview(wordList) // Navigate to review page with words
                         },
                         onBack = {
                             logger.info { "Navigating back to Home from WordDetailSummary." }
                             currentScreen = Screen.Home // Navigate back to Home
                         }
                     )
+                }
+
+                is Screen.WordReview -> {
+                    val reviewState = screen as Screen.WordReview
+                    val words = reviewState.words
+                    val currentIndex = reviewState.currentIndex
+                    
+                    if (currentIndex < words.size) {
+                        WordReviewPage(
+                            wordItem = words[currentIndex],
+                            remainingWordsCount = words.size - currentIndex, // Pass the count of remaining words
+                            onRemember = {
+                                // Update word progress (remembered)
+                                wordReviewViewModel.updateWordReviewProgress(words[currentIndex].id, true)
+                                
+                                // Navigate to next word or back to summary if done
+                                if (currentIndex + 1 < words.size) {
+                                    currentScreen = Screen.WordReview(words, currentIndex + 1)
+                                } else {
+                                    // All words reviewed, refresh data and go back to summary
+                                    wordReviewViewModel.loadWordsForReview() // Refresh data
+                                    currentScreen = Screen.WordDetailSummary
+                                }
+                            },
+                            onForget = {
+                                // Update word progress (forgotten)
+                                wordReviewViewModel.updateWordReviewProgress(words[currentIndex].id, false)
+                                
+                                // Navigate to next word or back to summary if done
+                                if (currentIndex + 1 < words.size) {
+                                    currentScreen = Screen.WordReview(words, currentIndex + 1)
+                                } else {
+                                    // All words reviewed, refresh data and go back to summary
+                                    wordReviewViewModel.loadWordsForReview() // Refresh data
+                                    currentScreen = Screen.WordDetailSummary
+                                }
+                            },
+                            onSkip = {
+                                // Skip this word without updating progress
+                                wordReviewViewModel.skipWordReview(words[currentIndex].id)
+                                
+                                // Navigate to next word or back to summary if done
+                                if (currentIndex + 1 < words.size) {
+                                    currentScreen = Screen.WordReview(words, currentIndex + 1)
+                                } else {
+                                    // All words reviewed, refresh data and go back to summary
+                                    wordReviewViewModel.loadWordsForReview() // Refresh data
+                                    currentScreen = Screen.WordDetailSummary
+                                }
+                            },
+                            onBack = {
+                                // Cancel review and go back to summary
+                                currentScreen = Screen.WordDetailSummary
+                            },
+                            onNext ={},
+                        )
+                    } else {
+                        // Safety check - if no more words, go back to summary
+                        wordReviewViewModel.loadWordsForReview() // Refresh data
+                        currentScreen = Screen.WordDetailSummary
+                    }
                 }
             }
         }
