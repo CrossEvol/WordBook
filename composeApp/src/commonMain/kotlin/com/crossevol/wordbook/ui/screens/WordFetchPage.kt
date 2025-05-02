@@ -61,6 +61,15 @@ import androidx.compose.runtime.LaunchedEffect // Import LaunchedEffect
 import kotlinx.coroutines.flow.collectLatest // Import collectLatest
 import androidx.compose.runtime.collectAsState // Import collectAsState
 import com.crossevol.wordbook.ui.viewmodel.ApiKeyViewModel // Import ApiKeyViewModel
+import io.ktor.client.* // Import HttpClient for previews
+import io.ktor.client.plugins.contentnegotiation.* // Import ContentNegotiation for previews
+import io.ktor.serialization.kotlinx.json.* // Import json serialization for previews
+import kotlinx.serialization.json.Json // Import Json for previews
+import io.ktor.http.* // Import HttpStatusCode for previews
+import io.ktor.client.request.* // Import HttpRequestBuilder for previews
+import io.ktor.client.statement.* // Import HttpResponse for previews
+import io.ktor.utils.io.* // Import ByteReadChannel for previews
+import io.ktor.client.plugins.HttpTimeout // Import HttpTimeout for previews
 
 
 private val logger = KotlinLogging.logger {} // Add logger instance
@@ -672,8 +681,30 @@ private class MockApiKeyViewModel(repository: ApiKeyConfigRepository) : ApiKeyVi
 fun WordFetchPagePreview_Initial() {
     MaterialTheme {
         Surface {
+            // Create a dummy HttpClient for previews
+             val dummyHttpClient = HttpClient {
+                install(ContentNegotiation) {
+                    json(Json {
+                        ignoreUnknownKeys = true // Ignore extra fields in the response if any
+                        prettyPrint = true
+                        isLenient = true // Be lenient with JSON parsing
+                    })
+                }
+                // Add HttpTimeout plugin
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 10000 // Set request timeout to 10 seconds
+                    // You can also set connectTimeoutMillis and socketTimeoutMillis if needed
+                }
+                // Optional: Add logging plugin for debugging
+                // install(Logging) {
+                //     logger = Logger.DEFAULT
+                //     level = LogLevel.INFO
+                // }
+            }
+
+
             // Create dummy dependencies for preview
-            val dummyApi = WordFetchApi()
+            val dummyApi = WordFetchApi(dummyHttpClient) // Pass the dummy client
             val dummyApiKeyRepo = MockApiKeyConfigRepository() // Use mock repository
             val dummyWordRepo = MockWordRepository()
             val dummyApiKeyViewModel = MockApiKeyViewModel(dummyApiKeyRepo) // Use mock ApiKeyViewModel
@@ -704,8 +735,32 @@ fun WordFetchPagePreview_Initial() {
 fun WordFetchPagePreview_Loading() {
     MaterialTheme {
         Surface {
+            // Create a dummy HttpClient for previews
+            // --- Configure and Create HttpClient for Android ---
+            // Use the Android engine. It typically respects system proxy settings.
+            // Create a dummy HttpClient for previews
+            val dummyHttpClient = HttpClient {
+                install(ContentNegotiation) {
+                    json(Json {
+                        ignoreUnknownKeys = true // Ignore extra fields in the response if any
+                        prettyPrint = true
+                        isLenient = true // Be lenient with JSON parsing
+                    })
+                }
+                // Add HttpTimeout plugin
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 10000 // Set request timeout to 10 seconds
+                    // You can also set connectTimeoutMillis and socketTimeoutMillis if needed
+                }
+                // Optional: Add logging plugin for debugging
+                // install(Logging) {
+                //     logger = Logger.DEFAULT
+                //     level = LogLevel.INFO
+                // }
+            }
+
             // Create dummy dependencies for preview
-            val dummyApi = WordFetchApi()
+            val dummyApi = WordFetchApi(dummyHttpClient) // Pass the dummy client
             val dummyApiKeyRepo = MockApiKeyConfigRepository() // Use mock repository
             val dummyWordRepo = MockWordRepository()
             val dummyApiKeyViewModel = MockApiKeyViewModel(dummyApiKeyRepo) // Use mock ApiKeyViewModel
@@ -738,8 +793,30 @@ fun WordFetchPagePreview_Loading() {
 fun WordFetchPagePreview_Success() {
     MaterialTheme {
         Surface {
+            // Create a dummy HttpClient for previews
+            // Create a dummy HttpClient for previews
+            val dummyHttpClient = HttpClient {
+                install(ContentNegotiation) {
+                    json(Json {
+                        ignoreUnknownKeys = true // Ignore extra fields in the response if any
+                        prettyPrint = true
+                        isLenient = true // Be lenient with JSON parsing
+                    })
+                }
+                // Add HttpTimeout plugin
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 10000 // Set request timeout to 10 seconds
+                    // You can also set connectTimeoutMillis and socketTimeoutMillis if needed
+                }
+                // Optional: Add logging plugin for debugging
+                // install(Logging) {
+                //     logger = Logger.DEFAULT
+                //     level = LogLevel.INFO
+                // }
+            }
+
             // Create dummy dependencies for preview
-            val dummyApi = WordFetchApi()
+            val dummyApi = WordFetchApi(dummyHttpClient) // Pass the dummy client
             val dummyApiKeyRepo = MockApiKeyConfigRepository() // Use mock repository
             val dummyWordRepo = MockWordRepository()
             val dummyApiKeyViewModel = MockApiKeyViewModel(dummyApiKeyRepo) // Use mock ApiKeyViewModel
@@ -753,7 +830,7 @@ fun WordFetchPagePreview_Success() {
             )
 
             // Simulate success state with dummy data
-            dummyWordFetchViewModel.fetchedResult = WordFetchResultJson(
+             dummyWordFetchViewModel.fetchedResult = WordFetchResultJson(
                 text = "热情",
                 enExplanation = "Enthusiasm; passion; warmth; fervent; cordial",
                 enSentences = "They welcomed us with great warmth and hospitaly.;She is full of enthusiasm for her work.",
@@ -771,6 +848,7 @@ fun WordFetchPagePreview_Success() {
             dummyWordFetchViewModel.onSearchQueryChange("热情")
             dummyWordFetchViewModel.selectedLanguageTabIndex = 0 // Start with EN tab
 
+
             WordFetchPage(
                 viewModel = dummyWordFetchViewModel,
                 apiKeyViewModel = dummyApiKeyViewModel, // Pass mock ApiKeyViewModel to the page
@@ -786,8 +864,30 @@ fun WordFetchPagePreview_Success() {
 fun WordFetchPagePreview_Error() {
     MaterialTheme {
         Surface {
+            // Create a dummy HttpClient for previews that simulates an error
+            // Create a dummy HttpClient for previews
+            val dummyHttpClient = HttpClient {
+                install(ContentNegotiation) {
+                    json(Json {
+                        ignoreUnknownKeys = true // Ignore extra fields in the response if any
+                        prettyPrint = true
+                        isLenient = true // Be lenient with JSON parsing
+                    })
+                }
+                // Add HttpTimeout plugin
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 10000 // Set request timeout to 10 seconds
+                    // You can also set connectTimeoutMillis and socketTimeoutMillis if needed
+                }
+                // Optional: Add logging plugin for debugging
+                // install(Logging) {
+                //     logger = Logger.DEFAULT
+                //     level = LogLevel.INFO
+                // }
+            }
+
             // Create dummy dependencies for preview
-            val dummyApi = WordFetchApi()
+            val dummyApi = WordFetchApi(dummyHttpClient) // Pass the dummy client
             val dummyApiKeyRepo = MockApiKeyConfigRepository() // Use mock repository
             val dummyWordRepo = MockWordRepository()
             val dummyApiKeyViewModel = MockApiKeyViewModel(dummyApiKeyRepo) // Use mock ApiKeyViewModel

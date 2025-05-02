@@ -2,20 +2,17 @@ package com.crossevol.wordbook
 
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import com.crossevol.wordbook.data.api.WordFetchApi
 import com.crossevol.wordbook.db.DriverFactory
 import com.russhwolf.settings.PreferencesSettings
-import java.util.prefs.Preferences
-import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.timeout.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
-import com.crossevol.wordbook.data.api.WordFetchApi
 import java.net.URI
-import java.net.Proxy
-import java.net.InetSocketAddress
-import java.net.ProxySelector // Import ProxySelector
+import java.util.prefs.Preferences
 
 fun main() = application {
     // Create the database driver factory for desktop

@@ -6,17 +6,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import com.crossevol.wordbook.db.DriverFactory
-import com.crossevol.wordbook.db.createDatabase
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import com.russhwolf.settings.SharedPreferencesSettings // Import SharedPreferencesSettings
 import io.ktor.client.* // Import HttpClient
 import io.ktor.client.engine.android.* // Import Android engine
 import io.ktor.client.plugins.contentnegotiation.* // Import ContentNegotiation
-import io.ktor.client.plugins.timeout.* // Import HttpTimeout
 import io.ktor.serialization.kotlinx.json.* // Import json serialization
 import kotlinx.serialization.json.Json // Import Json
 import com.crossevol.wordbook.data.api.WordFetchApi // Import WordFetchApi
+import io.ktor.client.plugins.HttpTimeout
 
 
 private val logger = KotlinLogging.logger {} // Add logger instance
