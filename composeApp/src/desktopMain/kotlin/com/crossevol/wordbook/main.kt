@@ -1,7 +1,11 @@
 package com.crossevol.wordbook
 
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import com.crossevol.wordbook.data.api.WordFetchApi
 import com.crossevol.wordbook.db.DriverFactory
 import com.russhwolf.settings.PreferencesSettings
@@ -35,12 +39,21 @@ fun main() = application {
     if (!httpProxy.isNullOrBlank()) {
         try {
             val uri = URI(httpProxy)
-            System.setProperty("http.proxyHost", uri.host)
-            System.setProperty("http.proxyPort", uri.port.toString())
+            System.setProperty(
+                "http.proxyHost",
+                uri.host
+            )
+            System.setProperty(
+                "http.proxyPort",
+                uri.port.toString()
+            )
             // Note: Handling proxy authentication (user:pass@host:port) is more complex
             // and might require configuring OkHttp's Authenticator.
             // For now, we rely on basic host/port.
-            System.setProperty("java.net.useSystemProxies", "true") // Encourage using system/JVM properties
+            System.setProperty(
+                "java.net.useSystemProxies",
+                "true"
+            ) // Encourage using system/JVM properties
             println("Using HTTP proxy from environment: $httpProxy") // Log for debugging
         } catch (e: Exception) {
             println("Warning: Could not parse http_proxy environment variable: $httpProxy. Error: ${e.message}")
@@ -48,16 +61,25 @@ fun main() = application {
     }
 
     if (!httpsProxy.isNullOrBlank()) {
-         try {
+        try {
             val uri = URI(httpsProxy)
-            System.setProperty("https.proxyHost", uri.host)
-            System.setProperty("https.proxyPort", uri.port.toString())
-             // Note: Handling proxy authentication is more complex
-             System.setProperty("java.net.useSystemProxies", "true") // Encourage using system/JVM properties
-             println("Using HTTPS proxy from environment: $httpsProxy") // Log for debugging
-         } catch (e: Exception) {
-             println("Warning: Could not parse https_proxy environment variable: $httpsProxy. Error: ${e.message}")
-         }
+            System.setProperty(
+                "https.proxyHost",
+                uri.host
+            )
+            System.setProperty(
+                "https.proxyPort",
+                uri.port.toString()
+            )
+            // Note: Handling proxy authentication is more complex
+            System.setProperty(
+                "java.net.useSystemProxies",
+                "true"
+            ) // Encourage using system/JVM properties
+            println("Using HTTPS proxy from environment: $httpsProxy") // Log for debugging
+        } catch (e: Exception) {
+            println("Warning: Could not parse https_proxy environment variable: $httpsProxy. Error: ${e.message}")
+        }
     }
 
     // Create the HttpClient instance using the OkHttp engine
@@ -89,8 +111,22 @@ fun main() = application {
     // Create the WordFetchApi instance with the configured client
     val wordFetchApi = WordFetchApi(client)
 
+    val windowState = rememberWindowState(
+        size = DpSize(
+            600.dp,
+            800.dp
+        ) // Set your desired initial width and height here
+    )
 
-    Window(onCloseRequest = ::exitApplication, title = "WordBook") {
+    val icon = painterResource("word_book_icon.png")
+
+
+    Window(
+        onCloseRequest = ::exitApplication,
+        title = "WordBook",
+        icon = icon,
+        state = windowState
+    ) {
         // Pass the driver factory, settings instance, and WordFetchApi to the common App composable
         App(
             settings = settings,
