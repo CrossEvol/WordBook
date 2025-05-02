@@ -8,10 +8,10 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
-import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.plugins.HttpTimeout
 
-private val logger = KotlinLogging.logger {} // Add logger instance
+private val logger = KotlinLogging.logger {}
 
 // --- Data classes for API Request Body (based on solicit.ps1) ---
 
@@ -75,30 +75,11 @@ data class WordFetchResultJson(
 
 /**
  * API client for fetching word details from the LLM.
+ * Accepts a pre-configured HttpClient instance.
  */
-class WordFetchApi() {
+class WordFetchApi(private val client: HttpClient) { // Accept HttpClient in constructor
 
-    private val client = HttpClient {
-        install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true // Ignore extra fields in the response if any
-                prettyPrint = true
-                isLenient = true // Be lenient with JSON parsing
-            })
-        }
-        // Add HttpTimeout plugin
-        install(HttpTimeout) {
-            requestTimeoutMillis = 10000 // Set request timeout to 10 seconds
-            // You can also set connectTimeoutMillis and socketTimeoutMillis if needed
-        }
-        // Optional: Add logging plugin for debugging
-        // install(Logging) {
-        //     logger = Logger.DEFAULT
-        //     level = LogLevel.INFO
-        // }
-    }
-
-    // Removed hardcoded baseUrl
+    // Removed internal client creation
 
     /**
      * Fetches word details for a given query using a specific model and API key.
@@ -109,7 +90,7 @@ class WordFetchApi() {
      * @return The parsed WordFetchResultJson object.
      * @throws Exception if the API call or parsing fails.
      */
-    suspend fun fetchWordDetails(query: String, apiKey: String, model: String): WordFetchResultJson { // Added model parameter
+    suspend fun fetchWordDetails(query: String, apiKey: String, model: String): WordFetchResultJson {
         if (apiKey.isBlank() || apiKey == "YOUR_API_KEY_HERE") {
              logger.error { "API Key is not configured." }
              throw IllegalStateException("API Key is not provided or is a placeholder.")

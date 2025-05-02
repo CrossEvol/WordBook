@@ -63,7 +63,8 @@ sealed class Screen {
 fun App(
     // Dependencies passed from platform-specific main functions
     settings: Settings? = null, // Pass Settings instance
-    driverFactory: com.crossevol.wordbook.db.DriverFactory? = null // Make nullable for Preview
+    driverFactory: com.crossevol.wordbook.db.DriverFactory? = null, // Make nullable for Preview
+    wordFetchApi: WordFetchApi? = null // <-- Add WordFetchApi parameter here (nullable for Preview)
 ) {
     // Navigation state using the sealed class
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
@@ -100,9 +101,8 @@ fun App(
     // --- End Database Setup ---
 
 
-    // Create API client instance (can be singleton or managed by DI)
-    // The API key will now be fetched dynamically in the ViewModel
-    val wordFetchApi = remember { WordFetchApi() }
+    // Removed: val wordFetchApi = remember { WordFetchApi() } // This is now passed as a parameter
+
 
     // Create ViewModel for API Key management
     // Use remember to create the ViewModel, handling the nullable repository
@@ -113,7 +113,7 @@ fun App(
     // Create ViewModel for WordFetchPage, passing the API client and the *ApiKeyViewModel*
     val wordFetchViewModel = remember(wordFetchApi, apiKeyViewModel, wordRepository) { // Dependency on apiKeyViewModel
         // Ensure dependencies are not null before passing
-        if (apiKeyViewModel != null) { // wordRepository can be null for previews
+        if (wordFetchApi != null && apiKeyViewModel != null) { // wordRepository can be null for previews
              WordFetchViewModel(api = wordFetchApi, apiKeyViewModel = apiKeyViewModel, wordRepository = wordRepository) // Pass apiKeyViewModel
         } else null // Return null if dependencies aren't ready
     }
