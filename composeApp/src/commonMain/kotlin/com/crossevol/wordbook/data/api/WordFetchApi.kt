@@ -76,7 +76,7 @@ data class WordFetchResultJson(
 /**
  * API client for fetching word details from the LLM.
  */
-class WordFetchApi() { // Removed apiKey from constructor
+class WordFetchApi() {
 
     private val client = HttpClient {
         install(ContentNegotiation) {
@@ -98,29 +98,33 @@ class WordFetchApi() { // Removed apiKey from constructor
         // }
     }
 
-    // Base URL for the API (model and key are part of the URL in the PS script)
-    // In a real app, you might want to make the model configurable.
-    private val baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent"
+    // Removed hardcoded baseUrl
 
     /**
-     * Fetches word details for a given query.
+     * Fetches word details for a given query using a specific model and API key.
      *
      * @param query The word or phrase to fetch details for.
      * @param apiKey The API key to use for the request.
+     * @param model The name of the LLM model to use (e.g., "gemini-1.5-flash-preview-04-17").
      * @return The parsed WordFetchResultJson object.
      * @throws Exception if the API call or parsing fails.
      */
-    suspend fun fetchWordDetails(query: String, apiKey: String): WordFetchResultJson { // Added apiKey parameter
+    suspend fun fetchWordDetails(query: String, apiKey: String, model: String): WordFetchResultJson { // Added model parameter
         if (apiKey.isBlank() || apiKey == "YOUR_API_KEY_HERE") {
-             logger.error { "API Key is not configured." } // Replaced println
+             logger.error { "API Key is not configured." }
              throw IllegalStateException("API Key is not provided or is a placeholder.")
         }
         if (query.isBlank()) {
-            logger.warn { "Attempted to fetch with empty query." } // Replaced println
+            logger.warn { "Attempted to fetch with empty query." }
             throw IllegalArgumentException("Search query cannot be empty.")
         }
+        if (model.isBlank()) {
+             logger.warn { "Attempted to fetch with empty model name." }
+             throw IllegalArgumentException("Model name cannot be empty.")
+        }
 
-        logger.debug { "Fetching word details for query: '$query' from API." } // Replaced println
+
+        logger.debug { "Fetching word details for query: '$query' using model '$model'." }
 
         // Construct the prompt text including the instructions and the query
         // This should match the structure in solicit.ps1
@@ -163,8 +167,11 @@ class WordFetchApi() { // Removed apiKey from constructor
             )
         )
 
+        // Construct the URL dynamically using the provided model name
+        val url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey"
+
         try {
-            val response: ApiResponse = client.post("$baseUrl?key=$apiKey") {
+            val response: ApiResponse = client.post(url) { // Use the dynamic URL
                 contentType(ContentType.Application.Json)
                 setBody(requestBody)
             }.body()
@@ -172,7 +179,7 @@ class WordFetchApi() { // Removed apiKey from constructor
             // Extract the text containing the inner JSON
             val responseText = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
                 ?: run {
-                    logger.error { "API response did not contain expected text content." } // Replaced println
+                    logger.error { "API response did not contain expected text content." }
                     throw Exception("API response did not contain expected text content.")
                 }
 
@@ -182,17 +189,17 @@ class WordFetchApi() { // Removed apiKey from constructor
                 .removeSuffix("\n```")
                 .trim() // Trim any extra whitespace
 
-            logger.debug { "Received raw API response text:\n$responseText" } // Replaced println
-            logger.debug { "Extracted JSON string:\n$jsonString" } // Replaced println
+            logger.debug { "Received raw API response text:\n$responseText" }
+            logger.debug { "Extracted JSON string:\n$jsonString" }
 
             // Parse the inner JSON string
             val result = Json.decodeFromString<WordFetchResultJson>(jsonString)
-            logger.info { "Successfully parsed API response for query: '$query'" } // Replaced println
+            logger.info { "Successfully parsed API response for query: '$query' using model '$model'." }
             return result
 
         } catch (e: Exception) {
             // Wrap specific Ktor exceptions or rethrow
-            logger.error(e) { "API Fetch Error for query '$query': ${e.message}" } // Replaced println, added exception
+            logger.error(e) { "API Fetch Error for query '$query' using model '$model': ${e.message}" }
             throw Exception("Failed to fetch word details: ${e.message}", e)
         }
     }

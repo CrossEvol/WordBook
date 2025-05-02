@@ -98,6 +98,12 @@ class WordFetchViewModel(
             logger.debug { "Fetch already in progress, ignoring new request." } // Replaced println
             return // Prevent multiple requests
         }
+        if (selectedModel.isBlank()) {
+             errorMessage = "Please select a model."
+             logger.warn { "Fetch attempt with no model selected." }
+             return
+        }
+
 
         logger.info { "Fetching word details for query: '$searchQuery' using model '$selectedModel'." }
         isLoading = true
@@ -130,22 +136,23 @@ class WordFetchViewModel(
 
         viewModelScope.launch {
             try {
-                // Call the API using the current search query and the fetched API key
+                // Call the API using the current search query, the fetched API key, and the selected model
                 val result = api.fetchWordDetails(
                     searchQuery,
-                    apiKey
-                ) // Pass query and dynamic apiKey
+                    apiKey,
+                    selectedModel // Pass the selected model
+                )
                 fetchedResult = result
-                logger.info { "Successfully fetched word details for '$searchQuery'." } // Replaced println
+                logger.info { "Successfully fetched word details for '$searchQuery' using model '$selectedModel'." }
                 // Automatically switch to the language tab that matches the input language?
                 // Or just stay on the current tab. Let's stay on the current tab for now.
 
             } catch (e: Exception) {
-                logger.error(e) { "Fetch Error in ViewModel: ${e.message}" } // Replaced println, added exception
+                logger.error(e) { "Fetch Error in ViewModel for query '$searchQuery' using model '$selectedModel': ${e.message}" }
                 errorMessage = "Error fetching data: ${e.message}"
             } finally {
                 isLoading = false
-                logger.debug { "Fetch process finished." } // Replaced println
+                logger.debug { "Fetch process finished." }
             }
         }
     }
