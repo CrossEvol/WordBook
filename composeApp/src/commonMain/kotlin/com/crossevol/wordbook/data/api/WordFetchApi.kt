@@ -9,6 +9,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
 import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
+import io.ktor.client.plugins.HttpTimeout
 
 private val logger = KotlinLogging.logger {} // Add logger instance
 
@@ -84,6 +85,11 @@ class WordFetchApi() { // Removed apiKey from constructor
                 prettyPrint = true
                 isLenient = true // Be lenient with JSON parsing
             })
+        }
+        // Add HttpTimeout plugin
+        install(HttpTimeout) {
+            requestTimeoutMillis = 10000 // Set request timeout to 10 seconds
+            // You can also set connectTimeoutMillis and socketTimeoutMillis if needed
         }
         // Optional: Add logging plugin for debugging
         // install(Logging) {
