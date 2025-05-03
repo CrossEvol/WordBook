@@ -13,36 +13,52 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.crossevol.wordbook.getDefaultDocumentsPath // Import the new function
+import com.crossevol.wordbook.getPlatform
 import com.crossevol.wordbook.ui.svgicons.MyIconPack
 import com.crossevol.wordbook.ui.svgicons.myiconpack.Description
+import com.crossevol.wordbook.ui.svgicons.myiconpack.DocumentScanner
 import com.crossevol.wordbook.ui.svgicons.myiconpack.SendAndArchive
 import com.crossevol.wordbook.ui.svgicons.myiconpack.Unarchive
+import com.darkrockstudios.libraries.mpfilepicker.DirectoryPicker
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import wordbook.composeapp.generated.resources.Res
@@ -68,15 +84,30 @@ fun SettingsPage(
     onNavigateBack: () -> Unit, // Required for navigation
     onEditProfile: () -> Unit = {},
     onChangeApiKey: () -> Unit = {}, // This will now navigate to ApiKeyListPage
-    onExport: () -> Unit = {},
+    onExport: (path: String, format: String) -> Unit = { _, _ -> }, // Updated signature
     onImport: () -> Unit = {},
     onNotificationSettings: () -> Unit = {},
     onIntroduction: () -> Unit = {},
     onTermsOfService: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
+    // State for showing the export dialog
+    var showExportDialog by remember { mutableStateOf(false) }
+
     // Define the primary color from the image header (approximate)
     val headerColor = Color(0xFF4A148C) // Deep Purple / Indigo
+
+    // Show the export dialog if state is true
+    if (showExportDialog) {
+        ExportDialog(
+            onDismiss = { showExportDialog = false },
+            onConfirm = { path, format ->
+                // Handle export with the selected path and format
+                onExport(path, format) // Call the provided onExport callback
+                showExportDialog = false
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -145,7 +176,7 @@ fun SettingsPage(
             SettingsItem(
                 icon = MyIconPack.SendAndArchive, // Icon for Export/Import
                 text = "Export",
-                onClick = onExport // Placeholder callback
+                onClick = { showExportDialog = true } // Show export dialog
             )
             SettingsItem(
                 icon = MyIconPack.Unarchive, // Icon for Export/Import
@@ -173,7 +204,7 @@ fun SettingsPage(
 
         // Log Out Button
         Button(
-            onClick = onLogout,
+            onClick = onNavigateBack, // Changed to onNavigateBack as per button text
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 32.dp, vertical = 24.dp) // More padding around button
@@ -243,4 +274,122 @@ fun SettingsPagePreview() {
     MaterialTheme {
         SettingsPage(onNavigateBack = {}) // Provide dummy lambda for preview
     }
+}
+
+/**
+ * Dialog for exporting data with path selection and format options.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExportDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (path: String, format: String) -> Unit
+) {
+    // State for showing the directory picker
+    var showDirectoryPicker by remember { mutableStateOf(false) } // State to control picker visibility
+
+    // Get the default path *before* initializing the state
+    val defaultPath = getDefaultDocumentsPath()
+
+    // State for the text field and selected format
+    // Initialize path with the default documents path obtained above
+    var path by remember { mutableStateOf(defaultPath) }
+    var selectedFormat by remember { mutableStateOf("JSON") }
+
+    // List of available export formats
+    val exportFormats = listOf("JSON", "CSV", "XML")
+
+    // Directory Picker Composable
+    DirectoryPicker(show = showDirectoryPicker) { selectedPath ->
+        showDirectoryPicker = false // Hide the picker when a selection is made or cancelled
+        if (selectedPath != null) {
+            path = selectedPath // Update the path state with the selected directory
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Export Data") },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                // Path selection text field (now read-only, triggers picker)
+                OutlinedTextField(
+                    value = path,
+                    onValueChange = { /* Read-only, value is set by picker */ },
+                    readOnly = true, // Make the text field read-only
+                    label = { Text("Export Path") },
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            showDirectoryPicker = true // Show the directory picker
+                        }) {
+                            Icon(
+                                imageVector = MyIconPack.DocumentScanner,
+                                contentDescription = "Select Folder"
+                            )
+                        }
+                    },
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Format selection radio group
+                Text(
+                    text = "Export Format",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                Column(
+                    modifier = Modifier
+                        .selectableGroup()
+                        .fillMaxWidth()
+                ) {
+                    exportFormats.forEach { format ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .selectable(
+                                    selected = (format == selectedFormat),
+                                    onClick = { selectedFormat = format },
+                                    role = Role.RadioButton
+                                )
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = (format == selectedFormat),
+                                onClick = null // null because we're handling clicks on the row
+                            )
+                            Text(
+                                text = format,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(start = 16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(path, selectedFormat) } // Use the path state updated by the picker
+            ) {
+                Text("Export")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss
+            ) {
+                Text("Cancel")
+            }
+        }
+    )
 }

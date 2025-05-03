@@ -50,6 +50,7 @@ kotlin {
             // Common Material 3 dependency (correct for common code)
             implementation(libs.androidx.material3)
             // Removed: implementation(libs.androidx.material3.android) // This was the problem!
+            implementation(libs.filechooser) // Add file chooser dependency
 
             // Kotlinx Serialization
             implementation(libs.kotlinx.serialization.json)

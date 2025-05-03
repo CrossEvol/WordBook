@@ -4,6 +4,10 @@
     <!-- Add the INTERNET permission here -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- Add these permissions to your existing AndroidManifest.xml -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/word_book_icon"
