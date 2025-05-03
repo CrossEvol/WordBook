@@ -1,7 +1,10 @@
 package com.crossevol.wordbook.ui.svgicons
 
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.crossevol.wordbook.ui.svgicons.myiconpack.Description
 import com.crossevol.wordbook.ui.svgicons.myiconpack.Save
+import com.crossevol.wordbook.ui.svgicons.myiconpack.SendAndArchive
+import com.crossevol.wordbook.ui.svgicons.myiconpack.Unarchive
 import kotlin.String
 import kotlin.collections.List as ____KtList
 import kotlin.collections.Map as ____KtMap
@@ -15,7 +18,7 @@ public val MyIconPack.AllIcons: ____KtList<ImageVector>
     if (__AllIcons != null) {
       return __AllIcons!!
     }
-    __AllIcons= listOf(Save)
+    __AllIcons= listOf(Description, Save, SendAndArchive, Unarchive)
     return __AllIcons!!
   }
 
@@ -26,6 +29,7 @@ public val MyIconPack.AllIconsNamed: ____KtMap<String, ImageVector>
     if (__AllIconsNamed != null) {
       return __AllIconsNamed!!
     }
-    __AllIconsNamed= mapOf("save" to Save)
+    __AllIconsNamed= mapOf("description" to Description, "save" to Save, "sendandarchive" to
+        SendAndArchive, "unarchive" to Unarchive)
     return __AllIconsNamed!!
   }

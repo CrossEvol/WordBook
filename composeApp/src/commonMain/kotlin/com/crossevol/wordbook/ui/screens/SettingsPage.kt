@@ -1,35 +1,51 @@
 package com.crossevol.wordbook.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Info // For Introduction
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Notifications // For Notification Settings
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.Image
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import org.jetbrains.compose.resources.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.crossevol.wordbook.ui.svgicons.MyIconPack
+import com.crossevol.wordbook.ui.svgicons.myiconpack.Description
+import com.crossevol.wordbook.ui.svgicons.myiconpack.SendAndArchive
+import com.crossevol.wordbook.ui.svgicons.myiconpack.Unarchive
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import wordbook.composeapp.generated.resources.Res // Import generated resources
+import wordbook.composeapp.generated.resources.Res
 import wordbook.composeapp.generated.resources.girl
 
 /**
@@ -52,6 +68,8 @@ fun SettingsPage(
     onNavigateBack: () -> Unit, // Required for navigation
     onEditProfile: () -> Unit = {},
     onChangeApiKey: () -> Unit = {}, // This will now navigate to ApiKeyListPage
+    onExport: () -> Unit = {},
+    onImport: () -> Unit = {},
     onNotificationSettings: () -> Unit = {},
     onIntroduction: () -> Unit = {},
     onTermsOfService: () -> Unit = {},
@@ -125,6 +143,16 @@ fun SettingsPage(
                 onClick = onChangeApiKey // This now navigates to ApiKeyListPage
             )
             SettingsItem(
+                icon = MyIconPack.SendAndArchive, // Icon for Export/Import
+                text = "Export",
+                onClick = onExport // Placeholder callback
+            )
+            SettingsItem(
+                icon = MyIconPack.Unarchive, // Icon for Export/Import
+                text = "Import",
+                onClick = onImport // Placeholder callback
+            )
+            SettingsItem(
                 icon = Icons.Filled.Notifications,
                 text = "Notification Settings",
                 onClick = onNotificationSettings
@@ -135,7 +163,7 @@ fun SettingsPage(
                 onClick = onIntroduction
             )
             SettingsItem(
-                icon = Icons.AutoMirrored.Filled.Send, // Correct Icon
+                icon = MyIconPack.Description, // Correct Icon
                 text = "Terms of Services",
                 onClick = onTermsOfService
             )
