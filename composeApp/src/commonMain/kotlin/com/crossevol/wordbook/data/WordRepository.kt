@@ -1,10 +1,19 @@
 package com.crossevol.wordbook.data
 
 import com.crossevol.wordbook.data.model.WordItemUI // Import the new UI model
+import com.crossevol.wordbook.data.model.WordExportJson // Import the export model
 import com.crossevol.wordbook.db.AppDatabase
 import com.crossevol.wordbook.db.SelectWordItemsForLanguage // SQLDelight generated class
 import com.crossevol.wordbook.util.ReviewCalculator
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import okio.buffer
+import okio.sink
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -253,6 +262,108 @@ open class WordRepository(private val database: AppDatabase) {
         } catch (e: Exception) {
             logger.error(e) { "Error updating word review result: ${e.message}" }
             false
+        }
+    }
+
+    /**
+     * Export all words with details in all languages to a file.
+     * 
+     * @param path The directory path to export to
+     * @param format The format to export as ("JSON" or "CSV")
+     * @return The path to the exported file, or null if export failed
+     */
+    fun exportWords(path: String, format: String): String? {
+        try {
+            // Generate timestamp for filename
+            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val filename = "wordbook_export_$timestamp.${format.lowercase()}"
+            val filePath = "$path${File.separator}$filename"
+            
+            // Get all words from the database
+            val allWords = wordQueries.selectAll().executeAsList()
+            
+            // Create the export data for each word
+            val exportData = allWords.map { word ->
+                // Get details for each language
+                val enDetail = wordDetailQueries.selectDetailForWordAndLanguage(word.id, "en").executeAsOneOrNull()
+                val jaDetail = wordDetailQueries.selectDetailForWordAndLanguage(word.id, "ja").executeAsOneOrNull()
+                val zhDetail = wordDetailQueries.selectDetailForWordAndLanguage(word.id, "zh").executeAsOneOrNull()
+                
+                // Create export model with defaults for null values
+                WordExportJson(
+                    text = word.text,
+                    lastReviewAt = word.last_review_at ?: 0L, // Use Long, remove .toInt()
+                    nextReviewAt = word.next_review_at ?: 0L, // Use Long, remove .toInt()
+                    reviewProgress = word.review_progress.toInt(), // Assuming review_progress fits Int
+
+                    // English details
+                    enExplanation = enDetail?.explanation ?: "",
+                    enSentences = enDetail?.sentences ?: "",
+                    enRelatedWords = enDetail?.related_words ?: "",
+                    enPronunciation = enDetail?.pronunciation ?: "",
+                    
+                    // Japanese details
+                    jaExplanation = jaDetail?.explanation ?: "",
+                    jaSentences = jaDetail?.sentences ?: "",
+                    jaRelatedWords = jaDetail?.related_words ?: "",
+                    jaPronunciation = jaDetail?.pronunciation ?: "",
+                    
+                    // Chinese details
+                    zhExplanation = zhDetail?.explanation ?: "",
+                    zhSentences = zhDetail?.sentences ?: "",
+                    zhRelatedWords = zhDetail?.related_words ?: "",
+                    zhPronunciation = zhDetail?.pronunciation ?: ""
+                )
+            }
+            
+            // Write to file based on format
+            val file = File(filePath)
+            when (format.uppercase()) {
+                "JSON" -> {
+                    // Use pretty printing for readability
+                    val json = Json { prettyPrint = true }
+                    file.sink().buffer().use { sink ->
+                        sink.writeUtf8(json.encodeToString(exportData))
+                    }
+                }
+                "CSV" -> {
+                    // Use CSV library to write CSV file
+                    com.github.doyaaaaaken.kotlincsv.dsl.csvWriter {
+                        charset = "UTF-8"
+                        delimiter = ','
+                        lineTerminator = "\n"
+                    }.open(file) {
+                        // Write header
+                        writeRow(listOf(
+                            "text", "lastReviewAt", "nextReviewAt", "reviewProgress",
+                            "enExplanation", "enSentences", "enRelatedWords", "enPronunciation",
+                            "jaExplanation", "jaSentences", "jaRelatedWords", "jaPronunciation",
+                            "zhExplanation", "zhSentences", "zhRelatedWords", "zhPronunciation"
+                        ))
+                        
+                        // Write data rows
+                        exportData.forEach { item ->
+                            writeRow(listOf(
+                                item.text, item.lastReviewAt.toString(), item.nextReviewAt.toString(), item.reviewProgress.toString(),
+                                item.enExplanation, item.enSentences, item.enRelatedWords, item.enPronunciation,
+                                item.jaExplanation, item.jaSentences, item.jaRelatedWords, item.jaPronunciation,
+                                item.zhExplanation, item.zhSentences, item.zhRelatedWords, item.zhPronunciation
+                            ))
+                        }
+                    }
+                }
+                else -> {
+                    logger.error { "Unsupported export format: $format" }
+                    return null
+                }
+            }
+            
+            logger.info { "Successfully exported ${exportData.size} words to $filePath" }
+            return filePath
+            
+        } catch (e: Exception) {
+            logger.error(e) { "Error exporting words: ${e.message}" }
+            return null
         }
     }
 

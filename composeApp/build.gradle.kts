@@ -33,6 +33,7 @@ kotlin {
             implementation(libs.androidx.ui.tooling.preview.android)
             implementation(compose.uiTooling)
             implementation(libs.ktor.client.android) // Ensure Ktor Android is here
+            implementation(libs.okio) // Add okio for Android
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -71,6 +72,10 @@ kotlin {
             // SLF4J Simple Provider for common logging output (Console/Logcat)
             implementation(libs.slf4j.simple) // Added slf4j-simple provider
 
+            // File operations
+            implementation(libs.okio) // Add okio for file operations
+            implementation(libs.csvReader) // Add CSV library
+            
             // Removed: implementation(libs.compose.hotpreview.jvm) // Moved to desktopMain
         }
         desktopMain.dependencies {
@@ -78,7 +83,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.okhttp) // Ensure Ktor OkHttp is here
             implementation(libs.sqldelight.sqlite.driver)
-
+            implementation(libs.okio) // Add okio for Desktop
         }
     }
 }

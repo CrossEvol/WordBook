@@ -314,7 +314,7 @@ fun ExportDialog(
     var selectedFormat by remember { mutableStateOf("JSON") }
 
     // List of available export formats
-    val exportFormats = listOf("JSON", "CSV", "XML")
+    val exportFormats = listOf("JSON", "CSV")
 
     // Directory Picker Composable
     DirectoryPicker(show = showDirectoryPicker) { selectedPath ->

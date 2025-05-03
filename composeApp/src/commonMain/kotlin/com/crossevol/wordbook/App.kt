@@ -41,6 +41,8 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope // Import rememberCoroutineScope
+import kotlinx.coroutines.launch // Import launch
 
 
 private val logger = KotlinLogging.logger {} // Add logger instance
@@ -71,6 +73,8 @@ fun App(
 
     // Snackbar state
     val snackbarHostState = remember { SnackbarHostState() }
+    // Coroutine scope for launching tasks from non-composable contexts like button clicks
+    val scope = rememberCoroutineScope()
 
     // --- Database and Repository Setup ---
     // Use remember to create database and repository instances, tied to the composable lifecycle
@@ -170,7 +174,40 @@ fun App(
                             logger.info { "Navigating back to Home from Settings." } // Replaced println
                             currentScreen = Screen.Home
                         }, // Navigate back to Home
-                        // Add other callbacks as needed, e.g.:
+                        // Implement the export functionality
+                        onExport = { path, format -> // Removed @Composable
+                            logger.info { "Exporting data in $format format to $path" }
+                            // Use the scope captured from the App composable
+                            scope.launch { // Launch coroutine for export logic
+                                if (wordRepository != null) {
+                                    // Export words using the repository (assuming exportWords is suspend or runs on background thread)
+                                    val exportedFilePath = wordRepository.exportWords(path, format)
+
+                                    if (exportedFilePath != null) {
+                                        // Show success message
+                                        snackbarHostState.showSnackbar("Export successful: $exportedFilePath")
+
+                                        // Open the directory (assuming openFileExplorer is safe to call from main thread or handles its own threading)
+                                        openFileExplorer(path)
+                                    } else {
+                                        // Show error message
+                                        snackbarHostState.showSnackbar("Export failed")
+                                    }
+                                } else {
+                                    snackbarHostState.showSnackbar("Error: Repository not initialized")
+                                }
+                            }
+                        },
+                        // Implement the import functionality (placeholder for now)
+                        onImport = { path, format -> // Removed @Composable
+                            logger.info { "Importing data from $path in $format format" }
+                            // TODO: Implement import functionality
+                            // Use the scope captured from the App composable
+                            scope.launch { // Launch coroutine for import logic (if needed)
+                                // Placeholder: Show snackbar message
+                                snackbarHostState.showSnackbar("Import not yet implemented")
+                            }
+                        },
                         onLogout = {
                             logger.info { "Logout clicked!" } // Replaced println
                             // Implement actual logout logic and navigate (e.g., to a login screen or back home)

@@ -1,31 +1,102 @@
 package com.crossevol.wordbook
 
 import androidx.compose.runtime.Composable
+import io.github.oshai.kotlinlogging.KotlinLogging
+import java.awt.Desktop
+import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Paths
 
-class JVMPlatform: Platform {
+private val logger = KotlinLogging.logger {}
+
+class JVMPlatform : Platform {
     override val name: String = "Java ${System.getProperty("java.version")}"
 }
 
+/**
+ * Get information about the desktop platform
+ */
 actual fun getPlatform(): Platform = JVMPlatform()
 
 /**
  * Actual implementation for Desktop (JVM) to get the default documents directory path.
  * Uses the user's home directory and appends "Documents".
  */
-@Composable // <-- Added @Composable here to match the expect signature
+@Composable
 actual fun getDefaultDocumentsPath(): String {
-    // Get the user's home directory
-    val userHome = System.getProperty("user.home") ?: ""
-    if (userHome.isBlank()) {
-        return "" // Return empty if home directory is not found
+    return try {
+        val userHome = System.getProperty("user.home")
+        val documentsPath = Paths.get(
+            userHome,
+            "Documents"
+        ).toString()
+
+        // Create directory if it doesn't exist
+        val documents = File(documentsPath)
+        if (!documents.exists()) {
+            documents.mkdirs()
+        }
+
+        documentsPath
+    } catch (e: Exception) {
+        logger.error(e) { "Error getting documents path: ${e.message}" }
+
+        // Fallback to user home directory
+        System.getProperty("user.home")
     }
+}
 
-    // Construct the path to the Documents folder
-    // Use Paths.get for platform-independent path construction
-    val documentsPath = Paths.get(userHome, "Documents")
+/**
+ * Open the given directory path in the desktop file explorer
+ */
+actual fun openFileExplorer(directoryPath: String): Boolean {
+    return try {
+        val directory = File(directoryPath)
 
-    // Return the absolute path string
-    return documentsPath.toString()
+        // Check if Desktop API is supported
+        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+            Desktop.getDesktop().open(directory)
+            true
+        } else {
+            // Desktop API not supported, fall through to platform-specific commands
+            logger.warn { "Desktop API not supported, trying platform-specific commands." }
+            false
+        }
+    } catch (e: Exception) {
+        logger.error(e) { "Error opening file explorer using Desktop API: ${e.message}" }
+
+        // Try alternative methods
+        try {
+            // Try using platform-specific commands
+            val os = System.getProperty("os.name").lowercase()
+            val command = when {
+                os.contains("win") -> arrayOf(
+                    "explorer.exe",
+                    directoryPath
+                )
+
+                os.contains("mac") -> arrayOf(
+                    "open",
+                    directoryPath
+                )
+
+                os.contains("nix") || os.contains("nux") -> arrayOf(
+                    "xdg-open",
+                    directoryPath
+                )
+
+                else -> null
+            }
+
+            if (command != null) {
+                Runtime.getRuntime().exec(command)
+                true
+            } else {
+                false
+            }
+        } catch (e2: Exception) {
+            logger.error(e2) { "Error opening file explorer (alternative method): ${e2.message}" }
+            false
+        }
+    }
 }
