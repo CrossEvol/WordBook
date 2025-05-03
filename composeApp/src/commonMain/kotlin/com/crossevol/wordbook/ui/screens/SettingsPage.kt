@@ -59,6 +59,7 @@ import com.crossevol.wordbook.ui.svgicons.myiconpack.DocumentScanner
 import com.crossevol.wordbook.ui.svgicons.myiconpack.SendAndArchive
 import com.crossevol.wordbook.ui.svgicons.myiconpack.Unarchive
 import com.darkrockstudios.libraries.mpfilepicker.DirectoryPicker
+import com.darkrockstudios.libraries.mpfilepicker.FilePicker // Import FilePicker
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import wordbook.composeapp.generated.resources.Res
@@ -72,6 +73,8 @@ import wordbook.composeapp.generated.resources.girl
  * @param onNavigateBack Callback to navigate back (e.g., to HomePage).
  * @param onEditProfile Callback when "Edit Profile" is clicked.
  * @param onChangeApiKey Callback when "Change ApiKey" is clicked.
+ * @param onExport Callback when export is confirmed, providing path and format.
+ * @param onImport Callback when import is confirmed, providing file path and format.
  * @param onNotificationSettings Callback when "Notification Settings" is clicked.
  * @param onIntroduction Callback when "Introduction" is clicked.
  * @param onTermsOfService Callback when "Terms of Services" is clicked.
@@ -85,7 +88,7 @@ fun SettingsPage(
     onEditProfile: () -> Unit = {},
     onChangeApiKey: () -> Unit = {}, // This will now navigate to ApiKeyListPage
     onExport: (path: String, format: String) -> Unit = { _, _ -> }, // Updated signature
-    onImport: () -> Unit = {},
+    onImport: (path: String, format: String) -> Unit = { _, _ -> }, // Updated signature for import
     onNotificationSettings: () -> Unit = {},
     onIntroduction: () -> Unit = {},
     onTermsOfService: () -> Unit = {},
@@ -93,6 +96,8 @@ fun SettingsPage(
 ) {
     // State for showing the export dialog
     var showExportDialog by remember { mutableStateOf(false) }
+    // State for showing the import dialog
+    var showImportDialog by remember { mutableStateOf(false) } // State for import dialog
 
     // Define the primary color from the image header (approximate)
     val headerColor = Color(0xFF4A148C) // Deep Purple / Indigo
@@ -105,6 +110,18 @@ fun SettingsPage(
                 // Handle export with the selected path and format
                 onExport(path, format) // Call the provided onExport callback
                 showExportDialog = false
+            }
+        )
+    }
+
+    // Show the import dialog if state is true
+    if (showImportDialog) {
+        ImportDialog( // Call the new ImportDialog
+            onDismiss = { showImportDialog = false },
+            onConfirm = { path, format ->
+                // Handle import with the selected file path and format
+                onImport(path, format) // Call the provided onImport callback
+                showImportDialog = false
             }
         )
     }
@@ -174,14 +191,14 @@ fun SettingsPage(
                 onClick = onChangeApiKey // This now navigates to ApiKeyListPage
             )
             SettingsItem(
-                icon = MyIconPack.SendAndArchive, // Icon for Export/Import
+                icon = MyIconPack.SendAndArchive, // Icon for Export
                 text = "Export",
                 onClick = { showExportDialog = true } // Show export dialog
             )
             SettingsItem(
-                icon = MyIconPack.Unarchive, // Icon for Export/Import
+                icon = MyIconPack.Unarchive, // Icon for Import
                 text = "Import",
-                onClick = onImport // Placeholder callback
+                onClick = { showImportDialog = true } // Show import dialog
             )
             SettingsItem(
                 icon = Icons.Filled.Notifications,
@@ -382,6 +399,134 @@ fun ExportDialog(
                 onClick = { onConfirm(path, selectedFormat) } // Use the path state updated by the picker
             ) {
                 Text("Export")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss
+            ) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+/**
+ * Dialog for importing data with file selection and format options.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ImportDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (path: String, format: String) -> Unit
+) {
+    // State for showing the file picker
+    var showFilePicker by remember { mutableStateOf(false) } // State to control picker visibility
+
+    // Get the default path *before* initializing the state
+    val defaultPath = getDefaultDocumentsPath() // Get the default path
+
+    // State for the text field and selected format
+    // Initialize path with the default documents path obtained above
+    var path by remember { mutableStateOf(defaultPath) } // Initialize path with defaultPath
+    var selectedFormat by remember { mutableStateOf("JSON") } // Default format
+
+    // List of available import formats and their corresponding file extensions
+    val importFormats = listOf("JSON", "CSV", "TXT")
+    val fileExtensions = listOf("json", "csv", "txt") // Extensions for the file picker filter
+
+    // File Picker Composable
+    FilePicker(
+        show = showFilePicker,
+        initialDirectory = defaultPath, // <-- Added initialDirectory here
+        fileExtensions = fileExtensions
+    ) { platformFile ->
+        showFilePicker = false // Hide the picker when a selection is made or cancelled
+        if (platformFile != null) {
+            // Update the path state with the selected file path
+            path = platformFile.path
+            // Optionally, try to infer format from extension, or keep default/selected
+            // For now, we rely on the user selecting the format via radio buttons
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Import Data") },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                // File selection text field (read-only, triggers picker)
+                OutlinedTextField(
+                    value = path, // Use the path state
+                    onValueChange = { /* Read-only, value is set by picker */ },
+                    readOnly = true, // Make the text field read-only
+                    label = { Text("Import File") },
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            showFilePicker = true // Show the file picker
+                        }) {
+                            Icon(
+                                imageVector = MyIconPack.DocumentScanner, // Using the same icon for file/folder selection
+                                contentDescription = "Select File"
+                            )
+                        }
+                    },
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Format selection radio group
+                Text(
+                    text = "Import Format",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                Column(
+                    modifier = Modifier
+                        .selectableGroup()
+                        .fillMaxWidth()
+                ) {
+                    importFormats.forEach { format ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .selectable(
+                                    selected = (format == selectedFormat),
+                                    onClick = { selectedFormat = format },
+                                    role = Role.RadioButton
+                                )
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = (format == selectedFormat),
+                                onClick = null // null because we're handling clicks on the row
+                            )
+                            Text(
+                                text = format,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(start = 16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                // Enable confirm button only if a file path has been selected
+                onClick = { onConfirm(path, selectedFormat) },
+                enabled = path.isNotBlank() // Disable button if no file is selected
+            ) {
+                Text("Confirm")
             }
         },
         dismissButton = {
