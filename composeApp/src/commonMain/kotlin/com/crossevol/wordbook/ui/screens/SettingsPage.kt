@@ -312,6 +312,10 @@ fun ExportDialog(
     // Initialize path with the default documents path obtained above
     var path by remember { mutableStateOf(defaultPath) }
     var selectedFormat by remember { mutableStateOf("JSON") }
+    
+    // State for showing a warning about the selected path
+    var showPathWarning by remember { mutableStateOf(false) }
+    var pathWarningMessage by remember { mutableStateOf("") }
 
     // List of available export formats
     val exportFormats = listOf("JSON", "CSV")
@@ -320,7 +324,22 @@ fun ExportDialog(
     DirectoryPicker(show = showDirectoryPicker) { selectedPath ->
         showDirectoryPicker = false // Hide the picker when a selection is made or cancelled
         if (selectedPath != null) {
-            path = selectedPath // Update the path state with the selected directory
+            // Check if the path is a content URI or a file path
+            if (selectedPath.startsWith("content://")) {
+                // Content URI is good for Android
+                path = selectedPath
+                showPathWarning = false
+            } else {
+                // For file paths, we'll use them but show a warning on Android
+                path = selectedPath
+                val platform = getPlatform().name
+                if (platform.startsWith("Android")) {
+                    pathWarningMessage = "Using app-specific storage. Files will be saved to the app's private documents folder."
+                    showPathWarning = true
+                } else {
+                    showPathWarning = false
+                }
+            }
         }
     }
 
@@ -352,6 +371,16 @@ fun ExportDialog(
                     },
                     singleLine = true
                 )
+                
+                // Show warning message if needed
+                if (showPathWarning) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = pathWarningMessage,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -445,8 +474,15 @@ fun ImportDialog(
         if (platformFile != null) {
             // Update the path state with the selected file path
             path = platformFile.path
-            // Optionally, try to infer format from extension, or keep default/selected
-            // For now, we rely on the user selecting the format via radio buttons
+            
+            // Try to infer format from file extension
+            val extension = platformFile.path.substringAfterLast('.', "").lowercase()
+            when (extension) {
+                "json" -> selectedFormat = "JSON"
+                "csv" -> selectedFormat = "CSV"
+                "txt" -> selectedFormat = "TXT"
+                // Default format remains unchanged if extension doesn't match
+            }
         }
     }
 

@@ -34,6 +34,21 @@ expect fun getDefaultDocumentsPath(): String
 expect fun openFileExplorer(directoryPath: String): Boolean
 
 /**
+ * Platform-specific function to write content to a file in a specified location.
+ * On Android, this handles writing to a `content://` URI obtained via SAF.
+ * On Desktop, this writes to a standard file path.
+ * Handles filename generation with timestamp.
+ *
+ * @param directoryLocation The target directory path (Desktop) or URI string (Android).
+ * @param baseFilename The base name for the file (e.g., "wordbook_export").
+ * @param extension The file extension (e.g., "json", "csv").
+ * @param content The string content to write to the file.
+ * @return The full path or URI string of the created file, or null on failure.
+ */
+expect fun writeToFile(directoryLocation: String, baseFilename: String, extension: String, content: String): String?
+
+
+/**
  * Class to hold platform-specific information
  */
 data class PlatformInfo(

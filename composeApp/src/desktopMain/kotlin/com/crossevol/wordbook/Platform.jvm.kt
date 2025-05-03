@@ -6,6 +6,9 @@ import java.awt.Desktop
 import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Paths
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 private val logger = KotlinLogging.logger {}
 
@@ -98,5 +101,34 @@ actual fun openFileExplorer(directoryPath: String): Boolean {
             logger.error(e2) { "Error opening file explorer (alternative method): ${e2.message}" }
             false
         }
+    }
+}
+
+
+/**
+ * Actual implementation for Desktop (JVM) to write content to a standard file.
+ */
+actual fun writeToFile(directoryLocation: String, baseFilename: String, extension: String, content: String): String? {
+    return try {
+        // Ensure directory exists (it should, based on getDefaultDocumentsPath)
+        val directory = File(directoryLocation)
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
+
+        // Generate timestamp for filename
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val filename = "${baseFilename}_${timestamp}.${extension.lowercase()}"
+        val filePath = "$directoryLocation${File.separator}$filename"
+
+        val file = File(filePath)
+        file.writeText(content, Charsets.UTF_8) // Write content using UTF-8
+
+        logger.info { "Successfully wrote file: ${file.absolutePath}" }
+        file.absolutePath // Return the absolute path of the created file
+
+    } catch (e: Exception) {
+        logger.error(e) { "Error writing file to path $directoryLocation: ${e.message}" }
+        null
     }
 }

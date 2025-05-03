@@ -5,15 +5,12 @@ import com.crossevol.wordbook.data.model.WordExportJson // Import the export mod
 import com.crossevol.wordbook.db.AppDatabase
 import com.crossevol.wordbook.db.SelectWordItemsForLanguage // SQLDelight generated class
 import com.crossevol.wordbook.util.ReviewCalculator
+import com.crossevol.wordbook.writeToFile // Import the platform-specific function
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import okio.buffer
-import okio.sink
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+// Removed okio and java.io imports
+// Removed java.text and java.util imports for Date/Locale/SimpleDateFormat
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -266,19 +263,15 @@ open class WordRepository(private val database: AppDatabase) {
     }
 
     /**
-     * Export all words with details in all languages to a file.
-     * 
-     * @param path The directory path to export to
-     * @param format The format to export as ("JSON" or "CSV")
-     * @return The path to the exported file, or null if export failed
+     * Export all words with details in all languages. It prepares the content
+     * and calls the platform-specific `writeToFile` function.
+     *
+     * @param directoryLocation The target directory path (Desktop) or URI string (Android).
+     * @param format The format to export as ("JSON" or "CSV").
+     * @return The path/URI string of the exported file, or null if export failed.
      */
-    fun exportWords(path: String, format: String): String? {
+    fun exportWords(directoryLocation: String, format: String): String? {
         try {
-            // Generate timestamp for filename
-            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val filename = "wordbook_export_$timestamp.${format.lowercase()}"
-            val filePath = "$path${File.separator}$filename"
-            
             // Get all words from the database
             val allWords = wordQueries.selectAll().executeAsList()
             
@@ -315,54 +308,64 @@ open class WordRepository(private val database: AppDatabase) {
                     zhPronunciation = zhDetail?.pronunciation ?: ""
                 )
             }
-            
-            // Write to file based on format
-            val file = File(filePath)
+
+            val baseFilename = "wordbook_export"
+            val contentString: String
+            val fileExtension: String
+
+            // Prepare content string based on format
             when (format.uppercase()) {
                 "JSON" -> {
-                    // Use pretty printing for readability
                     val json = Json { prettyPrint = true }
-                    file.sink().buffer().use { sink ->
-                        sink.writeUtf8(json.encodeToString(exportData))
-                    }
+                    contentString = json.encodeToString(exportData)
+                    fileExtension = "json"
                 }
                 "CSV" -> {
-                    // Use CSV library to write CSV file
-                    com.github.doyaaaaaken.kotlincsv.dsl.csvWriter {
-                        charset = "UTF-8"
-                        delimiter = ','
-                        lineTerminator = "\n"
-                    }.open(file) {
-                        // Write header
-                        writeRow(listOf(
+                    // Use StringBuilder for manual CSV creation to avoid external library dependency here if not needed elsewhere
+                    // Or keep kotlincsv if it's used elsewhere or preferred
+                    val csvBuilder = StringBuilder()
+                    // Write header
+                    csvBuilder.appendLine(
+                        listOf(
                             "text", "lastReviewAt", "nextReviewAt", "reviewProgress",
                             "enExplanation", "enSentences", "enRelatedWords", "enPronunciation",
                             "jaExplanation", "jaSentences", "jaRelatedWords", "jaPronunciation",
                             "zhExplanation", "zhSentences", "zhRelatedWords", "zhPronunciation"
-                        ))
-                        
-                        // Write data rows
-                        exportData.forEach { item ->
-                            writeRow(listOf(
+                        ).joinToString(",") // Simple comma separation, consider quoting if values might contain commas
+                    )
+                    // Write data rows
+                    exportData.forEach { item ->
+                        csvBuilder.appendLine(
+                            listOf(
                                 item.text, item.lastReviewAt.toString(), item.nextReviewAt.toString(), item.reviewProgress.toString(),
                                 item.enExplanation, item.enSentences, item.enRelatedWords, item.enPronunciation,
                                 item.jaExplanation, item.jaSentences, item.jaRelatedWords, item.jaPronunciation,
                                 item.zhExplanation, item.zhSentences, item.zhRelatedWords, item.zhPronunciation
-                            ))
-                        }
+                            ).joinToString(",") // Simple comma separation
+                        )
                     }
+                    contentString = csvBuilder.toString()
+                    fileExtension = "csv"
                 }
                 else -> {
                     logger.error { "Unsupported export format: $format" }
                     return null
                 }
             }
-            
-            logger.info { "Successfully exported ${exportData.size} words to $filePath" }
-            return filePath
-            
+
+            // Call the platform-specific write function
+            val finalPath = writeToFile(directoryLocation, baseFilename, fileExtension, contentString)
+
+            if (finalPath != null) {
+                logger.info { "Successfully initiated export of ${exportData.size} words to $finalPath" }
+            } else {
+                logger.error { "Export failed for ${exportData.size} words." }
+            }
+            return finalPath // Return the path/URI returned by writeToFile
+
         } catch (e: Exception) {
-            logger.error(e) { "Error exporting words: ${e.message}" }
+            // Log errors occurring during data fetching or content preparation
+            logger.error(e) { "Error preparing data for export: ${e.message}" }
             return null
         }
     }

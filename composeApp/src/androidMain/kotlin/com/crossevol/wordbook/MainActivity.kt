@@ -24,6 +24,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Initialize the platform extension with the application context
+        initPlatformExt(this) // <-- Add this call
+
         // Kotlin-logging doesn't require explicit platform initialization like Napier
         // It typically uses the underlying platform's logging mechanism (Logcat on Android)
         logger.info { "MainActivity created." } // Log activity creation
