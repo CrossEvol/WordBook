@@ -48,7 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.crossevol.wordbook.data.ApiKeyConfigRepository // Keep for Mock
 import com.crossevol.wordbook.data.api.WordFetchApi // Keep for Mock
-import com.crossevol.wordbook.data.api.WordFetchResultJson
+import com.crossevol.wordbook.data.model.WordFetchResultJson
 import com.crossevol.wordbook.ui.components.RelatedWordItem
 import com.crossevol.wordbook.data.WordRepository // Import for Mock
 import com.crossevol.wordbook.ui.components.SentenceItem
@@ -65,10 +65,6 @@ import io.ktor.client.* // Import HttpClient for previews
 import io.ktor.client.plugins.contentnegotiation.* // Import ContentNegotiation for previews
 import io.ktor.serialization.kotlinx.json.* // Import json serialization for previews
 import kotlinx.serialization.json.Json // Import Json for previews
-import io.ktor.http.* // Import HttpStatusCode for previews
-import io.ktor.client.request.* // Import HttpRequestBuilder for previews
-import io.ktor.client.statement.* // Import HttpResponse for previews
-import io.ktor.utils.io.* // Import ByteReadChannel for previews
 import io.ktor.client.plugins.HttpTimeout // Import HttpTimeout for previews
 
 
@@ -165,7 +161,10 @@ fun WordFetchPage(
                     },
                     // Optionally change appearance when saving, but disabling is clearer
                 ) {
-                    Icon(MyIconPack.Save, contentDescription = "Save Word")
+                    Icon(
+                        MyIconPack.Save,
+                        contentDescription = "Save Word"
+                    )
                 }
             }
         }
@@ -347,7 +346,9 @@ fun WordFetchPage(
     // Confirmation Dialog for Back Navigation
     if (showConfirmBackDialog) {
         AlertDialog(
-            onDismissRequest = { showConfirmBackDialog = false }, // Dismiss on outside click or back press
+            onDismissRequest = {
+                showConfirmBackDialog = false
+            }, // Dismiss on outside click or back press
             title = { Text("Unsaved Changes") },
             text = { Text("Do you want to save the fetched word before leaving?") },
             confirmButton = {
@@ -625,12 +626,30 @@ private class MockApiKeyConfigRepository : ApiKeyConfigRepository(
     // In a real scenario, you might need a more sophisticated mock database.
     database = null!! // Use null!! to satisfy non-nullable parameter for mocking purposes
 ) {
-     override fun getAllApiKeyConfigs(): List<ApiKeyConfig> {
+    override fun getAllApiKeyConfigs(): List<ApiKeyConfig> {
         // Return a predefined list of dummy configs for preview
         return listOf(
-            ApiKeyConfig(id = 1, alias = "Gemini Key 1", apiKey = "dummy_key_1", provider = "Google", model = "gemini-1.5-flash"),
-            ApiKeyConfig(id = 2, alias = "Gemini Key 2", apiKey = "dummy_key_2", provider = "Google", model = "gemini-1.5-pro"),
-            ApiKeyConfig(id = 3, alias = "OpenAI Key", apiKey = "dummy_key_3", provider = "OpenAI", model = "gpt-4o")
+            ApiKeyConfig(
+                id = 1,
+                alias = "Gemini Key 1",
+                apiKey = "dummy_key_1",
+                provider = "Google",
+                model = "gemini-1.5-flash"
+            ),
+            ApiKeyConfig(
+                id = 2,
+                alias = "Gemini Key 2",
+                apiKey = "dummy_key_2",
+                provider = "Google",
+                model = "gemini-1.5-pro"
+            ),
+            ApiKeyConfig(
+                id = 3,
+                alias = "OpenAI Key",
+                apiKey = "dummy_key_3",
+                provider = "OpenAI",
+                model = "gpt-4o"
+            )
         )
     }
 
@@ -661,13 +680,32 @@ private class MockWordRepository : WordRepository(database = null!!) { // Use nu
 }
 
 // Add MockApiKeyViewModel back for previews
-private class MockApiKeyViewModel(repository: ApiKeyConfigRepository) : ApiKeyViewModel(repository) {
+private class MockApiKeyViewModel(repository: ApiKeyConfigRepository) :
+    ApiKeyViewModel(repository) {
     // Override the StateFlow to provide dummy data for previews
     override val apiKeyConfigs = kotlinx.coroutines.flow.MutableStateFlow(
         listOf(
-            ApiKeyConfig(id = 1, alias = "Gemini Key 1", apiKey = "dummy_key_1", provider = "Google", model = "gemini-1.5-flash"),
-            ApiKeyConfig(id = 2, alias = "Gemini Key 2", apiKey = "dummy_key_2", provider = "Google", model = "gemini-1.5-pro"),
-            ApiKeyConfig(id = 3, alias = "OpenAI Key", apiKey = "dummy_key_3", provider = "OpenAI", model = "gpt-4o")
+            ApiKeyConfig(
+                id = 1,
+                alias = "Gemini Key 1",
+                apiKey = "dummy_key_1",
+                provider = "Google",
+                model = "gemini-1.5-flash"
+            ),
+            ApiKeyConfig(
+                id = 2,
+                alias = "Gemini Key 2",
+                apiKey = "dummy_key_2",
+                provider = "Google",
+                model = "gemini-1.5-pro"
+            ),
+            ApiKeyConfig(
+                id = 3,
+                alias = "OpenAI Key",
+                apiKey = "dummy_key_3",
+                provider = "OpenAI",
+                model = "gpt-4o"
+            )
         )
     )
     // Other methods can remain as is or be mocked if needed by preview scenarios
@@ -682,7 +720,7 @@ fun WordFetchPagePreview_Initial() {
     MaterialTheme {
         Surface {
             // Create a dummy HttpClient for previews
-             val dummyHttpClient = HttpClient {
+            val dummyHttpClient = HttpClient {
                 install(ContentNegotiation) {
                     json(Json {
                         ignoreUnknownKeys = true // Ignore extra fields in the response if any
@@ -707,7 +745,8 @@ fun WordFetchPagePreview_Initial() {
             val dummyApi = WordFetchApi(dummyHttpClient) // Pass the dummy client
             val dummyApiKeyRepo = MockApiKeyConfigRepository() // Use mock repository
             val dummyWordRepo = MockWordRepository()
-            val dummyApiKeyViewModel = MockApiKeyViewModel(dummyApiKeyRepo) // Use mock ApiKeyViewModel
+            val dummyApiKeyViewModel =
+                MockApiKeyViewModel(dummyApiKeyRepo) // Use mock ApiKeyViewModel
             val dummySnackbarHostState = SnackbarHostState()
 
             // Create a dummy WordFetchViewModel for preview, passing the mock ApiKeyViewModel
@@ -763,7 +802,8 @@ fun WordFetchPagePreview_Loading() {
             val dummyApi = WordFetchApi(dummyHttpClient) // Pass the dummy client
             val dummyApiKeyRepo = MockApiKeyConfigRepository() // Use mock repository
             val dummyWordRepo = MockWordRepository()
-            val dummyApiKeyViewModel = MockApiKeyViewModel(dummyApiKeyRepo) // Use mock ApiKeyViewModel
+            val dummyApiKeyViewModel =
+                MockApiKeyViewModel(dummyApiKeyRepo) // Use mock ApiKeyViewModel
             val dummySnackbarHostState = SnackbarHostState()
 
             // Create a dummy WordFetchViewModel for preview, passing the mock ApiKeyViewModel
@@ -819,7 +859,8 @@ fun WordFetchPagePreview_Success() {
             val dummyApi = WordFetchApi(dummyHttpClient) // Pass the dummy client
             val dummyApiKeyRepo = MockApiKeyConfigRepository() // Use mock repository
             val dummyWordRepo = MockWordRepository()
-            val dummyApiKeyViewModel = MockApiKeyViewModel(dummyApiKeyRepo) // Use mock ApiKeyViewModel
+            val dummyApiKeyViewModel =
+                MockApiKeyViewModel(dummyApiKeyRepo) // Use mock ApiKeyViewModel
             val dummySnackbarHostState = SnackbarHostState()
 
             // Create a dummy WordFetchViewModel for preview, passing the mock ApiKeyViewModel
@@ -830,7 +871,7 @@ fun WordFetchPagePreview_Success() {
             )
 
             // Simulate success state with dummy data
-             dummyWordFetchViewModel.fetchedResult = WordFetchResultJson(
+            dummyWordFetchViewModel.fetchedResult = WordFetchResultJson(
                 text = "热情",
                 enExplanation = "Enthusiasm; passion; warmth; fervent; cordial",
                 enSentences = "They welcomed us with great warmth and hospitaly.;She is full of enthusiasm for her work.",
@@ -890,7 +931,8 @@ fun WordFetchPagePreview_Error() {
             val dummyApi = WordFetchApi(dummyHttpClient) // Pass the dummy client
             val dummyApiKeyRepo = MockApiKeyConfigRepository() // Use mock repository
             val dummyWordRepo = MockWordRepository()
-            val dummyApiKeyViewModel = MockApiKeyViewModel(dummyApiKeyRepo) // Use mock ApiKeyViewModel
+            val dummyApiKeyViewModel =
+                MockApiKeyViewModel(dummyApiKeyRepo) // Use mock ApiKeyViewModel
             val dummySnackbarHostState = SnackbarHostState()
 
             // Create a dummy WordFetchViewModel for preview, passing the mock ApiKeyViewModel

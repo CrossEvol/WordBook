@@ -1,15 +1,12 @@
 package com.crossevol.wordbook.data.api
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.SerialName
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.json
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.plugins.HttpTimeout
+import com.crossevol.wordbook.data.model.WordFetchResultJson
 
 private val logger = KotlinLogging.logger {}
 
@@ -45,32 +42,6 @@ data class Candidate(
 )
 
 // --- Data class for the INNER JSON string extracted from the response ---
-
-@Serializable
-data class WordFetchResultJson(
-    val text: String,
-    @SerialName("en_explanation") val enExplanation: String,
-    @SerialName("en_sentences") val enSentences: String, // Sentences are semicolon-separated
-    @SerialName("en_related_words") val enRelatedWords: String, // Words are semicolon-separated
-    @SerialName("en_pronunciation") val enPronunciation: String,
-    @SerialName("ja_explanation") val jaExplanation: String,
-    @SerialName("ja_sentences") val jaSentences: String,
-    @SerialName("ja_related_words") val jaRelatedWords: String,
-    @SerialName("ja_pronunciation") val jaPronunciation: String,
-    @SerialName("zh_explanation") val zhExplanation: String,
-    @SerialName("zh_sentences") val zhSentences: String,
-    @SerialName("zh_related_words") val zhRelatedWords: String,
-    @SerialName("zh_pronunciation") val zhPronunciation: String,
-) {
-    // Helper function to split semicolon-separated strings into lists
-    fun getEnSentencesList(): List<String> = enSentences.split(";").filter { it.isNotBlank() }
-    fun getJaSentencesList(): List<String> = jaSentences.split(";").filter { it.isNotBlank() }
-    fun getZhSentencesList(): List<String> = zhSentences.split(";").filter { it.isNotBlank() }
-
-    fun getEnRelatedWordsList(): List<String> = enRelatedWords.split(";").filter { it.isNotBlank() }
-    fun getJaRelatedWordsList(): List<String> = jaRelatedWords.split(";").filter { it.isNotBlank() }
-    fun getZhRelatedWordsList(): List<String> = zhRelatedWords.split(";").filter { it.isNotBlank() }
-}
 
 
 /**

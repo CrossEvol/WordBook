@@ -5,17 +5,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.crossevol.wordbook.data.ApiKeyConfigRepository // Import repository - Keep for Mock
 import com.crossevol.wordbook.data.api.WordFetchApi // Dependency on the API client
-import com.crossevol.wordbook.data.api.WordFetchResultJson
 import com.crossevol.wordbook.data.WordRepository // Import WordRepository
+import com.crossevol.wordbook.data.model.WordFetchResultJson
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.firstOrNull // Import firstOrNull for StateFlow
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.Dispatchers // Import Dispatchers
 
 private val logger = KotlinLogging.logger {} // Add logger instance
 
