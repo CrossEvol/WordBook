@@ -39,8 +39,10 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 // Add imports for Scaffold and Snackbar
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration // Add this import
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult // Add this import
 import androidx.compose.runtime.rememberCoroutineScope // Import rememberCoroutineScope
 import kotlinx.coroutines.launch // Import launch
 
@@ -184,11 +186,16 @@ fun App(
                                     val exportedFilePath = wordRepository.exportWords(path, format)
 
                                     if (exportedFilePath != null) {
-                                        // Show success message
-                                        snackbarHostState.showSnackbar("Export successful: $exportedFilePath")
-
-                                        // Open the directory (assuming openFileExplorer is safe to call from main thread or handles its own threading)
-                                        openFileExplorer(path)
+                                        // Show success message with an action button
+                                        val result = snackbarHostState.showSnackbar(
+                                            message = "Export successful: $exportedFilePath",
+                                            actionLabel = "Open Folder", // Add the action button label
+                                            duration = SnackbarDuration.Long // Keep snackbar visible longer
+                                        )
+                                        // If the action button was clicked, open the directory
+                                        if (result == SnackbarResult.ActionPerformed) {
+                                            openFileExplorer(path)
+                                        }
                                     } else {
                                         // Show error message
                                         snackbarHostState.showSnackbar("Export failed")
