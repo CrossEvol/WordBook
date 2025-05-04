@@ -81,22 +81,41 @@ actual fun openFileExplorer(directoryPath: String): Boolean {
             // or might open a specific file manager app rather than the generic chooser.
             // Opening a *tree* URI isn't a standard ACTION_VIEW operation for folders.
             // A better approach might be needed if this consistently fails, but it's
-            // separate from the writing issue. Consider DocumentsContract.buildDocumentUriUsingTree
-            // if you need to show the *contents* of the tree URI.
+            // separate from the writing issue.
+            // To view the directory granted by a Tree URI, we should view the Document URI of the directory itself.
+            val documentUri: Uri? = try {
+                val treeDocumentId = DocumentsContract.getTreeDocumentId(directoryUri)
+                DocumentsContract.buildDocumentUriUsingTree(directoryUri, treeDocumentId)
+            } catch (e: Exception) {
+                 logger.error(e) { "Error deriving document URI from tree URI $directoryUri: ${e.message}" }
+                 null
+            }
+
+            if (documentUri == null) {
+                logger.warn { "Could not derive document URI for tree URI: $directoryUri. Cannot open." }
+                return false
+            }
+
+            logger.debug { "Attempting to view derived document URI: $documentUri" }
             val intent = Intent(Intent.ACTION_VIEW)
-            // Setting type to "resource/folder" might help some file managers
-            intent.setDataAndType(directoryUri, "resource/folder")
+            // Set the data to the document URI of the directory
+            intent.setData(documentUri)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            // Grant read permission for the intent
+            // Grant read permission for the intent target
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
             try {
                 ContextCompat.startActivity(appContext, intent, null)
-                logger.info { "Started activity to view directory URI: $directoryUri" }
+                logger.info { "Started activity to view document URI: $documentUri (derived from $directoryUri)" }
                 true
             } catch (e: Exception) {
-                logger.error(e) { "Error viewing directory URI $directoryUri: ${e.message}" }
-                // Fallback or alternative methods could be added here if needed
+                // Catch ActivityNotFoundException specifically if it occurs
+                logger.error(e) { "Error viewing document URI $documentUri: ${e.message}" }
+                // You could potentially try ACTION_OPEN_DOCUMENT with EXTRA_INITIAL_URI here as a fallback
+                // val fallbackIntent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+                // fallbackIntent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, documentUri)
+                // fallbackIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                // try { ContextCompat.startActivity(appContext, fallbackIntent, null); true } catch ...
                 false // Indicate failure
             }
 
@@ -200,11 +219,18 @@ actual fun writeToFile(directoryLocation: String, baseFilename: String, extensio
 
             var fileUri: Uri? = null
             try {
-                logger.debug { "Calling DocumentsContract.createDocument with parentUri=$directoryUri, mimeType=$mimeType, displayName=$filename" }
-                // Create the document using DocumentsContract - THIS IS THE CORRECT WAY with a TREE URI
+                // Convert the tree URI to the document URI for the directory itself
+                val treeDocumentId = DocumentsContract.getTreeDocumentId(directoryUri)
+                val parentDocumentUri = DocumentsContract.buildDocumentUriUsingTree(directoryUri, treeDocumentId)
+
+                logger.debug { "Original Tree URI: $directoryUri" }
+                logger.debug { "Derived Parent Document URI: $parentDocumentUri" }
+                logger.debug { "Calling DocumentsContract.createDocument with parentDocumentUri=$parentDocumentUri, mimeType=$mimeType, displayName=$filename" }
+
+                // Create the document using DocumentsContract, passing the derived parent document URI
                 fileUri = DocumentsContract.createDocument(
                     appContext.contentResolver,
-                    directoryUri, // The TREE URI acts as the parent directory reference
+                    parentDocumentUri, // Use the document URI of the directory
                     mimeType,
                     filename
                 )
