@@ -1,5 +1,6 @@
 package com.crossevol.wordbook
 
+import android.Manifest // Required for notification permission check
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -7,19 +8,27 @@ import android.os.Build
 import android.os.Environment
 import androidx.compose.runtime.Composable
 import android.provider.DocumentsContract
+import android.app.NotificationChannel // Required for Android 8+
+import android.app.NotificationManager // Required for Android 8+
+import android.content.pm.PackageManager // Required for permission check
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.core.app.ActivityCompat // Required for permission check
+import androidx.core.app.NotificationCompat // Required for building notification
+import androidx.core.app.NotificationManagerCompat // Required for showing notification
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.core.net.toUri
+import com.crossevol.wordbook.R // Import R for drawable resource
 import java.io.File
 import java.io.FileOutputStream // Needed for SAF writing
 import java.io.IOException // Needed for exception handling
 
 private val logger = KotlinLogging.logger {}
 private lateinit var appContext: Context
+private const val NOTIFICATION_CHANNEL_ID = "wordbook_channel_id" // Define a channel ID
 
 class AndroidPlatform : Platform {
     override val name: String = "Android ${Build.VERSION.SDK_INT}"
@@ -35,6 +44,7 @@ actual fun getPlatform(): Platform = AndroidPlatform()
  */
 fun initPlatformExt(context: Context) {
     appContext = context.applicationContext
+    createNotificationChannel() // Create channel on init
 }
 
 /**
@@ -180,6 +190,74 @@ actual fun readFileContent(filePath: String): String? {
     } catch (e: Exception) {
         logger.error(e) { "Error reading file content from '$filePath': ${e.message}" }
         null
+    }
+}
+
+/**
+ * Creates a notification channel required for Android 8.0 (Oreo) and above.
+ * This is safe to call multiple times; the system ignores it if the channel exists.
+ */
+private fun createNotificationChannel() {
+    if (!::appContext.isInitialized) {
+        logger.error { "Context not initialized, cannot create notification channel." }
+        return
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val name = "WordBook Notifications" // Channel name visible in settings
+        val descriptionText = "Notifications from WordBook App"
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val channel = NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance).apply {
+            description = descriptionText
+        }
+        // Register the channel with the system
+        val notificationManager: NotificationManager =
+            appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
+        logger.debug { "Notification channel '$NOTIFICATION_CHANNEL_ID' created or already exists." }
+    }
+}
+
+/**
+ * Actual implementation for Android to show a notification.
+ * Requires POST_NOTIFICATIONS permission on Android 13+.
+ */
+actual fun showNotification(title: String, message: String) {
+    if (!::appContext.isInitialized) {
+        logger.error { "Context not initialized, cannot show notification." }
+        return
+    }
+
+    // --- Permission Check (Crucial for Android 13+) ---
+    // NOTE: This only *checks* permission. A real app needs a flow to *request* it if missing.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && // TIRAMISU is API 33
+        ActivityCompat.checkSelfPermission(
+            appContext,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) != PackageManager.PERMISSION_GRANTED
+    ) {
+        logger.error { "Cannot show notification: POST_NOTIFICATIONS permission not granted." }
+        // In a real app, you would trigger the permission request flow here.
+        return
+    }
+    // --- End Permission Check ---
+
+    val builder = NotificationCompat.Builder(appContext, NOTIFICATION_CHANNEL_ID)
+        .setSmallIcon(R.drawable.word_book_icon) // Use your app's icon
+        .setContentTitle(title)
+        .setContentText(message)
+        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        .setAutoCancel(true) // Dismiss notification when tapped
+
+    val notificationId = System.currentTimeMillis().toInt() // Unique ID for each notification
+
+    try {
+        NotificationManagerCompat.from(appContext).notify(notificationId, builder.build())
+        logger.info { "Notification shown: '$title' - '$message'" }
+    } catch (e: SecurityException) {
+        // Catch potential SecurityException if permission check somehow failed or was revoked
+        logger.error(e) { "SecurityException while trying to show notification. Check permissions." }
+    } catch (e: Exception) {
+        logger.error(e) { "Failed to show notification: ${e.message}" }
     }
 }
 

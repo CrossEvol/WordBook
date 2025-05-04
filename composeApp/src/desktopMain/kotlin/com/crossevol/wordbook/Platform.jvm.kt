@@ -3,6 +3,11 @@ package com.crossevol.wordbook
 import androidx.compose.runtime.Composable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.awt.Desktop
+import java.awt.Image // Required for TrayIcon
+import java.awt.SystemTray // Required for SystemTray
+import java.awt.Toolkit // Required for loading image
+import java.awt.TrayIcon // Required for TrayIcon
+import java.awt.TrayIcon.MessageType // Required for message type
 import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Paths
@@ -66,6 +71,55 @@ actual fun readFileContent(filePath: String): String? {
         logger.error(e) { "Error reading file from path $filePath: ${e.message}" }
         null
     }
+}
+
+/**
+ * Actual implementation for Desktop (JVM) to show a notification using SystemTray.
+ */
+actual fun showNotification(title: String, message: String) {
+    if (!SystemTray.isSupported()) {
+        logger.warn { "SystemTray is not supported on this platform. Cannot show notification." }
+        // Fallback: Log to console as a simple alternative
+        println("Notification: [$title] $message")
+        return
+    }
+
+    val tray = SystemTray.getSystemTray()
+
+    // Load an image icon (make sure you have an icon resource)
+    // Place 'word_book_icon.png' (or your icon) in 'composeApp/src/commonMain/resources/drawable/'
+    // Or adjust the path if placed elsewhere.
+    val image: Image? = try {
+        // Attempt to load from resources relative to the classpath root
+        val resourceUrl = ClassLoader.getSystemResource("word_book_icon.png")
+        if (resourceUrl != null) {
+            Toolkit.getDefaultToolkit().getImage(resourceUrl)
+        } else {
+            logger.error { "Notification icon resource not found: drawable/word_book_icon.png" }
+            null
+        }
+    } catch (e: Exception) {
+        logger.error(e) { "Error loading notification icon: ${e.message}" }
+        null
+    }
+
+    // Create a TrayIcon (even if temporary just to display the message)
+    val trayIcon = TrayIcon(image ?: createDefaultImage(), "WordBook Notification") // Provide a fallback image if loading fails
+    trayIcon.isImageAutoSize = true // Adjust icon size automatically
+    tray.add(trayIcon)
+
+    // Display the message
+    // Note: This doesn't add a persistent icon to the tray, just shows the popup.
+    trayIcon.displayMessage(title, message, MessageType.INFO)
+    logger.info { "Desktop notification displayed: '$title' - '$message'" }
+
+    tray.remove(trayIcon)
+}
+
+// Helper function to create a minimal default image if icon loading fails
+private fun createDefaultImage(): Image {
+    // Create a tiny transparent image as a fallback
+    return java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_ARGB)
 }
 
 /**

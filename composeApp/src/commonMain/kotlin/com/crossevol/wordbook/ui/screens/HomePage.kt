@@ -1,24 +1,24 @@
 package com.crossevol.wordbook.ui.screens
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box // Import Box
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add // Import Add icon for FAB
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Notifications // Using Notifications for Review for now
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.DropdownMenu // Import DropdownMenu
-import androidx.compose.material3.DropdownMenuItem // Import DropdownMenuItem
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton // Import FAB
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar // Use NavigationBar for M3 bottom nav
+import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
@@ -27,26 +27,26 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.LaunchedEffect // Import LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalInspectionMode // Import for preview check
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.crossevol.wordbook.data.model.FilterOption // Import FilterOption
-import com.crossevol.wordbook.data.model.WordItemDB
-import com.crossevol.wordbook.ui.components.FilterDropdownMenu // Import FilterDropdownMenu
-import com.crossevol.wordbook.ui.components.WordListItem
-import com.crossevol.wordbook.data.WordRepository // Import WordRepository
-import org.jetbrains.compose.ui.tooling.preview.Preview
-import com.crossevol.wordbook.data.SettingsRepository // Import SettingsRepository
+import androidx.compose.ui.platform.LocalInspectionMode
+import com.crossevol.wordbook.data.SettingsRepository
+import com.crossevol.wordbook.data.WordRepository
 import com.crossevol.wordbook.data.mock.sampleWordListEN
 import com.crossevol.wordbook.data.mock.sampleWordListJA
 import com.crossevol.wordbook.data.mock.sampleWordListZH
+import com.crossevol.wordbook.data.model.FilterOption
+import com.crossevol.wordbook.data.model.WordItemDB
 import com.crossevol.wordbook.data.model.WordItemUI
+import com.crossevol.wordbook.ui.components.FilterDropdownMenu
+import com.crossevol.wordbook.ui.components.WordListItem
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 private val logger = KotlinLogging.logger {} // Add logger instance
 
@@ -164,6 +164,7 @@ fun HomePage(
             TopAppBar(
                 title = { Text("Browse") },
                 actions = {
+
                     // Locale Selector (New)
                     Box { // Box to anchor the dropdown
                         IconButton(onClick = { showLocaleMenu = true }) {

@@ -57,6 +57,14 @@ expect fun writeToFile(directoryLocation: String, baseFilename: String, extensio
  */
 expect fun readFileContent(filePath: String): String?
 
+/**
+ * Platform-specific function to display a simple notification.
+ *
+ * @param title The title of the notification.
+ * @param message The main text content of the notification.
+ */
+expect fun showNotification(title: String, message: String)
+
 
 /**
  * Class to hold platform-specific information
