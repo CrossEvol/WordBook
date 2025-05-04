@@ -9,7 +9,9 @@ import com.crossevol.wordbook.db.AppDatabase
 import com.crossevol.wordbook.db.SelectWordItemsForLanguage
 import com.crossevol.wordbook.util.ReviewCalculator
 import com.crossevol.wordbook.writeToFile
+import com.crossevol.wordbook.readFileContent // Import the new function
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.serialization.decodeFromString // Needed for JSON import
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -418,9 +420,295 @@ open class WordRepository(private val database: AppDatabase) {
         }
     }
 
+
+    /**
+     * Imports words from a given content string based on the specified format.
+     *
+     * @param fileContent The string content read from the import file.
+     * @param format The format of the content ("JSON" or "CSV").
+     * @return The number of words successfully imported, or null if the format is unsupported or parsing fails.
+     */
+    fun importWords(
+        fileContent: String,
+        format: String
+    ): Int? {
+        return try {
+            when (format.uppercase()) {
+                "JSON" -> importWordsFromJson(fileContent)
+                "CSV"  -> importWordsFromCsv(fileContent)
+                // Add "TXT" case later if needed
+                else   -> {
+                    logger.error { "Unsupported import format: $format" }
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "Error during import process (format: $format): ${e.message}" }
+            null
+        }
+    }
+
+    /**
+     * Parses JSON content and saves the words to the database.
+     *
+     * @param jsonContent The JSON string content.
+     * @return The number of words successfully imported.
+     */
+    private fun importWordsFromJson(jsonContent: String): Int {
+        val json = Json { ignoreUnknownKeys = true } // Be lenient with extra fields
+        val importedWords = json.decodeFromString<List<WordExportJson>>(jsonContent)
+        var importedCount = 0
+
+        database.transaction {
+            importedWords.forEach { wordData ->
+                try {
+                    // Save the core word data first
+                    saveWordCoreData(wordData)
+
+                    // Save details for each language if present
+                    saveImportedWordDetail(
+                        wordData,
+                        LanguageCode.EN
+                    )
+                    saveImportedWordDetail(
+                        wordData,
+                        LanguageCode.JA
+                    )
+                    saveImportedWordDetail(
+                        wordData,
+                        LanguageCode.ZH
+                    )
+
+                    importedCount++
+                } catch (e: Exception) {
+                    logger.error(e) { "Error importing word '${wordData.text}': ${e.message}" }
+                    // Optionally rollback transaction or just skip this word
+                    // For now, we continue with the next word
+                }
+            }
+        }
+        logger.info { "Successfully imported $importedCount words from JSON." }
+        return importedCount
+    }
+
+    /**
+     * Parses CSV content and saves the words to the database.
+     * Assumes a specific CSV structure matching the export format.
+     *
+     * @param csvContent The CSV string content.
+     * @return The number of words successfully imported.
+     */
+    private fun importWordsFromCsv(csvContent: String): Int {
+        val lines = csvContent.lines().filter { it.isNotBlank() }
+        if (lines.size < 2) { // Need header + at least one data row
+            logger.warn { "CSV content is empty or only contains a header." }
+            return 0
+        }
+
+        val header =
+            lines.first().split(",").map { it.trim() } // Simple split, assumes no commas in values
+        val dataRows = lines.drop(1)
+        var importedCount = 0
+
+        // Define expected header columns (adjust if export format changes)
+        val expectedHeader = listOf(
+            "text",
+            "lastReviewAt",
+            "nextReviewAt",
+            "reviewProgress",
+            "enExplanation",
+            "enSentences",
+            "enRelatedWords",
+            "enPronunciation",
+            "jaExplanation",
+            "jaSentences",
+            "jaRelatedWords",
+            "jaPronunciation",
+            "zhExplanation",
+            "zhSentences",
+            "zhRelatedWords",
+            "zhPronunciation"
+        )
+        // Basic header validation (can be more robust)
+        if (header != expectedHeader) {
+            logger.error { "CSV header does not match expected format. Header: $header, Expected: $expectedHeader" }
+            // Consider throwing an exception or returning 0/null
+            return 0 // Stop import if header is wrong
+        }
+
+        database.transaction {
+            dataRows.forEach { line ->
+                try {
+                    val values = line.split(",") // Simple split
+                    if (values.size == expectedHeader.size) {
+                        val wordDataMap = header.zip(values).toMap()
+
+                        // Create a WordExportJson object from the map
+                        val wordData = wordDataMap["enExplanation"]?.let {
+                            WordExportJson(
+                                text = wordDataMap["text"] ?: "",
+                                lastReviewAt = wordDataMap["lastReviewAt"]?.toLongOrNull() ?: 0L,
+                                nextReviewAt = wordDataMap["nextReviewAt"]?.toLongOrNull() ?: 0L,
+                                reviewProgress = wordDataMap["reviewProgress"]?.toIntOrNull() ?: 0,
+                                enExplanation = it,
+                                enSentences = wordDataMap["enSentences"] ?: "",
+                                enRelatedWords = wordDataMap["enRelatedWords"] ?: "",
+                                enPronunciation = wordDataMap["enPronunciation"] ?: "",
+                                jaExplanation = wordDataMap["jaExplanation"] ?: "",
+                                jaSentences = wordDataMap["jaSentences"] ?: "",
+                                jaRelatedWords = wordDataMap["jaRelatedWords"] ?: "",
+                                jaPronunciation = wordDataMap["jaPronunciation"] ?: "",
+                                zhExplanation = wordDataMap["zhExplanation"] ?: "",
+                                zhSentences = wordDataMap["zhSentences"] ?: "",
+                                zhRelatedWords = wordDataMap["zhRelatedWords"] ?: "",
+                                zhPronunciation = wordDataMap["zhPronunciation"] ?: ""
+                            )
+                        }
+
+                        if (wordData != null) {
+                            if (wordData.text.isNotBlank()) {
+                                saveWordCoreData(wordData)
+                                saveImportedWordDetail(
+                                    wordData,
+                                    LanguageCode.EN
+                                )
+                                saveImportedWordDetail(
+                                    wordData,
+                                    LanguageCode.JA
+                                )
+                                saveImportedWordDetail(
+                                    wordData,
+                                    LanguageCode.ZH
+                                )
+                                importedCount++
+                            } else {
+                                logger.warn { "Skipping CSV row with blank text: $line" }
+                            }
+                        }
+                    } else {
+                        logger.warn { "Skipping malformed CSV row (expected ${expectedHeader.size} columns, got ${values.size}): $line" }
+                    }
+                } catch (e: Exception) {
+                    logger.error(e) { "Error importing CSV row '$line': ${e.message}" }
+                    // Continue with the next row
+                }
+            }
+        }
+        logger.info { "Successfully imported $importedCount words from CSV." }
+        return importedCount
+    }
+
+    /**
+     * Helper function to save/update the core word data during import.
+     */
+    private fun saveWordCoreData(wordData: WordExportJson) {
+        val existingWord = wordQueries.selectByText(wordData.text).executeAsOneOrNull()
+        val currentTime = System.currentTimeMillis() // Needed if inserting new word
+
+        if (existingWord == null) {
+            wordQueries.insertWord(
+                text = wordData.text,
+                create_at = currentTime, // Use current time for new words
+                last_review_at = if (wordData.lastReviewAt > 0) wordData.lastReviewAt else null,
+                next_review_at = if (wordData.nextReviewAt > 0) wordData.nextReviewAt else null,
+                review_progress = wordData.reviewProgress.toLong()
+            )
+        } else {
+            // Update existing word - selectively update review times and progress
+            if (wordData.lastReviewAt > 0) {
+                wordQueries.updateLastReviewTime(
+                    wordData.lastReviewAt,
+                    existingWord.id
+                )
+            }
+            if (wordData.nextReviewAt > 0) {
+                wordQueries.updateNextReviewTime(
+                    wordData.nextReviewAt,
+                    existingWord.id
+                )
+            }
+            wordQueries.updateReviewProgress(
+                wordData.reviewProgress.toLong(),
+                existingWord.id
+            )
+        }
+    }
+
+    /**
+     * Helper function to save/update word details for a specific language during import.
+     */
+    private fun saveImportedWordDetail(
+        wordData: WordExportJson,
+        langCode: LanguageCode
+    ) {
+        val explanation: String?
+        val sentences: String?
+        val relatedWords: String?
+        val pronunciation: String?
+
+        when (langCode) {
+            LanguageCode.EN -> {
+                explanation = wordData.enExplanation
+                sentences = wordData.enSentences
+                relatedWords = wordData.enRelatedWords
+                pronunciation = wordData.enPronunciation
+            }
+
+            LanguageCode.JA -> {
+                explanation = wordData.jaExplanation
+                sentences = wordData.jaSentences
+                relatedWords = wordData.jaRelatedWords
+                pronunciation = wordData.jaPronunciation
+            }
+
+            LanguageCode.ZH -> {
+                explanation = wordData.zhExplanation
+                sentences = wordData.zhSentences
+                relatedWords = wordData.zhRelatedWords
+                pronunciation = wordData.zhPronunciation
+            }
+        }
+
+        // Only proceed if there's any data for this language
+        if (explanation.isNullOrBlank() && sentences.isNullOrBlank() && relatedWords.isNullOrBlank() && pronunciation.isNullOrBlank()) {
+            return
+        }
+
+        // Get the word ID (it should exist now after saveWordCoreData)
+        val wordId = wordQueries.selectByText(wordData.text).executeAsOne().id
+
+        // Check if detail for this language already exists
+        val existingDetail = wordDetailQueries.selectDetailForWordAndLanguage(
+            word_id = wordId,
+            language_code = langCode.name
+        ).executeAsOneOrNull()
+
+        if (existingDetail == null) {
+            // Insert new detail if any data exists
+            wordDetailQueries.insertDetail(
+                word_id = wordId,
+                language_code = langCode.name,
+                explanation = explanation,
+                sentences = sentences, // Store raw string from import
+                related_words = relatedWords, // Store raw string from import
+                pronunciation = pronunciation
+            )
+        } else {
+            // Update existing detail
+            wordDetailQueries.updateDetail(
+                explanation = explanation,
+                sentences = sentences,
+                related_words = relatedWords,
+                pronunciation = pronunciation,
+                id = existingDetail.id
+            )
+        }
+    }
+
+
     // TODO: Add methods for:
-    // - getWordById(id: Long): word? (SQLDelight generated)
-    // - getWordDetailById(id: Long): wordDetail? (SQLDelight generated)
+    // - getWordById(id: Long): word? (SQLDelight generated) - Already exists via selectById
+    // - getWordDetailById(id: Long): wordDetail? (SQLDelight generated) - Need to add query if required
     // - getWordDetailForWordAndLanguage(wordId: Long, languageCode: String): wordDetail? (SQLDelight generated)
     // - deleteWordById(id: Long)
     // - deleteWordDetailById(id: Long)

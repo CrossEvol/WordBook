@@ -47,6 +47,16 @@ expect fun openFileExplorer(directoryPath: String): Boolean
  */
 expect fun writeToFile(directoryLocation: String, baseFilename: String, extension: String, content: String): String?
 
+/**
+ * Platform-specific function to read the content of a file.
+ * On Android, this handles reading from a `content://` URI obtained via the file picker.
+ * On Desktop, this reads from a standard file path.
+ *
+ * @param filePath The path (Desktop) or URI string (Android) of the file to read.
+ * @return The content of the file as a String, or null on failure.
+ */
+expect fun readFileContent(filePath: String): String?
+
 
 /**
  * Class to hold platform-specific information

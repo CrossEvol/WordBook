@@ -31,10 +31,12 @@ import com.crossevol.wordbook.ui.screens.WordFetchPage
 import com.crossevol.wordbook.ui.screens.WordDetailSummaryPage // Import the new summary page
 import com.crossevol.wordbook.ui.screens.WordReviewPage
 import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel // Import ViewModel
-import com.crossevol.wordbook.ui.viewmodel.WordReviewViewModel // Import the new ViewModel
-import com.crossevol.wordbook.ui.viewmodel.ApiKeyViewModel // Import the new ApiKeyViewModel
-import com.russhwolf.settings.Settings // Import Settings
-import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
+import com.crossevol.wordbook.ui.viewmodel.WordReviewViewModel
+import com.crossevol.wordbook.ui.viewmodel.ApiKeyViewModel
+import com.russhwolf.settings.Settings
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.Dispatchers // Import Dispatchers for background tasks
+import kotlinx.coroutines.withContext // Import withContext
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 // Add imports for Scaffold and Snackbar
@@ -205,17 +207,42 @@ fun App(
                                 }
                             }
                         },
-                        // Implement the import functionality (placeholder for now)
-                        onImport = { path, format -> // Removed @Composable
-                            logger.info { "Importing data from $path in $format format" }
-                            // TODO: Implement import functionality
-                            // Use the scope captured from the App composable
-                            scope.launch { // Launch coroutine for import logic (if needed)
-                                // Placeholder: Show snackbar message
-                                snackbarHostState.showSnackbar("Import not yet implemented")
-                            }
-                        },
-                        onLogout = {
+                       // Implement the import functionality
+                       onImport = { path, format ->
+                           logger.info { "Importing data from $path in $format format" }
+                           scope.launch { // Launch coroutine for file reading and import
+                               if (wordRepository != null) {
+                                   try {
+                                       // Read file content in the background
+                                       val fileContent = withContext(Dispatchers.Default) {
+                                           readFileContent(path)
+                                       }
+
+                                       if (fileContent != null) {
+                                           // Import words using the repository in the background
+                                           val importedCount = withContext(Dispatchers.Default) {
+                                               wordRepository.importWords(fileContent, format)
+                                           }
+
+                                           if (importedCount != null) {
+                                               snackbarHostState.showSnackbar("Successfully imported $importedCount words.")
+                                               // Optionally refresh data or navigate
+                                           } else {
+                                               snackbarHostState.showSnackbar("Import failed: Unsupported format or error during processing.")
+                                           }
+                                       } else {
+                                           snackbarHostState.showSnackbar("Import failed: Could not read file content.")
+                                       }
+                                   } catch (e: Exception) {
+                                       logger.error(e) { "Error during import: ${e.message}" }
+                                       snackbarHostState.showSnackbar("Import failed: An unexpected error occurred.")
+                                   }
+                               } else {
+                                   snackbarHostState.showSnackbar("Error: Repository not initialized")
+                               }
+                           }
+                       },
+                       onLogout = {
                             logger.info { "Logout clicked!" } // Replaced println
                             // Implement actual logout logic and navigate (e.g., to a login screen or back home)
                             currentScreen = Screen.Home // Example: Go back home after logout

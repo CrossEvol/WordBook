@@ -148,6 +148,41 @@ actual fun openFileExplorer(directoryPath: String): Boolean {
     }
 }
 
+/**
+ * Actual implementation for Android to read content from a file path or content URI.
+ */
+actual fun readFileContent(filePath: String): String? {
+    if (!::appContext.isInitialized) {
+        logger.error { "Context not initialized, cannot read file" }
+        return null
+    }
+
+    return try {
+        val contentUri: Uri = try {
+            filePath.toUri() // Works for both "file://" and "content://" URIs
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to parse file path/URI string: $filePath" }
+            return null
+        }
+
+        logger.info { "Attempting to read content from URI: $contentUri" }
+
+        // Use ContentResolver to open an InputStream for the URI
+        appContext.contentResolver.openInputStream(contentUri)?.use { inputStream ->
+            // Read the content using a BufferedReader for efficiency
+            val content = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+            logger.info { "Successfully read content from URI: $contentUri" }
+            content
+        } ?: run {
+            logger.error { "Failed to open InputStream for URI: $contentUri" }
+            null
+        }
+    } catch (e: Exception) {
+        logger.error(e) { "Error reading file content from '$filePath': ${e.message}" }
+        null
+    }
+}
+
 
 /**
  * Helper function to request a document tree URI from the user for export.

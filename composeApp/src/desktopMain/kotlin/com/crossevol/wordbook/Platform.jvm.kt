@@ -50,6 +50,25 @@ actual fun getDefaultDocumentsPath(): String {
 }
 
 /**
+ * Actual implementation for Desktop (JVM) to read content from a standard file path.
+ */
+actual fun readFileContent(filePath: String): String? {
+    return try {
+        val file = File(filePath)
+        if (!file.exists() || !file.isFile) {
+            logger.error { "File does not exist or is not a file: $filePath" }
+            return null
+        }
+        val content = file.readText(Charsets.UTF_8) // Read content using UTF-8
+        logger.info { "Successfully read file: $filePath" }
+        content
+    } catch (e: Exception) {
+        logger.error(e) { "Error reading file from path $filePath: ${e.message}" }
+        null
+    }
+}
+
+/**
  * Open the given directory path in the desktop file explorer
  */
 actual fun openFileExplorer(directoryPath: String): Boolean {
