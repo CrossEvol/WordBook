@@ -1,20 +1,17 @@
 package com.crossevol.wordbook.data
 
-import com.crossevol.wordbook.data.model.WordItemUI // Import the new UI model
-import com.crossevol.wordbook.data.model.WordExportJson // Import the export model
+// Removed okio and java.io imports
+// Removed java.text and java.util imports for Date/Locale/SimpleDateFormat
+import com.crossevol.wordbook.data.model.LanguageCode
+import com.crossevol.wordbook.data.model.WordExportJson
+import com.crossevol.wordbook.data.model.WordItemUI
 import com.crossevol.wordbook.db.AppDatabase
-import com.crossevol.wordbook.db.SelectWordItemsForLanguage // SQLDelight generated class
+import com.crossevol.wordbook.db.SelectWordItemsForLanguage
 import com.crossevol.wordbook.util.ReviewCalculator
-import com.crossevol.wordbook.writeToFile // Import the platform-specific function
+import com.crossevol.wordbook.writeToFile
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-// Removed okio and java.io imports
-// Removed java.text and java.util imports for Date/Locale/SimpleDateFormat
-import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.DurationUnit
 
 private val logger = KotlinLogging.logger {}
 
@@ -39,7 +36,8 @@ open class WordRepository(private val database: AppDatabase) {
             explanation = this.explanation ?: "", // Handle nullable
             rating = this.review_progress, // Maps to review_progress (now from word table)
             sentences = this.sentences?.split(";")?.filter { it.isNotBlank() } ?: emptyList(),
-            relatedWords = this.related_words?.split(";")?.filter { it.isNotBlank() } ?: emptyList() // Split related_words string
+            relatedWords = this.related_words?.split(";")?.filter { it.isNotBlank() }
+                ?: emptyList() // Split related_words string
         )
     }
 
@@ -55,10 +53,10 @@ open class WordRepository(private val database: AppDatabase) {
             .executeAsList()
             .map { it.toUiWordItem() }
     }
-    
+
     /**
      * Get all words that need review (their next_review_at time is before current time).
-     * 
+     *
      * @param languageCode The language code to filter by.
      * @return A list of WordItemUI objects that need review.
      */
@@ -100,7 +98,7 @@ open class WordRepository(private val database: AppDatabase) {
     ) {
         database.transaction {
             val currentTime = System.currentTimeMillis()
-            
+
             // Calculate next review time based on rating/progress using the utility class
             val nextReviewAt = ReviewCalculator.calculateNextReviewTime(rating)
 
@@ -122,28 +120,28 @@ open class WordRepository(private val database: AppDatabase) {
             } else {
                 // Use the ID of the existing word
                 val existingWordId = existingWord.id
-                
+
                 // Get the current next_review_at as the new last_review_at
                 val previousNextReviewAt = existingWord.next_review_at
-                
+
                 // Update the last_review_at to previous next_review_at (if it wasn't null)
                 wordQueries.updateLastReviewTime(
                     last_review_at = previousNextReviewAt ?: currentTime,
                     id = existingWordId
                 )
-                
+
                 // Update next_review_at based on new review progress
                 wordQueries.updateNextReviewTime(
                     next_review_at = nextReviewAt,
                     id = existingWordId
                 )
-                
+
                 // Update the review_progress on the existing word
                 wordQueries.updateReviewProgress(
                     review_progress = rating,
                     id = existingWordId
                 )
-                
+
                 existingWordId
             }
 
@@ -177,35 +175,38 @@ open class WordRepository(private val database: AppDatabase) {
             }
         }
     }
-    
+
     /**
      * Updates a word's review progress and calculates the next review time.
-     * 
+     *
      * @param wordId The ID of the word to update.
      * @param newProgress The new review progress value (0-7).
      * @return True if update was successful, false otherwise.
      */
-    fun updateWordReviewProgress(wordId: Long, newProgress: Long): Boolean {
+    fun updateWordReviewProgress(
+        wordId: Long,
+        newProgress: Long
+    ): Boolean {
         return try {
             database.transaction {
                 // Get current word data
                 val word = wordQueries.selectById(wordId).executeAsOneOrNull() ?: return@transaction
-                
+
                 // Calculate next review time based on new progress using the utility class
                 val nextReviewAt = ReviewCalculator.calculateNextReviewTime(newProgress)
-                
+
                 // Update last_review_at to current next_review_at (if it exists)
                 wordQueries.updateLastReviewTime(
                     last_review_at = word.next_review_at ?: System.currentTimeMillis(),
                     id = wordId
                 )
-                
+
                 // Update next_review_at
                 wordQueries.updateNextReviewTime(
                     next_review_at = nextReviewAt,
                     id = wordId
                 )
-                
+
                 // Update review_progress
                 wordQueries.updateReviewProgress(
                     review_progress = newProgress,
@@ -218,37 +219,41 @@ open class WordRepository(private val database: AppDatabase) {
             false
         }
     }
-    
+
     /**
      * Updates a word's review progress based on whether it was remembered or forgotten.
-     * 
+     *
      * @param wordId The ID of the word to update
      * @param remembered Whether the user remembered the word
      * @return True if the update was successful, false otherwise
      */
-    fun updateWordReviewResult(wordId: Long, remembered: Boolean): Boolean {
+    fun updateWordReviewResult(
+        wordId: Long,
+        remembered: Boolean
+    ): Boolean {
         return try {
             database.transaction {
                 // Get current word data
                 val word = wordQueries.selectById(wordId).executeAsOneOrNull() ?: return@transaction
-                
+
                 // Calculate new progress and next review time based on current progress and result
                 val (newProgress, nextReviewAt) = ReviewCalculator.calculateReviewUpdate(
-                    word.review_progress, remembered
+                    word.review_progress,
+                    remembered
                 )
-                
+
                 // Update last_review_at to current time
                 wordQueries.updateLastReviewTime(
                     last_review_at = System.currentTimeMillis(),
                     id = wordId
                 )
-                
+
                 // Update next_review_at
                 wordQueries.updateNextReviewTime(
                     next_review_at = nextReviewAt,
                     id = wordId
                 )
-                
+
                 // Update review_progress
                 wordQueries.updateReviewProgress(
                     review_progress = newProgress,
@@ -270,18 +275,30 @@ open class WordRepository(private val database: AppDatabase) {
      * @param format The format to export as ("JSON" or "CSV").
      * @return The path/URI string of the exported file, or null if export failed.
      */
-    fun exportWords(directoryLocation: String, format: String): String? {
+    fun exportWords(
+        directoryLocation: String,
+        format: String
+    ): String? {
         try {
             // Get all words from the database
             val allWords = wordQueries.selectAll().executeAsList()
-            
+
             // Create the export data for each word
             val exportData = allWords.map { word ->
                 // Get details for each language
-                val enDetail = wordDetailQueries.selectDetailForWordAndLanguage(word.id, "en").executeAsOneOrNull()
-                val jaDetail = wordDetailQueries.selectDetailForWordAndLanguage(word.id, "ja").executeAsOneOrNull()
-                val zhDetail = wordDetailQueries.selectDetailForWordAndLanguage(word.id, "zh").executeAsOneOrNull()
-                
+                val enDetail = wordDetailQueries.selectDetailForWordAndLanguage(
+                    word.id,
+                    LanguageCode.EN.name
+                ).executeAsOneOrNull()
+                val jaDetail = wordDetailQueries.selectDetailForWordAndLanguage(
+                    word.id,
+                    LanguageCode.JA.name
+                ).executeAsOneOrNull()
+                val zhDetail = wordDetailQueries.selectDetailForWordAndLanguage(
+                    word.id,
+                    LanguageCode.ZH.name
+                ).executeAsOneOrNull()
+
                 // Create export model with defaults for null values
                 WordExportJson(
                     text = word.text,
@@ -294,13 +311,13 @@ open class WordRepository(private val database: AppDatabase) {
                     enSentences = enDetail?.sentences ?: "",
                     enRelatedWords = enDetail?.related_words ?: "",
                     enPronunciation = enDetail?.pronunciation ?: "",
-                    
+
                     // Japanese details
                     jaExplanation = jaDetail?.explanation ?: "",
                     jaSentences = jaDetail?.sentences ?: "",
                     jaRelatedWords = jaDetail?.related_words ?: "",
                     jaPronunciation = jaDetail?.pronunciation ?: "",
-                    
+
                     // Chinese details
                     zhExplanation = zhDetail?.explanation ?: "",
                     zhSentences = zhDetail?.sentences ?: "",
@@ -320,41 +337,72 @@ open class WordRepository(private val database: AppDatabase) {
                     contentString = json.encodeToString(exportData)
                     fileExtension = "json"
                 }
-                "CSV" -> {
+
+                "CSV"  -> {
                     // Use StringBuilder for manual CSV creation to avoid external library dependency here if not needed elsewhere
                     // Or keep kotlincsv if it's used elsewhere or preferred
                     val csvBuilder = StringBuilder()
                     // Write header
                     csvBuilder.appendLine(
                         listOf(
-                            "text", "lastReviewAt", "nextReviewAt", "reviewProgress",
-                            "enExplanation", "enSentences", "enRelatedWords", "enPronunciation",
-                            "jaExplanation", "jaSentences", "jaRelatedWords", "jaPronunciation",
-                            "zhExplanation", "zhSentences", "zhRelatedWords", "zhPronunciation"
+                            "text",
+                            "lastReviewAt",
+                            "nextReviewAt",
+                            "reviewProgress",
+                            "enExplanation",
+                            "enSentences",
+                            "enRelatedWords",
+                            "enPronunciation",
+                            "jaExplanation",
+                            "jaSentences",
+                            "jaRelatedWords",
+                            "jaPronunciation",
+                            "zhExplanation",
+                            "zhSentences",
+                            "zhRelatedWords",
+                            "zhPronunciation"
                         ).joinToString(",") // Simple comma separation, consider quoting if values might contain commas
                     )
                     // Write data rows
                     exportData.forEach { item ->
                         csvBuilder.appendLine(
                             listOf(
-                                item.text, item.lastReviewAt.toString(), item.nextReviewAt.toString(), item.reviewProgress.toString(),
-                                item.enExplanation, item.enSentences, item.enRelatedWords, item.enPronunciation,
-                                item.jaExplanation, item.jaSentences, item.jaRelatedWords, item.jaPronunciation,
-                                item.zhExplanation, item.zhSentences, item.zhRelatedWords, item.zhPronunciation
+                                item.text,
+                                item.lastReviewAt.toString(),
+                                item.nextReviewAt.toString(),
+                                item.reviewProgress.toString(),
+                                item.enExplanation,
+                                item.enSentences,
+                                item.enRelatedWords,
+                                item.enPronunciation,
+                                item.jaExplanation,
+                                item.jaSentences,
+                                item.jaRelatedWords,
+                                item.jaPronunciation,
+                                item.zhExplanation,
+                                item.zhSentences,
+                                item.zhRelatedWords,
+                                item.zhPronunciation
                             ).joinToString(",") // Simple comma separation
                         )
                     }
                     contentString = csvBuilder.toString()
                     fileExtension = "csv"
                 }
-                else -> {
+
+                else   -> {
                     logger.error { "Unsupported export format: $format" }
                     return null
                 }
             }
 
             // Call the platform-specific write function
-            val finalPath = writeToFile(directoryLocation, baseFilename, fileExtension, contentString)
+            val finalPath = writeToFile(
+                directoryLocation,
+                baseFilename,
+                fileExtension,
+                contentString
+            )
 
             if (finalPath != null) {
                 logger.info { "Successfully initiated export of ${exportData.size} words to $finalPath" }

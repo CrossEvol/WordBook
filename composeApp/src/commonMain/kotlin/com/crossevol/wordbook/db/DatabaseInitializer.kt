@@ -1,14 +1,15 @@
 package com.crossevol.wordbook.db
 
-import com.crossevol.wordbook.data.ApiKeyConfigRepository
-import com.crossevol.wordbook.ui.screens.ApiKeyConfig
-import com.crossevol.wordbook.data.WordRepository // Import WordRepository
 // Import the sample lists (adjust path if necessary, assuming they are accessible)
-import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
+import com.crossevol.wordbook.data.ApiKeyConfigRepository
+import com.crossevol.wordbook.data.WordRepository
+import com.crossevol.wordbook.data.mock.mockWordsForReview
 import com.crossevol.wordbook.data.mock.sampleWordListEN
 import com.crossevol.wordbook.data.mock.sampleWordListJA
 import com.crossevol.wordbook.data.mock.sampleWordListZH
-import com.crossevol.wordbook.data.mock.mockWordsForReview // Import the new mock data
+import com.crossevol.wordbook.data.model.LanguageCode
+import com.crossevol.wordbook.ui.screens.ApiKeyConfig
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {} // Add logger instance
 
@@ -60,14 +61,14 @@ fun initializeDatabase(
     val wordCount = database.wordQueries.countWords().executeAsOne()
     if (wordCount == 0L) {
         logger.info { "DatabaseInitializer: word table is empty, inserting sample word data." }
-        
+
         database.transaction { // Use a transaction for efficiency
             // First add the mock review words (words that need review)
             logger.info { "DatabaseInitializer: adding ${mockWordsForReview.size} words for review." }
             mockWordsForReview.forEach { word ->
                 wordRepository.saveWordDetails(
                     title = word.title,
-                    languageCode = "EN", // All mock review words are in English
+                    languageCode = LanguageCode.EN.name, // All mock review words are in English
                     explanation = word.explanation,
                     sentences = word.sentences,
                     pronunciation = word.pronunciation,
@@ -75,12 +76,12 @@ fun initializeDatabase(
                     rating = word.rating
                 )
             }
-            
+
             // Seed English words
             sampleWordListEN.forEach { item ->
                 wordRepository.saveWordDetails(
                     title = item.title,
-                    languageCode = "EN",
+                    languageCode = LanguageCode.EN.name,
                     explanation = item.explanation,
                     sentences = item.sentences,
                     pronunciation = item.pronunciation,
@@ -92,7 +93,7 @@ fun initializeDatabase(
             sampleWordListJA.forEach { item ->
                 wordRepository.saveWordDetails(
                     title = item.title,
-                    languageCode = "JA",
+                    languageCode = LanguageCode.JA.name,
                     explanation = item.explanation,
                     sentences = item.sentences,
                     pronunciation = item.pronunciation,
@@ -104,7 +105,7 @@ fun initializeDatabase(
             sampleWordListZH.forEach { item ->
                 wordRepository.saveWordDetails(
                     title = item.title,
-                    languageCode = "ZH",
+                    languageCode = LanguageCode.ZH.name,
                     explanation = item.explanation,
                     sentences = item.sentences,
                     pronunciation = item.pronunciation,
