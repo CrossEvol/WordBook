@@ -14,6 +14,14 @@ import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.foundation.layout.* // Imports for Desktop TimePicker Dialog
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
 
 private val logger = KotlinLogging.logger {}
 
@@ -70,6 +78,112 @@ actual fun readFileContent(filePath: String): String? {
     } catch (e: Exception) {
         logger.error(e) { "Error reading file from path $filePath: ${e.message}" }
         null
+    }
+}
+
+
+/**
+ * Actual implementation of PlatformTimePicker for Desktop using a simple AlertDialog.
+ * Note: This is a basic implementation. A more robust solution might involve
+ * dedicated number pickers or a third-party library.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+actual fun PlatformTimePicker(
+    show: Boolean,
+    initialHour: Int,
+    initialMinute: Int,
+    onDismiss: () -> Unit,
+    onTimeSelected: (hour: Int, minute: Int) -> Unit
+) {
+    if (show) {
+        // State for the text fields
+        var hourText by remember { mutableStateOf(initialHour.toString().padStart(2, '0')) }
+        var minuteText by remember { mutableStateOf(initialMinute.toString().padStart(2, '0')) }
+
+        // State for validation errors
+        var hourError by remember { mutableStateOf<String?>(null) }
+        var minuteError by remember { mutableStateOf<String?>(null) }
+
+        fun validateAndConfirm() {
+            val hour = hourText.toIntOrNull()
+            val minute = minuteText.toIntOrNull()
+
+            hourError = when {
+                hour == null -> "Invalid number"
+                hour !in 0..23 -> "Hour must be 0-23"
+                else -> null
+            }
+            minuteError = when {
+                minute == null -> "Invalid number"
+                minute !in 0..59 -> "Minute must be 0-59"
+                else -> null
+            }
+
+            if (hourError == null && minuteError == null) {
+                onTimeSelected(hour!!, minute!!)
+            }
+        }
+
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("Select Time") },
+            text = {
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = hourText,
+                            onValueChange = { newValue ->
+                                // Allow only digits and limit length
+                                if (newValue.all { it.isDigit() } && newValue.length <= 2) {
+                                    hourText = newValue
+                                    hourError = null // Clear error on change
+                                }
+                            },
+                            modifier = Modifier.width(80.dp),
+                            label = { Text("HH") },
+                            isError = hourError != null,
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                        Text(" : ", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(horizontal = 4.dp))
+                        OutlinedTextField(
+                            value = minuteText,
+                            onValueChange = { newValue ->
+                                // Allow only digits and limit length
+                                if (newValue.all { it.isDigit() } && newValue.length <= 2) {
+                                    minuteText = newValue
+                                    minuteError = null // Clear error on change
+                                }
+                            },
+                            modifier = Modifier.width(80.dp),
+                            label = { Text("MM") },
+                            isError = minuteError != null,
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                    }
+                    // Display validation errors
+                    if (hourError != null) {
+                        Text(hourError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    }
+                    if (minuteError != null) {
+                        Text(minuteError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+
+            },
+            confirmButton = {
+                Button(onClick = ::validateAndConfirm) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 

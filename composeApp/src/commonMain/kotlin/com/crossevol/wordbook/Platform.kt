@@ -2,7 +2,7 @@ package com.crossevol.wordbook
 
 import androidx.compose.runtime.Composable
 import io.github.oshai.kotlinlogging.KotlinLogging
-import java.io.File
+// Removed java.io.File import as it's not used directly here anymore
 
 private val logger = KotlinLogging.logger {}
 
@@ -72,4 +72,23 @@ expect fun showNotification(title: String, message: String)
 data class PlatformInfo(
     val name: String,
     val version: String
+)
+
+
+/**
+ * Expects a platform-specific implementation for displaying a time picker dialog.
+ *
+ * @param show Controls the visibility of the time picker.
+ * @param initialHour The initial hour to display (0-23).
+ * @param initialMinute The initial minute to display (0-59).
+ * @param onDismiss Called when the dialog is dismissed without selecting a time.
+ * @param onTimeSelected Called with the selected hour and minute when the user confirms.
+ */
+@Composable
+expect fun PlatformTimePicker(
+    show: Boolean,
+    initialHour: Int,
+    initialMinute: Int,
+    onDismiss: () -> Unit,
+    onTimeSelected: (hour: Int, minute: Int) -> Unit
 )

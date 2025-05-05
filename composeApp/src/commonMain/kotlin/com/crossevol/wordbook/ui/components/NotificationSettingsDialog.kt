@@ -19,9 +19,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.crossevol.wordbook.data.NotificationFrequency
+import com.crossevol.wordbook.PlatformTimePicker // Import the expect composable
 import io.github.oshai.kotlinlogging.KotlinLogging
+import java.util.Locale // Import Locale for formatting
 
 private val logger = KotlinLogging.logger {}
+
+// Helper function to parse "HH:mm" string
+private fun parseTime(time: String): Pair<Int, Int> {
+    return try {
+        val parts = time.split(":")
+        val hour = parts.getOrNull(0)?.toIntOrNull() ?: 0
+        val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
+        Pair(hour.coerceIn(0, 23), minute.coerceIn(0, 59))
+    } catch (e: Exception) {
+        logger.warn(e) { "Failed to parse time string: $time, defaulting to 00:00" }
+        Pair(0, 0) // Default to 00:00 on error
+    }
+}
+
+// Helper function to format hour/minute to "HH:mm" string
+private fun formatTime(hour: Int, minute: Int): String {
+    return String.format(Locale.US, "%02d:%02d", hour, minute)
+}
 
 // Data class to hold the state within the dialog
 private data class DialogState(
@@ -62,7 +82,36 @@ fun NotificationSettingsDialog(
         )
     }
 
+    // State for managing the time picker dialog
+    var showTimePicker by remember { mutableStateOf(false) }
+    // State to track which frequency's time is being edited
+    var editingFrequency by remember { mutableStateOf<NotificationFrequency?>(null) }
+
     val cyanColor = Color(0xFF06D5CD) // Color from the design
+
+    // --- Time Picker ---
+    // Only compose the PlatformTimePicker when needed
+    editingFrequency?.let { freqToEdit ->
+        val (initialHour, initialMinute) = parseTime(dialogState.startTimes[freqToEdit] ?: "00:00")
+        PlatformTimePicker(
+            show = showTimePicker,
+            initialHour = initialHour,
+            initialMinute = initialMinute,
+            onDismiss = {
+                showTimePicker = false
+                editingFrequency = null // Clear editing state on dismiss
+            },
+            onTimeSelected = { hour, minute ->
+                val updatedTimes = dialogState.startTimes.toMutableMap()
+                updatedTimes[freqToEdit] = formatTime(hour, minute) // Use helper to format
+                dialogState = dialogState.copy(startTimes = updatedTimes)
+                showTimePicker = false
+                editingFrequency = null // Clear editing state after selection
+            }
+        )
+    }
+    // --- End Time Picker ---
+
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -137,13 +186,10 @@ fun NotificationSettingsDialog(
                                 // --- Placeholder for Time Picker ---
                                 // In a real app, you'd show a TimePickerDialog here.
                                 // For now, we just log it. You could update the state
-                                // with a hardcoded value for testing, or show another dialog.
-                                logger.info { "Time clicked for ${freq.displayName}. Implement Time Picker!" }
-                                // Example: Update time to a fixed value for testing
-                                // val updatedTimes = dialogState.startTimes.toMutableMap()
-                                // updatedTimes[freq] = "10:30"
-                                // dialogState = dialogState.copy(startTimes = updatedTimes)
-                                // --- End Placeholder ---
+                                // --- Show the Time Picker ---
+                                editingFrequency = freq // Set which frequency we are editing
+                                showTimePicker = true // Trigger the picker display
+                                // --- End Show Time Picker ---
                             },
                             // Use the color from the enum entry directly
                             enabledColor = freq.color

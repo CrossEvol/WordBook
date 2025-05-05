@@ -25,6 +25,8 @@ import com.crossevol.wordbook.R // Import R for drawable resource
 import java.io.File
 import java.io.FileOutputStream // Needed for SAF writing
 import java.io.IOException // Needed for exception handling
+import android.app.TimePickerDialog // Import for Time Picker
+import androidx.compose.runtime.LaunchedEffect // Import for LaunchedEffect
 
 private val logger = KotlinLogging.logger {}
 private lateinit var appContext: Context
@@ -190,6 +192,44 @@ actual fun readFileContent(filePath: String): String? {
     } catch (e: Exception) {
         logger.error(e) { "Error reading file content from '$filePath': ${e.message}" }
         null
+    }
+}
+
+
+/**
+ * Actual implementation of PlatformTimePicker for Android using TimePickerDialog.
+ */
+@Composable
+actual fun PlatformTimePicker(
+    show: Boolean,
+    initialHour: Int,
+    initialMinute: Int,
+    onDismiss: () -> Unit,
+    onTimeSelected: (hour: Int, minute: Int) -> Unit
+) {
+    val context = LocalContext.current
+
+    // Use LaunchedEffect to show the dialog safely when 'show' becomes true
+    // It avoids showing the dialog on every recomposition.
+    if (show) {
+        LaunchedEffect(Unit) { // Trigger only once when show becomes true
+            TimePickerDialog(
+                context,
+                { _, hour: Int, minute: Int ->
+                    // Called when the user clicks "OK"
+                    onTimeSelected(hour, minute)
+                },
+                initialHour,
+                initialMinute,
+                true // Use 24-hour format (true) or AM/PM (false)
+            ).apply {
+                // Set a listener for when the dialog is dismissed (e.g., clicking outside, back button)
+                setOnDismissListener {
+                    onDismiss()
+                }
+                show() // Display the dialog
+            }
+        }
     }
 }
 
