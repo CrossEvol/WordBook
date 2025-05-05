@@ -13,10 +13,12 @@ androidx-lifecycle-viewmodel-compose = "2.8.7"
 androidx-material = "1.12.0"
 androidx-test-junit = "1.2.1"
 compose-multiplatform = "1.7.3"
+datetimeWheelPicker = "1.0.3-compose1.7"
 junit = "4.13.2"
 kotlin = "2.1.10"
 kotlinLogging = "6.0.3"
 kotlinx-coroutines = "1.10.1"
+kotlinxDatetime = "0.6.1"
 kotlinxSerializationJson = "1.6.3"
 ktorClientCore = "2.3.10"
 multiplatform-settings = "1.1.1" # Added multiplatform-settings version
@@ -34,6 +36,7 @@ csvReader = "1.9.2" # Added CSV reader version
 
 [libraries]
 androidx-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3Android" }
+datetime-wheel-picker = { module = "io.github.darkokoa:datetime-wheel-picker", version.ref = "datetimeWheelPicker" }
 kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlinLogging" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
@@ -50,6 +53,7 @@ androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle-viewmodel-compose" }
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 androidx-material3-android = { group = "androidx.compose.material3", name = "material3-android", version.ref = "material3Android" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktorClientCore" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktorClientCore" }

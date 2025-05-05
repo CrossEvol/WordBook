@@ -75,8 +75,8 @@ kotlin {
             // File operations
             implementation(libs.okio) // Add okio for file operations
             implementation(libs.csvReader) // Add CSV library
-            
-            // Removed: implementation(libs.compose.hotpreview.jvm) // Moved to desktopMain
+
+            implementation(libs.kotlinx.datetime)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -84,6 +84,7 @@ kotlin {
             implementation(libs.ktor.client.okhttp) // Ensure Ktor OkHttp is here
             implementation(libs.sqldelight.sqlite.driver)
             implementation(libs.okio) // Add okio for Desktop
+            implementation(libs.datetime.wheel.picker)
         }
     }
 }
