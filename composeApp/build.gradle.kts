@@ -13,11 +13,15 @@ plugins {
 kotlin {
     androidTarget {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_17) // Changed to JVM 17
         }
     }
 
-    jvm("desktop")
+    jvm("desktop") {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17) // Set JVM 17 for desktop target too
+        }
+    }
 
     sourceSets {
         val desktopMain by getting
@@ -39,7 +43,7 @@ kotlin {
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(compose.material) // This is Compose Material 2, keep if needed, otherwise remove
+            // implementation(compose.material) // Remove Material 2 dependency
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
@@ -84,6 +88,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.okhttp) // Ensure Ktor OkHttp is here
             implementation(libs.sqldelight.sqlite.driver)
+            implementation(libs.androidx.material3.desktop)
             implementation(libs.okio) // Add okio for Desktop
             implementation(libs.datetime.wheel.picker)
         }
@@ -120,9 +125,12 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17 // Changed to 17
+        targetCompatibility = JavaVersion.VERSION_17 // Changed to 17
     }
+}
+dependencies {
+    implementation(libs.androidx.material3.android)
 }
 
 // Removed the redundant dependencies block here
@@ -144,6 +152,22 @@ compose.desktop {
         mainClass = "com.crossevol.wordbook.MainKt"
 
         nativeDistributions {
+            // Explicitly include the java modules needed for the application
+            modules(
+                "java.compiler",
+                "java.instrument",
+                "java.sql",
+                "jdk.unsupported",
+                "java.logging",
+                "java.desktop", // Add java.desktop module
+                "jdk.jsobject" // Add jsobject module
+            )
+
+            windows {
+                includeAllModules = true
+                // Ensure menu icons are visible
+                menuGroup = "WordBook"
+            }
             targetFormats(
                 TargetFormat.Dmg,
                 TargetFormat.Msi,
@@ -151,7 +175,6 @@ compose.desktop {
             )
             packageName = "com.crossevol.wordbook"
             packageVersion = "1.0.0"
-
         }
     }
 }

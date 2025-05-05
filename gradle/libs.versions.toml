@@ -24,6 +24,8 @@ ktorClientCore = "2.3.10"
 multiplatform-settings = "1.1.1" # Added multiplatform-settings version
 lifecycleViewmodel = "2.8.7"
 material3Android = "1.3.2"
+material3Common = "1.3.2" # Add version for common Material 3
+material3Desktop = "1.3.2"
 mvvmCore = "0.16.1"
 slf4jSimple = "2.0.13"
 sqldelight = "2.0.2"
@@ -36,7 +38,8 @@ csvReader = "1.9.2" # Added CSV reader version
 androidx-work = "2.9.0" # Added WorkManager version (use latest stable)
 
 [libraries]
-androidx-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3Android" }
+androidx-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3Common" } # Use common M3 version
+androidx-material3-desktop = { group = "androidx.compose.material3", name = "material3-desktop", version.ref = "material3Desktop" }
 datetime-wheel-picker = { module = "io.github.darkokoa:datetime-wheel-picker", version.ref = "datetimeWheelPicker" }
 kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlinLogging" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

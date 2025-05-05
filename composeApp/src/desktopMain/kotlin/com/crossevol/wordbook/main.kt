@@ -39,10 +39,51 @@ import kotlinx.coroutines.swing.Swing
 import kotlinx.serialization.json.Json
 import java.net.URI
 import java.util.prefs.Preferences
+import java.awt.*
+import java.io.File // Import File
+import java.io.PrintWriter // Import PrintWriter
+import java.io.StringWriter // Import StringWriter
+import java.text.SimpleDateFormat // Import SimpleDateFormat
+import java.util.Date // Import Date
 
 private val logger = KotlinLogging.logger {} // Add logger instance
 
 fun main() { // Changed from = application { ... } to { application { ... } }
+    Thread.setDefaultUncaughtExceptionHandler { _, e ->
+        logger.error(e) { "Uncaught exception occurred." } // Log the error
+
+        // Build the detailed error message including full stack trace
+        val errorMessage = buildString {
+            val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
+            append("Timestamp: $timestamp\n")
+            append("Error Type: ${e::class.simpleName}\n")
+            append("Error Message: ${e.message ?: "No message provided"}\n\n")
+            append("Stack Trace:\n")
+
+            // Get the full stack trace as a string
+            val sw = StringWriter()
+            e.printStackTrace(PrintWriter(sw))
+            append(sw.toString())
+        }
+
+        // Define the error log file path
+        val errorFile = File("error.log") // File in the current working directory
+
+        try {
+            // Append the error message to the file
+            errorFile.appendText(errorMessage + "\n---\n") // Add separator between errors
+            logger.info { "Error details written to ${errorFile.absolutePath}" }
+        } catch (fileException: Exception) {
+            // If writing to file fails, print to standard error as a fallback
+            System.err.println("Failed to write error details to file: ${fileException.message}")
+            System.err.println(errorMessage) // Print the error message to console
+        }
+
+        // Optionally, you might still want to exit the application gracefully
+        // depending on the severity of the uncaught exception.
+        // exitProcess(1) // Uncomment if you want to force exit on any uncaught error
+    }
+
     application {
         // Create a CoroutineScope for the application lifecycle
         val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -213,5 +254,3 @@ fun main() { // Changed from = application { ... } to { application { ... } }
         })
     } // Closing brace for the application block
 } // Closing brace for the main function
-
-
