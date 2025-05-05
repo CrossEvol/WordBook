@@ -26,6 +26,7 @@ import java.io.File
 import java.io.FileOutputStream // Needed for SAF writing
 import java.io.IOException // Needed for exception handling
 import android.app.TimePickerDialog // Import for Time Picker
+import android.app.PendingIntent // Add this
 import androidx.compose.runtime.LaunchedEffect // Import for LaunchedEffect
 
 private val logger = KotlinLogging.logger {}
@@ -69,7 +70,8 @@ actual fun getDefaultDocumentsPath(): String {
         documentsDir.mkdirs()
     }
 
-    return documentsDir?.absolutePath ?: context.filesDir.absolutePath // Fallback to internal files dir
+    return documentsDir?.absolutePath
+        ?: context.filesDir.absolutePath // Fallback to internal files dir
 }
 
 /**
@@ -97,10 +99,13 @@ actual fun openFileExplorer(directoryPath: String): Boolean {
             // To view the directory granted by a Tree URI, we should view the Document URI of the directory itself.
             val documentUri: Uri? = try {
                 val treeDocumentId = DocumentsContract.getTreeDocumentId(directoryUri)
-                DocumentsContract.buildDocumentUriUsingTree(directoryUri, treeDocumentId)
+                DocumentsContract.buildDocumentUriUsingTree(
+                    directoryUri,
+                    treeDocumentId
+                )
             } catch (e: Exception) {
-                 logger.error(e) { "Error deriving document URI from tree URI $directoryUri: ${e.message}" }
-                 null
+                logger.error(e) { "Error deriving document URI from tree URI $directoryUri: ${e.message}" }
+                null
             }
 
             if (documentUri == null) {
@@ -117,7 +122,11 @@ actual fun openFileExplorer(directoryPath: String): Boolean {
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
             try {
-                ContextCompat.startActivity(appContext, intent, null)
+                ContextCompat.startActivity(
+                    appContext,
+                    intent,
+                    null
+                )
                 logger.info { "Started activity to view document URI: $documentUri (derived from $directoryUri)" }
                 true
             } catch (e: Exception) {
@@ -135,18 +144,25 @@ actual fun openFileExplorer(directoryPath: String): Boolean {
             // It's a file path (likely the default app-specific path)
             val directory = File(directoryPath)
             if (!directory.exists() || !directory.isDirectory) {
-                 logger.error { "Directory path does not exist or is not a directory: $directoryPath" }
-                 return false
+                logger.error { "Directory path does not exist or is not a directory: $directoryPath" }
+                return false
             }
             val fileUri = Uri.fromFile(directory) // Convert file path to Uri
             logger.debug { "Attempting to open directory path: $directoryPath (Uri: $fileUri)" }
 
             val intent = Intent(Intent.ACTION_VIEW) // Use ACTION_VIEW for directories too
-            intent.setDataAndType(fileUri, "resource/folder") // Standard type for folders
+            intent.setDataAndType(
+                fileUri,
+                "resource/folder"
+            ) // Standard type for folders
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
             try {
-                ContextCompat.startActivity(appContext, intent, null)
+                ContextCompat.startActivity(
+                    appContext,
+                    intent,
+                    null
+                )
                 logger.info { "Started activity to view directory path: $directoryPath" }
                 true
             } catch (e: Exception) {
@@ -217,7 +233,10 @@ actual fun PlatformTimePicker(
                 context,
                 { _, hour: Int, minute: Int ->
                     // Called when the user clicks "OK"
-                    onTimeSelected(hour, minute)
+                    onTimeSelected(
+                        hour,
+                        minute
+                    )
                 },
                 initialHour,
                 initialMinute,
@@ -246,7 +265,11 @@ private fun createNotificationChannel() {
         val name = "WordBook Notifications" // Channel name visible in settings
         val descriptionText = "Notifications from WordBook App"
         val importance = NotificationManager.IMPORTANCE_DEFAULT
-        val channel = NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance).apply {
+        val channel = NotificationChannel(
+            NOTIFICATION_CHANNEL_ID,
+            name,
+            importance
+        ).apply {
             description = descriptionText
         }
         // Register the channel with the system
@@ -261,7 +284,11 @@ private fun createNotificationChannel() {
  * Actual implementation for Android to show a notification.
  * Requires POST_NOTIFICATIONS permission on Android 13+.
  */
-actual fun showNotification(title: String, message: String) {
+actual fun showNotification(
+    title: String,
+    message: String,
+    onClick: (() -> Unit)?
+) {
     if (!::appContext.isInitialized) {
         logger.error { "Context not initialized, cannot show notification." }
         return
@@ -281,7 +308,10 @@ actual fun showNotification(title: String, message: String) {
     }
     // --- End Permission Check ---
 
-    val builder = NotificationCompat.Builder(appContext, NOTIFICATION_CHANNEL_ID)
+    val builder = NotificationCompat.Builder(
+        appContext,
+        NOTIFICATION_CHANNEL_ID
+    )
         .setSmallIcon(R.drawable.word_book_icon) // Use your app's icon
         .setContentTitle(title)
         .setContentText(message)
@@ -291,8 +321,66 @@ actual fun showNotification(title: String, message: String) {
     val notificationId = System.currentTimeMillis().toInt() // Unique ID for each notification
 
     try {
-        NotificationManagerCompat.from(appContext).notify(notificationId, builder.build())
+        NotificationManagerCompat.from(appContext).notify(
+            notificationId,
+            builder.build()
+        )
         logger.info { "Notification shown: '$title' - '$message'" }
+    } catch (e: SecurityException) {
+        // Catch potential SecurityException if permission check somehow failed or was revoked
+        logger.error(e) { "SecurityException while trying to show notification. Check permissions." }
+    } catch (e: Exception) {
+        logger.error(e) { "Failed to show notification: ${e.message}" }
+    }
+}
+
+
+/**
+ * Shows a notification that launches a PendingIntent when tapped.
+ */
+fun showNotificationWithIntent(
+    context: Context,
+    title: String,
+    message: String,
+    pendingIntent: PendingIntent?
+) {
+    if (!::appContext.isInitialized) {
+        appContext = context.applicationContext // Ensure context is set if called early
+        createNotificationChannel()
+    }
+    // --- Permission Check (Crucial for Android 13+) ---
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+        ActivityCompat.checkSelfPermission(
+            appContext,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) != PackageManager.PERMISSION_GRANTED
+    ) {
+        logger.error { "Cannot show notification: POST_NOTIFICATIONS permission not granted." }
+        return
+    }
+    // --- End Permission Check ---
+
+    val builder = NotificationCompat.Builder(
+        appContext,
+        NOTIFICATION_CHANNEL_ID
+    )
+        .setSmallIcon(R.drawable.word_book_icon)
+        .setContentTitle(title)
+        .setContentText(message)
+        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        .setAutoCancel(true) // Dismiss notification when tapped
+        .setContentIntent(pendingIntent) // Set the PendingIntent here!
+
+    val notificationId =
+        1 // Use a fixed ID for review notifications to update/replace existing ones
+    // Or generate dynamically if you want multiple stacked notifications
+
+    try {
+        NotificationManagerCompat.from(appContext).notify(
+            notificationId,
+            builder.build()
+        )
+        logger.info { "Review Notification shown: '$title' - '$message'" }
     } catch (e: SecurityException) {
         // Catch potential SecurityException if permission check somehow failed or was revoked
         logger.error(e) { "SecurityException while trying to show notification. Check permissions." }
@@ -309,16 +397,22 @@ actual fun showNotification(title: String, message: String) {
  * @param activity The activity to launch the picker from
  * @param requestCode The request code to use for the activity result
  */
-fun requestDocumentTreeUri(activity: android.app.Activity, requestCode: Int) {
+fun requestDocumentTreeUri(
+    activity: android.app.Activity,
+    requestCode: Int
+) {
     try {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         // Request persistable permissions when picking the directory
         intent.addFlags(
             Intent.FLAG_GRANT_READ_URI_PERMISSION or
-            Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
-            Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
         )
-        activity.startActivityForResult(intent, requestCode)
+        activity.startActivityForResult(
+            intent,
+            requestCode
+        )
     } catch (e: Exception) {
         logger.error(e) { "Error launching document tree picker: ${e.message}" }
     }
@@ -331,21 +425,29 @@ fun requestDocumentTreeUri(activity: android.app.Activity, requestCode: Int) {
  * For file paths: Uses standard File I/O
  * For content URIs: Uses DocumentsContract and ContentResolver
  */
-actual fun writeToFile(directoryLocation: String, baseFilename: String, extension: String, content: String): String? {
+actual fun writeToFile(
+    directoryLocation: String,
+    baseFilename: String,
+    extension: String,
+    content: String
+): String? {
     if (!::appContext.isInitialized) {
         logger.error { "Context not initialized, cannot write file" }
         return null
     }
 
     // Generate timestamp for filename
-    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+    val timestamp = SimpleDateFormat(
+        "yyyyMMdd_HHmmss",
+        Locale.getDefault()
+    ).format(Date())
     val filename = "${baseFilename}_${timestamp}.${extension.lowercase()}"
 
     // Determine MIME type
     val mimeType = when (extension.lowercase()) {
         "json" -> "application/json"
-        "csv" -> "text/csv"
-        else -> "application/octet-stream" // Default MIME type
+        "csv"  -> "text/csv"
+        else   -> "application/octet-stream" // Default MIME type
     }
 
     return try {
@@ -354,7 +456,7 @@ actual fun writeToFile(directoryLocation: String, baseFilename: String, extensio
             // Handle as content URI (This should be the TREE URI from the picker)
             logger.info { "Attempting to write using SAF to directory URI: $directoryLocation" }
             val directoryUri: Uri = try {
-                 directoryLocation.toUri()
+                directoryLocation.toUri()
             } catch (e: Exception) {
                 logger.error(e) { "Failed to parse directory location string to URI: $directoryLocation" }
                 return null
@@ -374,7 +476,10 @@ actual fun writeToFile(directoryLocation: String, baseFilename: String, extensio
             try {
                 // Convert the tree URI to the document URI for the directory itself
                 val treeDocumentId = DocumentsContract.getTreeDocumentId(directoryUri)
-                val parentDocumentUri = DocumentsContract.buildDocumentUriUsingTree(directoryUri, treeDocumentId)
+                val parentDocumentUri = DocumentsContract.buildDocumentUriUsingTree(
+                    directoryUri,
+                    treeDocumentId
+                )
 
                 logger.debug { "Original Tree URI: $directoryUri" }
                 logger.debug { "Derived Parent Document URI: $parentDocumentUri" }
@@ -410,10 +515,14 @@ actual fun writeToFile(directoryLocation: String, baseFilename: String, extensio
                     logger.error { "Failed to open OutputStream for the created document URI: $fileUri" }
                     // Attempt to delete the partially created file if output stream failed
                     try {
-                        if (DocumentsContract.deleteDocument(appContext.contentResolver, fileUri)) {
-                             logger.info { "Deleted partially created document: $fileUri" }
+                        if (DocumentsContract.deleteDocument(
+                                appContext.contentResolver,
+                                fileUri
+                            )
+                        ) {
+                            logger.info { "Deleted partially created document: $fileUri" }
                         } else {
-                             logger.warn { "Failed to delete partially created document: $fileUri" }
+                            logger.warn { "Failed to delete partially created document: $fileUri" }
                         }
                     } catch (deleteEx: Exception) {
                         logger.error(deleteEx) { "Error deleting partially created document: $fileUri" }
@@ -421,12 +530,16 @@ actual fun writeToFile(directoryLocation: String, baseFilename: String, extensio
                     return null // Return null as writing failed
                 }
             } catch (ioe: IOException) {
-                 logger.error(ioe) { "IOException writing to OutputStream for URI: $fileUri" }
-                 // Attempt deletion on IO error too
-                 try {
-                     DocumentsContract.deleteDocument(appContext.contentResolver, fileUri)
-                 } catch (_: Exception) {}
-                 return null
+                logger.error(ioe) { "IOException writing to OutputStream for URI: $fileUri" }
+                // Attempt deletion on IO error too
+                try {
+                    DocumentsContract.deleteDocument(
+                        appContext.contentResolver,
+                        fileUri
+                    )
+                } catch (_: Exception) {
+                }
+                return null
             }
 
             fileUri.toString() // Return the URI string of the created file
@@ -448,9 +561,9 @@ actual fun writeToFile(directoryLocation: String, baseFilename: String, extensio
 
             try {
                 // Write content to file using FileOutputStream for consistency
-                 FileOutputStream(file).use { outputStream ->
-                     outputStream.write(content.toByteArray(Charsets.UTF_8)) // Specify charset
-                 }
+                FileOutputStream(file).use { outputStream ->
+                    outputStream.write(content.toByteArray(Charsets.UTF_8)) // Specify charset
+                }
                 logger.info { "Successfully wrote file to path: ${file.absolutePath}" }
                 file.absolutePath // Return the absolute path of the created file
             } catch (ioe: IOException) {

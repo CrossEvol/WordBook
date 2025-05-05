@@ -11,14 +11,18 @@ import java.awt.SystemTray
 import java.awt.Toolkit
 import java.awt.TrayIcon
 import java.awt.TrayIcon.MessageType
+import java.awt.event.ActionListener // Import ActionListener
 import java.io.File
 import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlinx.datetime.LocalTime // Import LocalTime
+import kotlinx.coroutines.* // Import coroutines for delayed removal
+import kotlin.time.Duration.Companion.seconds // Import seconds
 
 private val logger = KotlinLogging.logger {}
+private val notificationScope = CoroutineScope(SupervisorJob()) // Scope for notification lifecycle
 
 class JVMPlatform : Platform {
     override val name: String = "Java ${System.getProperty("java.version")}"
@@ -101,7 +105,10 @@ actual fun PlatformTimePicker(
                 // Use the WheelTimePicker composable from the new library
                 WheelTimePicker(
                     // Pass initial time as LocalTime
-                    startTime = LocalTime(hour = initialHour, minute = initialMinute),
+                    startTime = LocalTime(
+                        hour = initialHour,
+                        minute = initialMinute
+                    ),
                     // Update state when time changes using the LocalTime object
                     onSnappedTime = { snappedTime ->
                         selectedHour = snappedTime.hour
@@ -113,7 +120,10 @@ actual fun PlatformTimePicker(
             confirmButton = {
                 Button(onClick = {
                     // Call the onTimeSelected callback with the selected time
-                    onTimeSelected(selectedHour, selectedMinute)
+                    onTimeSelected(
+                        selectedHour,
+                        selectedMinute
+                    )
                     onDismiss() // Dismiss the dialog after selection
                 }) {
                     Text("OK")
@@ -130,22 +140,25 @@ actual fun PlatformTimePicker(
 
 /**
  * Actual implementation for Desktop (JVM) to show a notification using SystemTray.
+ * Includes an optional click action.
  */
-actual fun showNotification(title: String, message: String) {
+actual fun showNotification(
+    title: String,
+    message: String,
+    onClick: (() -> Unit)?
+) {
     if (!SystemTray.isSupported()) {
         logger.warn { "SystemTray is not supported on this platform. Cannot show notification." }
         // Fallback: Log to console as a simple alternative
         println("Notification: [$title] $message")
+        onClick?.invoke() // Still call the click handler if provided, as a fallback behavior
         return
     }
 
     val tray = SystemTray.getSystemTray()
 
     // Load an image icon (make sure you have an icon resource)
-    // Place 'word_book_icon.png' (or your icon) in 'composeApp/src/commonMain/resources/drawable/'
-    // Or adjust the path if placed elsewhere.
     val image: Image? = try {
-        // Attempt to load from resources relative to the classpath root
         val resourceUrl = ClassLoader.getSystemResource("word_book_icon.png")
         if (resourceUrl != null) {
             Toolkit.getDefaultToolkit().getImage(resourceUrl)
@@ -158,23 +171,75 @@ actual fun showNotification(title: String, message: String) {
         null
     }
 
-    // Create a TrayIcon (even if temporary just to display the message)
-    val trayIcon = TrayIcon(image ?: createDefaultImage(), "WordBook Notification") // Provide a fallback image if loading fails
-    trayIcon.isImageAutoSize = true // Adjust icon size automatically
-    tray.add(trayIcon)
+    // Create a TrayIcon
+    val trayIcon = TrayIcon(
+        image ?: createDefaultImage(),
+        "WordBook Notification"
+    )
+    trayIcon.isImageAutoSize = true
 
-    // Display the message
-    // Note: This doesn't add a persistent icon to the tray, just shows the popup.
-    trayIcon.displayMessage(title, message, MessageType.INFO)
-    logger.info { "Desktop notification displayed: '$title' - '$message'" }
+    // Add ActionListener to the TrayIcon
+    // This listener is triggered when the icon or the popup message is clicked (behavior varies by OS)
+    val actionListener = ActionListener {
+        logger.debug { "Notification clicked." }
+        onClick?.invoke() // Execute the provided callback
+        // Remove the icon after it's clicked
+        try {
+            tray.remove(trayIcon)
+            logger.debug { "Tray icon removed after click." }
+        } catch (e: Exception) {
+            logger.error(e) { "Error removing tray icon after click." }
+        }
+    }
+    trayIcon.addActionListener(actionListener)
 
-    tray.remove(trayIcon)
+    try {
+        // Add the icon to the tray
+        tray.add(trayIcon)
+        logger.debug { "Tray icon added." }
+
+        // Display the message
+        trayIcon.displayMessage(
+            title,
+            message,
+            MessageType.INFO
+        )
+        logger.info { "Desktop notification displayed: '$title' - '$message'" }
+
+        // Schedule removal of the icon after a delay if it's not clicked
+        // This prevents the tray from filling up with icons.
+        // Choose a delay longer than the typical notification display time.
+        notificationScope.launch {
+            delay(10.seconds) // Keep the icon for 10 seconds
+            // Check if the icon is still in the tray before removing
+            if (tray.trayIcons.contains(trayIcon)) {
+                try {
+                    tray.remove(trayIcon)
+                    logger.debug { "Tray icon removed after delay." }
+                } catch (e: Exception) {
+                    logger.error(e) { "Error removing tray icon after delay." }
+                }
+            }
+        }
+
+    } catch (e: Exception) {
+        logger.error(e) { "Failed to show desktop notification: ${e.message}" }
+        // Clean up if adding failed
+        try {
+            tray.remove(trayIcon)
+        } catch (_: Exception) {
+        }
+    }
 }
 
 // Helper function to create a minimal default image if icon loading fails
 private fun createDefaultImage(): Image {
     // Create a tiny transparent image as a fallback
-    return java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_ARGB)
+    return java.awt.image.BufferedImage(
+        1,
+        1,
+        java.awt.image.BufferedImage.TYPE_INT_ARGB
+    )
 }
 
 /**
@@ -236,7 +301,12 @@ actual fun openFileExplorer(directoryPath: String): Boolean {
 /**
  * Actual implementation for Desktop (JVM) to write content to a standard file.
  */
-actual fun writeToFile(directoryLocation: String, baseFilename: String, extension: String, content: String): String? {
+actual fun writeToFile(
+    directoryLocation: String,
+    baseFilename: String,
+    extension: String,
+    content: String
+): String? {
     return try {
         // Ensure directory exists (it should, based on getDefaultDocumentsPath)
         val directory = File(directoryLocation)
@@ -245,12 +315,18 @@ actual fun writeToFile(directoryLocation: String, baseFilename: String, extensio
         }
 
         // Generate timestamp for filename
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val timestamp = SimpleDateFormat(
+            "yyyyMMdd_HHmmss",
+            Locale.getDefault()
+        ).format(Date())
         val filename = "${baseFilename}_${timestamp}.${extension.lowercase()}"
         val filePath = "$directoryLocation${File.separator}$filename"
 
         val file = File(filePath)
-        file.writeText(content, Charsets.UTF_8) // Write content using UTF-8
+        file.writeText(
+            content,
+            Charsets.UTF_8
+        ) // Write content using UTF-8
 
         logger.info { "Successfully wrote file: ${file.absolutePath}" }
         file.absolutePath // Return the absolute path of the created file

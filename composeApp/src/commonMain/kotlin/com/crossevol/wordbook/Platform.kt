@@ -62,8 +62,9 @@ expect fun readFileContent(filePath: String): String?
  *
  * @param title The title of the notification.
  * @param message The main text content of the notification.
+ * @param onClick An optional callback to be executed when the notification is clicked.
  */
-expect fun showNotification(title: String, message: String)
+expect fun showNotification(title: String, message: String, onClick: (() -> Unit)? = null)
 
 
 /**

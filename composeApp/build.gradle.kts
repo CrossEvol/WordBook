@@ -34,6 +34,7 @@ kotlin {
             implementation(compose.uiTooling)
             implementation(libs.ktor.client.android) // Ensure Ktor Android is here
             implementation(libs.okio) // Add okio for Android
+            implementation(libs.androidx.work.runtime.ktx) // Add WorkManager
         }
         commonMain.dependencies {
             implementation(compose.runtime)

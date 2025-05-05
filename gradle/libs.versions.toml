@@ -33,6 +33,7 @@ uiAndroid = "1.8.0"
 uiToolingPreviewAndroid = "1.8.0" # Added SQLDelight version
 okio = "3.9.0" # Added okio version
 csvReader = "1.9.2" # Added CSV reader version
+androidx-work = "2.9.0" # Added WorkManager version (use latest stable)
 
 [libraries]
 androidx-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3Android" }
@@ -73,6 +74,7 @@ androidx-ui-tooling-preview-android = { group = "androidx.compose.ui", name = "u
 filechooser = { module = "com.darkrockstudios:mpfilepicker", version.ref = "filechooser" }
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" } # Added okio library
 csvReader = { module = "com.github.doyaaaaaken:kotlin-csv-jvm", version.ref = "csvReader" } # Added CSV reader library
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "androidx-work" } # Added WorkManager library
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

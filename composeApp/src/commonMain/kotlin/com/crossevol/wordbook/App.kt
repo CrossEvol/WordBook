@@ -2,6 +2,7 @@ package com.crossevol.wordbook
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding // Import padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
@@ -16,37 +17,38 @@ import com.crossevol.wordbook.data.ApiKeyConfigRepository // Import repository
 import com.crossevol.wordbook.data.api.WordFetchApi // Import API client
 import com.crossevol.wordbook.data.SettingsRepository // Import SettingsRepository
 import com.crossevol.wordbook.data.WordRepository // Import WordRepository
-import com.crossevol.wordbook.data.model.WordItemUI
-import com.crossevol.wordbook.db.AppDatabase
-import com.crossevol.wordbook.db.createDatabase
-import com.crossevol.wordbook.db.initializeDatabase // Import initializer
-import com.crossevol.wordbook.ui.screens.ApiKeyConfig
-import com.crossevol.wordbook.ui.screens.ApiKeyEditingPage // Import the editing page
+import com.crossevol.wordbook.data.model.WordItemUI // Keep this
+import com.crossevol.wordbook.db.AppDatabase // Keep this for type hint if needed, or remove if unused
+import com.crossevol.wordbook.db.createDatabase // Keep this
+import com.crossevol.wordbook.db.initializeDatabase // Keep this
+import com.crossevol.wordbook.ui.screens.ApiKeyConfig // Keep this
+import com.crossevol.wordbook.ui.screens.ApiKeyEditingPage // Keep this
 import com.crossevol.wordbook.ui.screens.ApiKeyListPage
-import com.crossevol.wordbook.ui.screens.EditProfilePage
 import com.crossevol.wordbook.ui.screens.HomePage
 import com.crossevol.wordbook.ui.screens.SettingsPage
 import com.crossevol.wordbook.ui.screens.WordDetailPage
 import com.crossevol.wordbook.ui.screens.WordFetchPage
 import com.crossevol.wordbook.ui.screens.WordDetailSummaryPage // Import the new summary page
 import com.crossevol.wordbook.ui.screens.WordReviewPage
-import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel // Import ViewModel
-import com.crossevol.wordbook.ui.viewmodel.WordReviewViewModel
-import com.crossevol.wordbook.ui.viewmodel.ApiKeyViewModel
-import com.russhwolf.settings.Settings
-import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers // Import Dispatchers for background tasks
-import kotlinx.coroutines.withContext // Import withContext
+import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel // Keep this
+import com.crossevol.wordbook.ui.viewmodel.WordReviewViewModel // Keep this
+import com.crossevol.wordbook.ui.viewmodel.ApiKeyViewModel // Keep this
+import com.russhwolf.settings.Settings // Keep this
+import io.github.oshai.kotlinlogging.KotlinLogging // Keep this
+import kotlinx.coroutines.Dispatchers // Keep this
+import kotlinx.coroutines.withContext // Keep this
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 // Add imports for Scaffold and Snackbar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration // Add this import
 import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult // Add this import
-import androidx.compose.runtime.rememberCoroutineScope // Import rememberCoroutineScope
-import kotlinx.coroutines.launch // Import launch
+import androidx.compose.material3.SnackbarHostState // Keep this
+import androidx.compose.material3.SnackbarResult // Keep this
+import androidx.compose.runtime.rememberCoroutineScope // Keep this
+import com.crossevol.wordbook.db.DriverFactory // Keep this
+import androidx.compose.runtime.State // Import State for trigger
+import kotlinx.coroutines.launch // Keep this
 
 
 private val logger = KotlinLogging.logger {} // Add logger instance
@@ -58,354 +60,360 @@ sealed class Screen {
     data object Settings : Screen()
     data object EditProfile : Screen()
     data object ApiKeyList : Screen()
-    data class ApiKeyEdit(val config: ApiKeyConfig? = null) : Screen() // config is optional for adding
+    data class ApiKeyEdit(val config: ApiKeyConfig? = null) :
+        Screen() // config is optional for adding
+
     data object WordFetch : Screen() // Add WordFetch screen state
     data object WordDetailSummary : Screen() // Add state for the new summary page
-    data class WordReview(val words: List<WordItemUI>, val currentIndex: Int = 0) : Screen() // Add state for review process
+    data class WordReview(
+        val words: List<WordItemUI>,
+        val currentIndex: Int = 0
+    ) : Screen() // Add state for review process
 }
 
 @Composable
-@Preview
+// @Preview // Preview might be harder to set up now with internal state management
 fun App(
-    // Dependencies passed from platform-specific main functions
-    settings: Settings? = null, // Pass Settings instance
-    driverFactory: com.crossevol.wordbook.db.DriverFactory? = null, // Make nullable for Preview
-    wordFetchApi: WordFetchApi? = null // <-- Add WordFetchApi parameter here (nullable for Preview)
+    // Core dependencies provided by each platform
+    driverFactory: DriverFactory,
+    settings: Settings,
+    wordFetchApi: WordFetchApi, // API client needs platform-specific engine config
+
+    // Optional navigation triggers
+    initialScreenRoute: String? = null, // For Android intent navigation
+    desktopReviewTrigger: State<Boolean>? = null, // For Desktop notification click
+    onDesktopReviewTriggerHandled: (() -> Unit)? = null // Callback for Desktop trigger
 ) {
-    // Navigation state using the sealed class
-    var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
+    // --- Internal State Management ---
+
+    // Create database and repositories internally, remembered across recompositions
+    val database = remember(driverFactory) { createDatabase(driverFactory) }
+    val wordRepository = remember(database) { WordRepository(database) }
+    val apiKeyConfigRepository = remember(database) { ApiKeyConfigRepository(database) }
+    val settingsRepository = remember(settings) { SettingsRepository(settings) }
+
+    // Create ViewModels internally
+    val apiKeyViewModel =
+        remember(apiKeyConfigRepository) { ApiKeyViewModel(apiKeyConfigRepository) }
+    // Ensure WordFetchViewModel receives non-null WordRepository
+    val wordFetchViewModel = remember(
+        wordFetchApi,
+        apiKeyViewModel,
+        wordRepository
+    ) {
+        WordFetchViewModel(
+            wordFetchApi,
+            apiKeyViewModel,
+            wordRepository
+        )
+    }
+    val wordReviewViewModel = remember(wordRepository) { WordReviewViewModel(wordRepository) }
+
+    // Navigation state managed internally
+    var currentScreenState by remember { mutableStateOf<Screen>(Screen.Home) }
+    val onScreenChange: (Screen) -> Unit = { newScreen ->
+        logger.debug { "Changing screen to: $newScreen" }
+        currentScreenState = newScreen
+    }
 
     // Snackbar state
     val snackbarHostState = remember { SnackbarHostState() }
-    // Coroutine scope for launching tasks from non-composable contexts like button clicks
+    // Coroutine scope for launching tasks like export/import
     val scope = rememberCoroutineScope()
 
-    // --- Database and Repository Setup ---
-    // Use remember to create database and repository instances, tied to the composable lifecycle
-    val database: AppDatabase? = remember(driverFactory) {
-        driverFactory?.let { createDatabase(it) }
-    }
-
-    val apiKeyConfigRepository: ApiKeyConfigRepository? = remember(database) {
-        database?.let { ApiKeyConfigRepository(it) }
-    }
-
-    // Create Word Repository instance
-    val wordRepository: WordRepository? = remember(database) {
-        database?.let { WordRepository(it) }
-    }
-
-    // Create Settings Repository instance
-    val settingsRepository: SettingsRepository? = remember(settings) {
-        settings?.let { SettingsRepository(it) }
-    }
-
     // Initialize database with dummy data if empty, runs once
-    LaunchedEffect(database, apiKeyConfigRepository, wordRepository) { // Add wordRepository to key
-        if (database != null && apiKeyConfigRepository != null && wordRepository != null) { // Check wordRepository too
-            initializeDatabase(database, apiKeyConfigRepository, wordRepository) // Pass wordRepository
+    LaunchedEffect(
+        database,
+        apiKeyConfigRepository,
+        wordRepository
+    ) {
+        // Pass the internally created instances
+        initializeDatabase(
+            database,
+            apiKeyConfigRepository,
+            wordRepository
+        )
+    }
+
+    // Handle navigation trigger from Desktop notification
+    LaunchedEffect(desktopReviewTrigger?.value) {
+        if (desktopReviewTrigger?.value == true) {
+            logger.info { "Desktop review trigger activated. Navigating to WordDetailSummary." }
+            // Use the internal state modifier
+            onScreenChange(Screen.WordDetailSummary)
+            onDesktopReviewTriggerHandled?.invoke() // Signal that the trigger has been handled
         }
     }
-    // --- End Database Setup ---
 
-
-    // Removed: val wordFetchApi = remember { WordFetchApi() } // This is now passed as a parameter
-
-
-    // Create ViewModel for API Key management
-    // Use remember to create the ViewModel, handling the nullable repository
-    val apiKeyViewModel = remember(apiKeyConfigRepository) {
-        apiKeyConfigRepository?.let { ApiKeyViewModel(it) } // Return null if repository is null
-    }
-
-    // Create ViewModel for WordFetchPage, passing the API client and the *ApiKeyViewModel*
-    val wordFetchViewModel = remember(wordFetchApi, apiKeyViewModel, wordRepository) { // Dependency on apiKeyViewModel
-        // Ensure dependencies are not null before passing
-        if (wordFetchApi != null && apiKeyViewModel != null) { // wordRepository can be null for previews
-             WordFetchViewModel(api = wordFetchApi, apiKeyViewModel = apiKeyViewModel, wordRepository = wordRepository) // Pass apiKeyViewModel
-        } else null // Return null if dependencies aren't ready
-    }
-
-    // Create ViewModel for WordReviewPage
-    val wordReviewViewModel = remember(wordRepository) {
-        // Ensure wordRepository is not null before creating ViewModel
-        wordRepository?.let { WordReviewViewModel(it) } // Return null if repository is null
-    }
-
-
+    // --- UI ---
+    // No explicit isLoading check needed here anymore, dependencies are created synchronously with remember
     MaterialTheme {
-        // Wrap the screen content with Scaffold to provide SnackbarHost
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) }
-        ) {
-            when (val screen = currentScreen) {
-                is Screen.Home -> {
-                    HomePage(
-                        settingsRepository = settingsRepository, // Pass the settings repository
-                        wordRepository = wordRepository, // Pass the word repository
-                        snackbarHostState = snackbarHostState, // Pass SnackbarHostState
-                        onWordItemClick = { word ->
-                            logger.info { "Navigating to Detail for word: ${word.title}" } // Replaced println
-                            currentScreen = Screen.Detail(word) // Navigate to Detail
-                        },
-                        onNavigate = { route ->
-                            logger.info { "Bottom nav clicked: $route" } // Replaced println
-                            when (route) {
-                                "home" -> currentScreen = Screen.Home // Stay home or return home
-                                "review" -> currentScreen =
-                                    Screen.WordDetailSummary // Navigate to the new summary page
-                                "settings" -> currentScreen = Screen.Settings // Navigate to Settings
-                                "fetch" -> currentScreen =
-                                    Screen.WordFetch // Navigate to WordFetch via FAB
+        ) { paddingValues -> // Consume padding values
+            Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) { // Apply padding
+                // Use the internal currentScreenState
+                when (val screen = currentScreenState) {
+                    is Screen.Home              -> {
+                        HomePage(
+                            // Pass the internally created repositories/VMs
+                            settingsRepository = settingsRepository,
+                            wordRepository = wordRepository,
+                            snackbarHostState = snackbarHostState,
+                            onWordItemClick = { word ->
+                                logger.info { "Navigating to Detail for word: ${word.title}" }
+                                onScreenChange(Screen.Detail(word)) // Use internal callback
+                            },
+                            onNavigate = { route ->
+                                logger.info { "Bottom nav clicked: $route" }
+                                when (route) {
+                                    "home"     -> onScreenChange(Screen.Home) // Use internal callback
+                                    "review"   -> onScreenChange(Screen.WordDetailSummary) // Use internal callback
+                                    "settings" -> onScreenChange(Screen.Settings) // Use internal callback
+                                    "fetch"    -> onScreenChange(Screen.WordFetch) // Use internal callback
+                                }
                             }
-                        }
-                    )
-                }
+                        )
+                    }
 
-                is Screen.Detail -> {
-                    WordDetailPage(
-                        wordItem = screen.word,
-                        onBack = {
-                            logger.info { "Navigating back to Home from Detail." } // Replaced println
-                            currentScreen = Screen.Home // Navigate back to Home from Detail
-                        }
-                    )
-                }
+                    is Screen.Detail            -> {
+                        WordDetailPage(
+                            wordItem = screen.word,
+                            onBack = {
+                                logger.info { "Navigating back to Home from Detail." }
+                                onScreenChange(Screen.Home) // Use internal callback
+                            }
+                        )
+                    }
 
-                is Screen.Settings -> {
-                    SettingsPage(
-                        settingsRepository = settingsRepository, // Pass the repository
-                        onNavigateBack = {
-                            logger.info { "Navigating back to Home from Settings." } // Replaced println
-                            currentScreen = Screen.Home
-                        }, // Navigate back to Home
-                        // Implement the export functionality
-                        onExport = { path, format -> // Removed @Composable
-                            logger.info { "Exporting data in $format format to $path" }
-                            // Use the scope captured from the App composable
-                            scope.launch { // Launch coroutine for export logic
-                                if (wordRepository != null) {
-                                    // Export words using the repository (assuming exportWords is suspend or runs on background thread)
-                                    val exportedFilePath = wordRepository.exportWords(path, format)
+                    is Screen.Settings          -> {
+                        SettingsPage(
+                            // Pass the internally created repository
+                            settingsRepository = settingsRepository,
+                            onNavigateBack = {
+                                logger.info { "Navigating back to Home from Settings." }
+                                onScreenChange(Screen.Home) // Use internal callback
+                            },
+                            onExport = { path, format ->
+                                logger.info { "Exporting data in $format format to $path" }
+                                scope.launch {
+                                    // Use the internally created repository
+                                    val exportedFilePath = wordRepository.exportWords(
+                                        path,
+                                        format
+                                    )
 
                                     if (exportedFilePath != null) {
-                                        // Show success message with an action button
                                         val result = snackbarHostState.showSnackbar(
                                             message = "Export successful: $exportedFilePath",
-                                            actionLabel = "Open Folder", // Add the action button label
-                                            duration = SnackbarDuration.Long // Keep snackbar visible longer
+                                            actionLabel = "Open Folder",
+                                            duration = SnackbarDuration.Long
                                         )
-                                        // If the action button was clicked, open the directory
                                         if (result == SnackbarResult.ActionPerformed) {
                                             openFileExplorer(path)
                                         }
                                     } else {
-                                        // Show error message
                                         snackbarHostState.showSnackbar("Export failed")
                                     }
-                                } else {
-                                    snackbarHostState.showSnackbar("Error: Repository not initialized")
                                 }
-                            }
-                        },
-                       // Implement the import functionality
-                       onImport = { path, format ->
-                           logger.info { "Importing data from $path in $format format" }
-                           scope.launch { // Launch coroutine for file reading and import
-                               if (wordRepository != null) {
-                                   try {
-                                       // Read file content in the background
-                                       val fileContent = withContext(Dispatchers.Default) {
-                                           readFileContent(path)
-                                       }
+                            },
+                            onImport = { path, format ->
+                                logger.info { "Importing data from $path in $format format" }
+                                scope.launch {
+                                    // Use the internally created repository
+                                    try {
+                                        val fileContent = withContext(Dispatchers.Default) {
+                                            readFileContent(path)
+                                        }
 
-                                       if (fileContent != null) {
-                                           // Import words using the repository in the background
-                                           val importedCount = withContext(Dispatchers.Default) {
-                                               wordRepository.importWords(fileContent, format)
-                                           }
+                                        if (fileContent != null) {
+                                            val importedCount = withContext(Dispatchers.Default) {
+                                                wordRepository.importWords(
+                                                    fileContent,
+                                                    format
+                                                )
+                                            }
 
-                                           if (importedCount != null) {
-                                               snackbarHostState.showSnackbar("Successfully imported $importedCount words.")
-                                               // Optionally refresh data or navigate
-                                           } else {
-                                               snackbarHostState.showSnackbar("Import failed: Unsupported format or error during processing.")
-                                           }
-                                       } else {
-                                           snackbarHostState.showSnackbar("Import failed: Could not read file content.")
-                                       }
-                                   } catch (e: Exception) {
-                                       logger.error(e) { "Error during import: ${e.message}" }
-                                       snackbarHostState.showSnackbar("Import failed: An unexpected error occurred.")
-                                   }
-                               } else {
-                                   snackbarHostState.showSnackbar("Error: Repository not initialized")
-                               }
-                           }
-                       },
-                       onLogout = {
-                            logger.info { "Logout clicked!" } // Replaced println
-                            // Implement actual logout logic and navigate (e.g., to a login screen or back home)
-                            currentScreen = Screen.Home // Example: Go back home after logout
-                        },
-                        onEditProfile = {
-                            logger.info { "Navigating to EditProfile." } // Replaced println
-                            currentScreen = Screen.EditProfile
-                        }, // Navigate to EditProfile
-                        onChangeApiKey = {
-                            logger.info { "Navigating to ApiKeyList." } // Replaced println
-                            currentScreen = Screen.ApiKeyList // Navigate to the new ApiKeyListPage
-                        },
-                        onIntroduction = { logger.info { "Introduction clicked!" } }, // Replaced println
-                        onTermsOfService = { logger.info { "Terms of Service clicked!" } } // Replaced println
-                    )
-                }
+                                            if (importedCount != null) {
+                                                snackbarHostState.showSnackbar("Successfully imported $importedCount words.")
+                                            } else {
+                                                snackbarHostState.showSnackbar("Import failed: Unsupported format or error during processing.")
+                                            }
+                                        } else {
+                                            snackbarHostState.showSnackbar("Import failed: Could not read file content.")
+                                        }
+                                    } catch (e: Exception) {
+                                        logger.error(e) { "Error during import: ${e.message}" }
+                                        snackbarHostState.showSnackbar("Import failed: An unexpected error occurred.")
+                                    }
+                                    // Removed the else block checking for null repository
+                                }
+                            },
+                            onLogout = {
+                                logger.info { "Logout clicked!" }
+                                onScreenChange(Screen.Home) // Use internal callback
+                            },
+                            onEditProfile = {
+                                logger.info { "Navigating to EditProfile." }
+                                onScreenChange(Screen.EditProfile) // Use internal callback
+                            },
+                            onChangeApiKey = {
+                                logger.info { "Navigating to ApiKeyList." }
+                                onScreenChange(Screen.ApiKeyList) // Use internal callback
+                            },
+                            onIntroduction = { logger.info { "Introduction clicked!" } },
+                            onTermsOfService = { logger.info { "Terms of Service clicked!" } }
+                        )
+                    }
 
-                is Screen.ApiKeyList -> { // New case for the API Key List page
-                    // Pass the ViewModel to the list page, handling the nullable case
-                    if (apiKeyViewModel != null) {
+                    is Screen.ApiKeyList        -> {
+                        // Use the internally created ViewModel
                         ApiKeyListPage(
-                            viewModel = apiKeyViewModel, // Provide the ViewModel
+                            viewModel = apiKeyViewModel,
                             onNavigateBack = {
-                                logger.info { "Navigating back to Settings from ApiKeyList." } // Replaced println
-                                currentScreen = Screen.Settings
-                            }, // Go back to Settings
+                                logger.info { "Navigating back to Settings from ApiKeyList." }
+                                onScreenChange(Screen.Settings) // Use internal callback
+                            },
                             onAddApiKey = {
-                                logger.info { "Navigating to ApiKeyEdit (Add mode)." } // Replaced println
-                                currentScreen = Screen.ApiKeyEdit(null)
-                            }, // Navigate to Edit page for adding (config is null)
+                                logger.info { "Navigating to ApiKeyEdit (Add mode)." }
+                                onScreenChange(Screen.ApiKeyEdit(null)) // Use internal callback
+                            },
                             onEditApiKey = { config ->
-                                logger.info { "Navigating to ApiKeyEdit (Edit mode) for ID: ${config.id}" } // Replaced println
-                                currentScreen = Screen.ApiKeyEdit(config)
-                            } // Navigate to Edit page with config
-                            // onDeleteApiKey is now handled inside ApiKeyListPage by calling the ViewModel
+                                logger.info { "Navigating to ApiKeyEdit (Edit mode) for ID: ${config.id}" }
+                                onScreenChange(Screen.ApiKeyEdit(config)) // Use internal callback
+                            }
                         )
-                    } else {
-                         // Handle the case where the repository/ViewModel is not available (e.g., in preview)
-                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                             Text("Error: API Key Repository not initialized.")
-                         }
+                        // Removed null check and ErrorScreen
                     }
-                }
 
-                is Screen.WordFetch -> {
-                    // Ensure ViewModels are not null before using
-                    if (wordFetchViewModel != null && apiKeyViewModel != null) { // Check both ViewModels
-                        WordFetchPage( // Use the ViewModel instance created above
-                            viewModel = wordFetchViewModel, // Pass the WordFetchViewModel
-                            apiKeyViewModel = apiKeyViewModel, // Pass the ApiKeyViewModel
-                            snackbarHostState = snackbarHostState, // Pass SnackbarHostState
+                    is Screen.WordFetch         -> {
+                        // Use the internally created ViewModels
+                        WordFetchPage(
+                            viewModel = wordFetchViewModel,
+                            apiKeyViewModel = apiKeyViewModel,
+                            snackbarHostState = snackbarHostState,
                             onBack = {
-                                logger.info { "Navigating back to Home from WordFetch." } // Replaced println
-                                currentScreen = Screen.Home
-                            } // Navigate back to Home (or previous screen)
+                                logger.info { "Navigating back to Home from WordFetch." }
+                                onScreenChange(Screen.Home) // Use internal callback
+                            }
                         )
-                    } else {
-                        // Handle the case where the repository/ViewModel is not available (e.g., in preview)
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("Error: Required ViewModels not initialized.")
-                        }
+                        // Removed null check and ErrorScreen
                     }
-                }
 
-                is Screen.ApiKeyEdit -> { // Handle the ApiKeyEdit screen state
-                    // Pass the ViewModel to the editing page, handling the nullable case
-                    if (apiKeyViewModel != null) {
+                    is Screen.ApiKeyEdit        -> {
+                        // Use the internally created ViewModel
                         ApiKeyEditingPage(
-                            viewModel = apiKeyViewModel, // Provide the ViewModel
-                            config = screen.config, // Pass the config from the screen state
+                            viewModel = apiKeyViewModel,
+                            config = screen.config,
                             onNavigateBack = {
-                                logger.info { "Navigating back to ApiKeyList from ApiKeyEdit." } // Replaced println
-                                currentScreen = Screen.ApiKeyList
-                            } // Go back to the list after saving (handled inside the page now)
-                            // onSaveChanges is now handled inside ApiKeyEditingPage by calling the ViewModel
+                                logger.info { "Navigating back to ApiKeyList from ApiKeyEdit." }
+                                onScreenChange(Screen.ApiKeyList) // Use internal callback
+                            }
                         )
-                    } else {
-                        // Handle the case where the repository/ViewModel is not available (e.g., in preview)
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("Error: API Key Repository not initialized.")
-                        }
+                        // Removed null check and ErrorScreen
                     }
-                }
 
-                is Screen.WordDetailSummary -> { // Add case for the new summary page
-                    // Pass the ViewModel to the summary page, handling the nullable case
-                    if (wordReviewViewModel != null) {
+                    is Screen.WordDetailSummary -> {
+                        // Use the internally created ViewModel
                         WordDetailSummaryPage(
                             viewModel = wordReviewViewModel,
                             onStart = { wordList ->
                                 logger.info { "Starting review with ${wordList.size} words" }
-                                currentScreen = Screen.WordReview(wordList) // Navigate to review page with words
+                                onScreenChange(Screen.WordReview(wordList)) // Use internal callback
                             },
                             onBack = {
                                 logger.info { "Navigating back to Home from WordDetailSummary." }
-                                currentScreen = Screen.Home // Navigate back to Home
+                                onScreenChange(Screen.Home) // Use internal callback
                             }
                         )
-                    } else {
-                         // Handle the case where the repository/ViewModel is not available (e.g., in preview)
-                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                             Text("Error: Word Repository not initialized.")
-                         }
+                        // Removed null check and ErrorScreen
                     }
-                }
 
-                is Screen.WordReview -> {
-                    val reviewState = screen as Screen.WordReview
-                    val words = reviewState.words
-                    val currentIndex = reviewState.currentIndex
+                    is Screen.WordReview        -> {
+                        val reviewState = screen // Already cast
+                        val words = reviewState.words
+                        val currentIndex = reviewState.currentIndex
 
-                    // Ensure ViewModel is not null before using
-                    if (wordReviewViewModel != null) {
+                        // Use the internally created ViewModel
                         if (currentIndex < words.size) {
                             WordReviewPage(
                                 wordItem = words[currentIndex],
-                                remainingWordsCount = words.size - currentIndex, // Pass the count of remaining words
+                                remainingWordsCount = words.size - currentIndex,
                                 onRemember = {
-                                    // Update word progress (remembered)
-                                    wordReviewViewModel.updateWordReviewProgress(words[currentIndex].id, true)
-                                    // Navigation logic is now in onNext
+                                    wordReviewViewModel.updateWordReviewProgress(
+                                        words[currentIndex].id,
+                                        true
+                                    )
+                                    // Navigation handled by onNext callback
                                 },
                                 onForget = {
-                                    // Update word progress (forgotten)
-                                    wordReviewViewModel.updateWordReviewProgress(words[currentIndex].id, false)
-                                    // Navigation logic is now in onNext
+                                    wordReviewViewModel.updateWordReviewProgress(
+                                        words[currentIndex].id,
+                                        false
+                                    )
+                                    // Navigation handled by onNext callback
                                 },
                                 onSkip = {
-                                    // Skip this word without updating progress
                                     wordReviewViewModel.skipWordReview(words[currentIndex].id)
-                                    // Navigation logic is now in onNext
+                                    // Navigation handled by onNext callback
                                 },
                                 onBack = {
                                     // Cancel review and go back to summary
-                                    currentScreen = Screen.WordDetailSummary
+                                    onScreenChange(Screen.WordDetailSummary) // Use internal callback
                                 },
                                 onNext = {
                                     // Navigation logic: move to next word or back to summary if done
                                     if (currentIndex + 1 < words.size) {
-                                        currentScreen = Screen.WordReview(words, currentIndex + 1)
+                                        onScreenChange(
+                                            Screen.WordReview(
+                                                words,
+                                                currentIndex + 1
+                                            )
+                                        ) // Use internal callback
                                     } else {
                                         // All words reviewed, refresh data and go back to summary
                                         wordReviewViewModel.loadWordsForReview() // Refresh data
-                                        currentScreen = Screen.WordDetailSummary
+                                        onScreenChange(Screen.WordDetailSummary) // Use internal callback
                                     }
                                 },
                             )
                         } else {
                             // Safety check - if no more words, go back to summary
                             wordReviewViewModel.loadWordsForReview() // Refresh data
-                            currentScreen = Screen.WordDetailSummary
+                            onScreenChange(Screen.WordDetailSummary) // Use internal callback
                         }
-                    } else {
-                         // Handle the case where the repository/ViewModel is not available (e.g., in preview)
-                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                             Text("Error: Word Repository not initialized.")
-                         }
+                        // Removed null check and ErrorScreen
+                    }
+
+                    Screen.EditProfile          -> {
+                        // Placeholder for EditProfilePage
+                        Box(
+                            Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Edit Profile Page (TODO)")
+                        }
+                        // Example navigation back
+                        LaunchedEffect(Unit) {
+                            // delay(2000) // Removed delay
+                            onScreenChange(Screen.Settings) // Use internal callback
+                        }
                     }
                 }
-
-                Screen.EditProfile   -> TODO()
+                // Removed the closing brace for the 'else' block of isLoading check
             }
         }
     }
 }
+
+// Simple error screen composable (Keep this)
+@Composable
+fun ErrorScreen(message: String) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Error: $message")
+    }
+}
+
