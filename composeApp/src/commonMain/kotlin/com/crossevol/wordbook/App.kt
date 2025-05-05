@@ -174,6 +174,7 @@ fun App(
 
                 is Screen.Settings -> {
                     SettingsPage(
+                        settingsRepository = settingsRepository, // Pass the repository
                         onNavigateBack = {
                             logger.info { "Navigating back to Home from Settings." } // Replaced println
                             currentScreen = Screen.Home
@@ -255,7 +256,6 @@ fun App(
                             logger.info { "Navigating to ApiKeyList." } // Replaced println
                             currentScreen = Screen.ApiKeyList // Navigate to the new ApiKeyListPage
                         },
-                        onNotificationSettings = { logger.info { "Notification Settings clicked!" } }, // Replaced println
                         onIntroduction = { logger.info { "Introduction clicked!" } }, // Replaced println
                         onTermsOfService = { logger.info { "Terms of Service clicked!" } } // Replaced println
                     )

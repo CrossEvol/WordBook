@@ -51,6 +51,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.crossevol.wordbook.data.NotificationFrequency // Import enum
+import com.crossevol.wordbook.data.SettingsRepository // Import SettingsRepository
 import com.crossevol.wordbook.getDefaultDocumentsPath // Import the new function
 import com.crossevol.wordbook.getPlatform
 import com.crossevol.wordbook.ui.svgicons.MyIconPack
@@ -59,6 +61,7 @@ import com.crossevol.wordbook.ui.svgicons.myiconpack.DocumentScanner
 import com.crossevol.wordbook.ui.svgicons.myiconpack.SendAndArchive
 import com.crossevol.wordbook.ui.svgicons.myiconpack.Unarchive
 import com.darkrockstudios.libraries.mpfilepicker.DirectoryPicker
+import com.crossevol.wordbook.ui.components.NotificationSettingsDialog // Import the dialog
 import com.darkrockstudios.libraries.mpfilepicker.FilePicker // Import FilePicker
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -68,6 +71,7 @@ import wordbook.composeapp.generated.resources.girl
 /**
  * Settings Page composable based on the design image SettingsPage.png.
  *
+ * @param settingsRepository Repository for accessing and saving settings. Required.
  * @param username The username to display.
  * @param email The email address to display.
  * @param onNavigateBack Callback to navigate back (e.g., to HomePage).
@@ -75,7 +79,6 @@ import wordbook.composeapp.generated.resources.girl
  * @param onChangeApiKey Callback when "Change ApiKey" is clicked.
  * @param onExport Callback when export is confirmed, providing path and format.
  * @param onImport Callback when import is confirmed, providing file path and format.
- * @param onNotificationSettings Callback when "Notification Settings" is clicked.
  * @param onIntroduction Callback when "Introduction" is clicked.
  * @param onTermsOfService Callback when "Terms of Services" is clicked.
  * @param onLogout Callback when "Log Out" is clicked.
@@ -83,13 +86,13 @@ import wordbook.composeapp.generated.resources.girl
 @Composable
 fun SettingsPage(
     username: String = "[Username]", // Default values for preview
-    email: String = "[Email_Address]",
+    email: String = "[Email_Address]", // Default values for preview
+    settingsRepository: SettingsRepository?, // Make nullable for preview, but required in practice
     onNavigateBack: () -> Unit, // Required for navigation
     onEditProfile: () -> Unit = {},
     onChangeApiKey: () -> Unit = {}, // This will now navigate to ApiKeyListPage
     onExport: (path: String, format: String) -> Unit = { _, _ -> }, // Updated signature
     onImport: (path: String, format: String) -> Unit = { _, _ -> }, // Updated signature for import
-    onNotificationSettings: () -> Unit = {},
     onIntroduction: () -> Unit = {},
     onTermsOfService: () -> Unit = {},
     onLogout: () -> Unit = {}
@@ -98,6 +101,8 @@ fun SettingsPage(
     var showExportDialog by remember { mutableStateOf(false) }
     // State for showing the import dialog
     var showImportDialog by remember { mutableStateOf(false) } // State for import dialog
+    // State for showing the notification settings dialog
+    var showNotificationDialog by remember { mutableStateOf(false) }
 
     // Define the primary color from the image header (approximate)
     val headerColor = Color(0xFF4A148C) // Deep Purple / Indigo
@@ -122,6 +127,36 @@ fun SettingsPage(
                 // Handle import with the selected file path and format
                 onImport(path, format) // Call the provided onImport callback
                 showImportDialog = false
+            }
+        )
+    }
+
+    // Show the notification settings dialog if state is true
+    if (showNotificationDialog && settingsRepository != null) { // Ensure repository is not null
+        // Load initial settings from the repository
+        val initialPermission = remember { settingsRepository.getNotificationPermissionEnabled() }
+        val initialFrequenciesEnabled = remember {
+            NotificationFrequency.entries.associateWith { freq ->
+                settingsRepository.isNotificationFrequencyEnabled(freq)
+            }
+        }
+        val initialStartTimes = remember {
+            NotificationFrequency.entries.associateWith { freq ->
+                settingsRepository.getNotificationFrequencyStartTime(freq)
+            }
+        }
+
+        NotificationSettingsDialog(
+            initialPermissionEnabled = initialPermission,
+            initialEnabledFrequencies = initialFrequenciesEnabled,
+            initialStartTimes = initialStartTimes,
+            onDismissRequest = { showNotificationDialog = false },
+            onConfirm = { permissionEnabled, enabledFrequencies, startTimes ->
+                // Save the updated settings back to the repository
+                settingsRepository.setNotificationPermissionEnabled(permissionEnabled)
+                enabledFrequencies.forEach { (freq, enabled) -> settingsRepository.setNotificationFrequencyEnabled(freq, enabled) }
+                startTimes.forEach { (freq, time) -> settingsRepository.setNotificationFrequencyStartTime(freq, time) }
+                showNotificationDialog = false // Close the dialog
             }
         )
     }
@@ -203,7 +238,10 @@ fun SettingsPage(
             SettingsItem(
                 icon = Icons.Filled.Notifications,
                 text = "Notification Settings",
-                onClick = onNotificationSettings
+                onClick = {
+                    // Show the notification dialog when clicked
+                    showNotificationDialog = true
+                }
             )
             SettingsItem(
                 icon = Icons.Filled.Info,
@@ -289,7 +327,10 @@ private fun SettingsItem(
 @Composable
 fun SettingsPagePreview() {
     MaterialTheme {
-        SettingsPage(onNavigateBack = {}) // Provide dummy lambda for preview
+        SettingsPage(
+            settingsRepository = null, // No repository in preview
+            onNavigateBack = {} // Provide dummy lambda for preview
+        )
     }
 }
 
