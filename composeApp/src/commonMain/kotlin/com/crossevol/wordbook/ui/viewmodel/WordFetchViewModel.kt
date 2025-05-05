@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.crossevol.wordbook.data.api.WordFetchApi // Dependency on the API client
 import com.crossevol.wordbook.data.WordRepository // Import WordRepository
+import com.crossevol.wordbook.data.model.LanguageCode
 import com.crossevol.wordbook.data.model.WordFetchResultJson
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.channels.Channel
@@ -95,9 +96,9 @@ class WordFetchViewModel(
             return // Prevent multiple requests
         }
         if (selectedModel.isBlank()) {
-             errorMessage = "Please select a model."
-             logger.warn { "Fetch attempt with no model selected." }
-             return
+            errorMessage = "Please select a model."
+            logger.warn { "Fetch attempt with no model selected." }
+            return
         }
 
 
@@ -192,7 +193,7 @@ class WordFetchViewModel(
                 // Save English details
                 wordRepository.saveWordDetails(
                     title = result.text,
-                    languageCode = "en",
+                    languageCode = LanguageCode.EN.name,
                     explanation = result.enExplanation,
                     sentences = result.getEnSentencesList(),
                     pronunciation = result.enPronunciation,
@@ -202,7 +203,7 @@ class WordFetchViewModel(
                 // Save Japanese details
                 wordRepository.saveWordDetails(
                     title = result.text,
-                    languageCode = "ja",
+                    languageCode = LanguageCode.JA.name,
                     explanation = result.jaExplanation,
                     sentences = result.getJaSentencesList(),
                     pronunciation = result.jaPronunciation,
@@ -212,7 +213,7 @@ class WordFetchViewModel(
                 // Save Chinese details
                 wordRepository.saveWordDetails(
                     title = result.text,
-                    languageCode = "zh",
+                    languageCode = LanguageCode.ZH.name,
                     explanation = result.zhExplanation,
                     sentences = result.getZhSentencesList(),
                     pronunciation = result.zhPronunciation,
