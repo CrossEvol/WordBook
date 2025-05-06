@@ -127,21 +127,23 @@ android {
             // keyAlias=my-alias
             // keyPassword=your_key_password
 
-            val properties = Properties().apply {
-                val keystorePropertiesFile = rootProject.file("key.properties")
-                if (keystorePropertiesFile.exists()) {
-                    load(FileInputStream(keystorePropertiesFile))
-                } else {
-                    // Provide default values or throw an error if the file is missing
-                    // For now, we'll just log a warning or use empty strings
-                    println("WARNING: keystore.properties not found. Release signing config may be incomplete.")
-                }
-            }
+            val keystorePropertiesFile = rootProject.file("key.properties")
 
-            storeFile = file(properties.getProperty("storeFile", "")) // Provide a default empty string if property is missing
-            storePassword = properties.getProperty("storePassword", "")
-            keyAlias = properties.getProperty("keyAlias", "")
-            keyPassword = properties.getProperty("keyPassword", "")
+            // Only load properties and set signing config if the file exists
+            if (keystorePropertiesFile.exists()) {
+                val properties = Properties().apply {
+                    load(FileInputStream(keystorePropertiesFile))
+                }
+                // Use rootProject.file() to resolve the path relative to the project root
+                storeFile = rootProject.file(properties.getProperty("storeFile"))
+                storePassword = properties.getProperty("storePassword")
+                keyAlias = properties.getProperty("keyAlias")
+                keyPassword = properties.getProperty("keyPassword")
+            } else {
+                // Log a warning but do not fail the configuration if the file is missing.
+                // This allows tasks like 'check' to run without signing config.
+                println("WARNING: key.properties not found. Release signing config will not be fully configured.")
+            }
 
             // Alternatively, use environment variables:
             // storeFile = file(System.getenv("KEYSTORE_PATH") ?: "")

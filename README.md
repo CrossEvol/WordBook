@@ -61,6 +61,13 @@ Here's a summary of the process:
     keytool -genkeypair -v -keystore my-release-key.keystore -alias my-alias -keyalg RSA -keysize 2048 -validity 10000
     ```
     Replace `my-release-key.keystore` and `my-alias` with your desired names. You will be prompted to set passwords for the keystore and the key alias. **Keep this keystore file and its passwords secure and backed up!** Losing it means you cannot update your app on stores like Google Play.
+
+    *   You might need to encode your keystore file, for example, if you are using CI/CD pipelines that require secrets to be stored as strings. You can use `base64` for this:
+        ```bash
+        base64 my-release-key.keystore > keystore_base64.txt
+        ```
+        This command encodes the binary keystore file into a base64 string and saves it to `keystore_base64.txt`. You would then store the content of `keystore_base64.txt` securely (e.g., as a CI/CD secret) and decode it back to a file during the build process.
+
 2.  **Configure Signing in `build.gradle.kts`:** Add a `signingConfigs` block within the `android` block in your `composeApp/build.gradle.kts` file. Reference your keystore file and provide the keystore password, key alias, and key password (it's recommended to store passwords securely, e.g., in environment variables or a separate properties file, rather than directly in the build script).
     ```kotlin
     android {
