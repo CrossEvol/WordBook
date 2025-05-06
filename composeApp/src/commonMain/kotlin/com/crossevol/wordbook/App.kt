@@ -48,7 +48,7 @@ import androidx.compose.runtime.rememberCoroutineScope // Keep this
 import com.crossevol.wordbook.db.DriverFactory // Keep this
 import androidx.compose.runtime.State // Import State for trigger
 import kotlinx.coroutines.launch // Keep this
-
+import com.crossevol.wordbook.ui.screens.EditProfilePage // Import EditProfilePage
 
 private val logger = KotlinLogging.logger {} // Add logger instance
 
@@ -385,18 +385,19 @@ fun App(
                     }
 
                     Screen.EditProfile          -> {
-                        // Placeholder for EditProfilePage
-                        Box(
-                            Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("Edit Profile Page (TODO)")
-                        }
-                        // Example navigation back
-                        LaunchedEffect(Unit) {
-                            // delay(2000) // Removed delay
-                            onScreenChange(Screen.Settings) // Use internal callback
-                        }
+                        // Render the actual EditProfilePage
+                        EditProfilePage(
+                            onNavigateBack = {
+                                logger.info { "Navigating back to Settings from EditProfile." }
+                                onScreenChange(Screen.Settings) // Navigate back to Settings
+                            },
+                            onSaveChanges = { name, city, state, bio ->
+                                logger.info { "Saving profile changes: Name=$name, City=$city, State=$state, Bio=$bio" }
+                                // TODO: Implement actual saving logic here
+                                // After saving, navigate back to Settings or Home
+                                onScreenChange(Screen.Settings) // Navigate back to Settings after saving
+                            }
+                        )
                     }
                 }
                 // Removed the closing brace for the 'else' block of isLoading check
@@ -415,4 +416,3 @@ fun ErrorScreen(message: String) {
         Text("Error: $message")
     }
 }
-
