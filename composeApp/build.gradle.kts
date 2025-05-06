@@ -128,7 +128,7 @@ android {
             // keyPassword=your_key_password
 
             val properties = Properties().apply {
-                val keystorePropertiesFile = rootProject.file("keystore.properties")
+                val keystorePropertiesFile = rootProject.file("key.properties")
                 if (keystorePropertiesFile.exists()) {
                     load(FileInputStream(keystorePropertiesFile))
                 } else {
