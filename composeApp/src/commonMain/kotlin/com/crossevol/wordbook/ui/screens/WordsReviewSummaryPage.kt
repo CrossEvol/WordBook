@@ -3,9 +3,9 @@ package com.crossevol.wordbook.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -21,7 +21,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WordDetailSummaryPage(
     viewModel: WordReviewViewModel,
@@ -46,16 +45,13 @@ fun WordDetailSummaryPage(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            Icons.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                backgroundColor = MaterialTheme.colors.primary,
+                contentColor = MaterialTheme.colors.onPrimary,
             )
         }
     ) { paddingValues ->
@@ -71,7 +67,7 @@ fun WordDetailSummaryPage(
                 }
             }
 
-            is WordReviewViewModel.ReviewState.Error   -> {
+            is WordReviewViewModel.ReviewState.Error -> {
                 val errorMessage = (reviewState as WordReviewViewModel.ReviewState.Error).message
                 Box(
                     modifier = Modifier
@@ -85,12 +81,12 @@ fun WordDetailSummaryPage(
                     ) {
                         Text(
                             text = "No words to review",
-                            style = MaterialTheme.typography.headlineMedium
+                            style = MaterialTheme.typography.h3
                         )
                         Text(
                             text = errorMessage,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.error
+                            style = MaterialTheme.typography.body1,
+                            color = MaterialTheme.colors.error
                         )
                         Button(onClick = { viewModel.loadWordsForReview() }) {
                             Text("Retry")
@@ -128,9 +124,8 @@ private fun ReviewContent(
                     horizontal = 16.dp,
                     vertical = 8.dp
                 ),
-            shape = MaterialTheme.shapes.medium,
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            elevation = 0.dp,
+            backgroundColor = MaterialTheme.colors.surface
         ) {
             Column(
                 modifier = Modifier.padding(12.dp),
@@ -143,22 +138,22 @@ private fun ReviewContent(
                 ) {
                     Text(
                         text = "Left",
-                        style = MaterialTheme.typography.headlineMedium.copy(
+                        style = MaterialTheme.typography.h3.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
                         modifier = Modifier.padding(end = 8.dp)
                     )
                     Text(
                         text = words.size.toString(),
-                        style = MaterialTheme.typography.displayLarge.copy(
+                        style = MaterialTheme.typography.h1.copy(
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colors.primary
                         ),
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                     Text(
                         text = if (words.size == 1) " word" else " words",
-                        style = MaterialTheme.typography.headlineMedium.copy(
+                        style = MaterialTheme.typography.h3.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
                         modifier = Modifier.padding(start = 8.dp)
@@ -177,52 +172,51 @@ private fun ReviewContent(
                         },
                         enabled = words.isNotEmpty(),
                         modifier = Modifier.width(320.dp).height(56.dp),
-                        shape = MaterialTheme.shapes.medium,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
+                            backgroundColor = MaterialTheme.colors.primary
                         )
                     ) {
                         Text(
                             "Start!",
-                            style = MaterialTheme.typography.titleMedium.copy(
+                            style = MaterialTheme.typography.h3.copy(
                                 fontSize = 28.sp,
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = MaterialTheme.colors.onPrimary
                             )
                         )
                     }
                 }
             }
+        }
 
-            // --- Divider ---
-            HorizontalDivider(
-                thickness = 2.dp,
-                color = MaterialTheme.colorScheme.outlineVariant
-            )
+        // --- Divider ---
+        Divider(
+            thickness = 2.dp,
+            color = MaterialTheme.colors.onSurface.copy(alpha = 0.12f)
+        )
 
-            // --- Scrollable List Section ---
-            LazyColumn(
-                modifier = Modifier.weight(1f)
-            ) {
-                items(words) { word ->
-                    Column {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(80.dp)
-                                .padding(horizontal = 20.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = word.title,
-                                style = MaterialTheme.typography.headlineLarge,
-                                maxLines = 1
-                            )
-                        }
-                        HorizontalDivider(
-                            thickness = 2.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant
+        // --- Scrollable List Section ---
+        LazyColumn(
+            modifier = Modifier.weight(1f)
+        ) {
+            items(words) { word ->
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp)
+                            .padding(horizontal = 20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = word.title,
+                            style = MaterialTheme.typography.h1,
+                            maxLines = 1
                         )
                     }
+                    Divider(
+                        thickness = 2.dp,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.12f)
+                    )
                 }
             }
         }
