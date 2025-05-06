@@ -1,12 +1,12 @@
 package com.crossevol.wordbook.ui.components
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Switch
+import androidx.compose.material.SwitchDefaults
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -47,7 +47,7 @@ fun FilterDropdownMenu(
     ) {
         Text(
             "Filter Display",
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.h6,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(
                 horizontal = 16.dp,
@@ -62,8 +62,8 @@ fun FilterDropdownMenu(
             // Define custom colors for the 'None' switch when checked
             val switchColors = if (option == FilterOption.NONE) {
                 SwitchDefaults.colors(
-                    checkedTrackColor = MaterialTheme.colorScheme.error,
-                    checkedThumbColor = MaterialTheme.colorScheme.onError // Use onError for contrast on the error track
+                    checkedTrackColor = MaterialTheme.colors.error,
+                    checkedThumbColor = MaterialTheme.colors.onError // Use onError for contrast on the error track
                     // Unchecked colors will use defaults
                 )
             } else {
@@ -72,7 +72,7 @@ fun FilterDropdownMenu(
             }
 
             DropdownMenuItem(
-                text = { Text(option.displayName) },
+                content = { Text(option.displayName) },
                 onClick = {
                     // Selecting ALL or NONE sets the state exclusively
                     onOptionToggle(
@@ -103,7 +103,7 @@ fun FilterDropdownMenu(
             val isSelected = selectedOptions.contains(option)
 
             DropdownMenuItem(
-                text = { Text(option.displayName) },
+                content = { Text(option.displayName) },
                 onClick = {
                         onOptionToggle(
                             option,
