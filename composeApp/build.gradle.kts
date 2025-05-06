@@ -1,5 +1,7 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -113,6 +115,43 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
+
+    // --- Added Signing Configuration ---
+    signingConfigs {
+        create("release") {
+            // It's highly recommended to load sensitive information like passwords
+            // from environment variables or a separate properties file, NOT hardcoded.
+            // Example using a properties file (create keystore.properties in project root):
+            // storeFile=path/to/your/my-release-key.keystore
+            // storePassword=your_keystore_password
+            // keyAlias=my-alias
+            // keyPassword=your_key_password
+
+            val properties = Properties().apply {
+                val keystorePropertiesFile = rootProject.file("keystore.properties")
+                if (keystorePropertiesFile.exists()) {
+                    load(FileInputStream(keystorePropertiesFile))
+                } else {
+                    // Provide default values or throw an error if the file is missing
+                    // For now, we'll just log a warning or use empty strings
+                    println("WARNING: keystore.properties not found. Release signing config may be incomplete.")
+                }
+            }
+
+            storeFile = file(properties.getProperty("storeFile", "")) // Provide a default empty string if property is missing
+            storePassword = properties.getProperty("storePassword", "")
+            keyAlias = properties.getProperty("keyAlias", "")
+            keyPassword = properties.getProperty("keyPassword", "")
+
+            // Alternatively, use environment variables:
+            // storeFile = file(System.getenv("KEYSTORE_PATH") ?: "")
+            // storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+            // keyAlias = System.getenv("KEY_ALIAS") ?: ""
+            // keyPassword = System.getenv("KEY_PASSWORD") ?: ""
+        }
+    }
+    // --- End Signing Configuration ---
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -120,7 +159,10 @@ android {
     }
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = false // Set to true to enable code shrinking and obfuscation
+            // --- Apply Release Signing Config ---
+            signingConfig = signingConfigs.getByName("release")
+            // --- End Apply Release Signing Config ---
         }
     }
     compileOptions {
