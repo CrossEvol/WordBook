@@ -1,6 +1,5 @@
 package com.crossevol.wordbook.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -8,11 +7,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,8 +45,8 @@ fun SimpleActionSheet(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)), // Rounded top corners
-        color = MaterialTheme.colorScheme.surface, // Or a specific background color if needed
-        shadowElevation = 8.dp // Increased elevation for more prominence
+        color = MaterialTheme.colors.surface, // Or a specific background color if needed
+        elevation = 8.dp // Increased elevation for more prominence
     ) {
         Column(
             modifier = Modifier
@@ -64,12 +63,12 @@ fun SimpleActionSheet(
                     .height(56.dp), // Taller buttons
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4DB6AC) // Teal color from image
+                    backgroundColor = Color(0xFF4DB6AC) // Teal color from image
                 )
             ) {
                 Text(
                     editLabel, 
-                    style = MaterialTheme.typography.titleMedium // Larger text
+                    style = MaterialTheme.typography.h1 // Larger text
                 )
             }
 
@@ -81,12 +80,12 @@ fun SimpleActionSheet(
                     .height(56.dp), // Taller buttons
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFF06292) // Pink/Red color from image
+                    backgroundColor = Color(0xFFF06292) // Pink/Red color from image
                 )
             ) {
                 Text(
                     deleteLabel, 
-                    style = MaterialTheme.typography.titleMedium // Larger text
+                    style = MaterialTheme.typography.h3 // Larger text
                 )
             }
 
@@ -98,13 +97,13 @@ fun SimpleActionSheet(
                     .height(56.dp), // Taller buttons
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFE0E0E0), // Light gray from image
+                    backgroundColor = Color(0xFFE0E0E0), // Light gray from image
                     contentColor = Color.Black.copy(alpha = 0.7f) // Darker text for contrast
                 )
             ) {
                 Text(
                     cancelLabel, 
-                    style = MaterialTheme.typography.titleMedium // Larger text
+                    style = MaterialTheme.typography.h3 // Larger text
                 )
             }
             
