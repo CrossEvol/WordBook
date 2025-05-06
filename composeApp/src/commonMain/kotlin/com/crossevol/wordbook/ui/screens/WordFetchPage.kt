@@ -12,32 +12,34 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ExposedDropdownMenuBox
+import androidx.compose.material.ExposedDropdownMenuDefaults
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarHostState
+import androidx.compose.material.Surface
+import androidx.compose.material.Tab
+import androidx.compose.material.TabRow
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,34 +48,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.crossevol.wordbook.data.ApiKeyConfigRepository // Keep for Mock
-import com.crossevol.wordbook.data.api.WordFetchApi // Keep for Mock
+import com.crossevol.wordbook.data.ApiKeyConfigRepository
+import com.crossevol.wordbook.data.WordRepository
+import com.crossevol.wordbook.data.api.WordFetchApi
 import com.crossevol.wordbook.data.model.WordFetchResultJson
 import com.crossevol.wordbook.ui.components.RelatedWordItem
-import com.crossevol.wordbook.data.WordRepository // Import for Mock
 import com.crossevol.wordbook.ui.components.SentenceItem
 import com.crossevol.wordbook.ui.svgicons.MyIconPack
 import com.crossevol.wordbook.ui.svgicons.myiconpack.Save
-import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel // Import ViewModel
+import com.crossevol.wordbook.ui.viewmodel.ApiKeyViewModel
+import com.crossevol.wordbook.ui.viewmodel.WordFetchViewModel
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.serialization.json.Json
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import androidx.compose.runtime.LaunchedEffect // Import LaunchedEffect
-import kotlinx.coroutines.flow.collectLatest // Import collectLatest
-import androidx.compose.runtime.collectAsState // Import collectAsState
-import com.crossevol.wordbook.ui.viewmodel.ApiKeyViewModel // Import ApiKeyViewModel
-import io.ktor.client.* // Import HttpClient for previews
-import io.ktor.client.plugins.contentnegotiation.* // Import ContentNegotiation for previews
-import io.ktor.serialization.kotlinx.json.* // Import json serialization for previews
-import kotlinx.serialization.json.Json // Import Json for previews
-import io.ktor.client.plugins.HttpTimeout // Import HttpTimeout for previews
 
 
 private val logger = KotlinLogging.logger {} // Add logger instance
 
-@OptIn(
-    ExperimentalMaterial3Api::class, // Keep for Scaffold etc.
-    ExperimentalMaterialApi::class
-)
+@OptIn(ExperimentalMaterialApi::class) // Add OptIn for ExposedDropdownMenuBox
 @Composable
 fun WordFetchPage(
     viewModel: WordFetchViewModel, // Accept WordFetchViewModel as parameter
@@ -132,7 +129,7 @@ fun WordFetchPage(
                         }
                     }) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
@@ -210,14 +207,13 @@ fun WordFetchPage(
                     readOnly = true,
                     label = { Text("Select Model") }, // Label from image
                     trailingIcon = {
-                        Icon(
-                            Icons.Filled.ArrowDropDown,
-                            contentDescription = "Dropdown Arrow",
-                            Modifier.clickable { isDropdownExpanded = !isDropdownExpanded }
+                        ExposedDropdownMenuDefaults.TrailingIcon(
+                            expanded = isDropdownExpanded
                         )
                     },
                     modifier = Modifier.fillMaxWidth(), // Important for anchoring the dropdown
-                    enabled = !isLoading // Disable while loading
+                    enabled = !isLoading, // Disable while loading
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors() // Use default colors
                 )
                 ExposedDropdownMenu(
                     expanded = isDropdownExpanded,
@@ -225,12 +221,13 @@ fun WordFetchPage(
                 ) {
                     modelOptions.forEach { option -> // Use derived modelOptions
                         DropdownMenuItem(
-                            text = { Text(option) },
                             onClick = {
                                 viewModel.onModelSelect(option) // Update WordFetchViewModel state
                                 isDropdownExpanded = false
                             }
-                        )
+                        ) {
+                            Text(option)
+                        }
                     }
                 }
             }
@@ -244,21 +241,21 @@ fun WordFetchPage(
                     .height(40.dp), // Height from Flutter code
                 shape = MaterialTheme.shapes.small, // Use small shape for 8dp border radius
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary // Primary color for button
+                    backgroundColor = MaterialTheme.colors.primary // Primary color for button
                 ),
                 enabled = !isLoading // Disable button while loading
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
+                        color = MaterialTheme.colors.onPrimary,
                         strokeWidth = 2.dp
                     )
                 } else {
                     Text(
                         "Translate",
-                        color = MaterialTheme.colorScheme.onPrimary, // Text color on primary
-                        style = MaterialTheme.typography.titleSmall // Use titleSmall style
+                        color = MaterialTheme.colors.onPrimary, // Text color on primary
+                        style = MaterialTheme.typography.h6 // Use titleSmall style
                     )
                 }
             }
@@ -267,8 +264,8 @@ fun WordFetchPage(
             // Language Tabs
             TabRow(
                 selectedTabIndex = selectedLanguageTabIndex, // Use state from ViewModel
-                containerColor = MaterialTheme.colorScheme.surface, // Background for tabs
-                contentColor = MaterialTheme.colorScheme.primary // Color for selected tab indicator/text
+                backgroundColor = MaterialTheme.colors.surface, // Background for tabs
+                contentColor = MaterialTheme.colors.primary // Color for selected tab indicator/text
             ) {
                 viewModel.languageTabs.forEachIndexed { index, title -> // Use tabs from ViewModel
                     Tab(
@@ -384,17 +381,17 @@ fun EnglishContent(result: WordFetchResultJson) {
         // Pronunciation Label
         Text(
             text = "Pronunciation",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.body2,
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(4.dp))
 
         // Pronunciation
         Text(
             text = result.enPronunciation,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.subtitle2,
             fontWeight = FontWeight.W500,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colors.onSurface,
             modifier = Modifier.padding(
                 horizontal = 16.dp,
                 vertical = 0.dp
@@ -405,25 +402,25 @@ fun EnglishContent(result: WordFetchResultJson) {
         // Explanation Label
         Text(
             text = "Explanation",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.body2,
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(4.dp))
 
         // Explanation Text
         Text(
             text = result.enExplanation,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.subtitle2,
             fontWeight = FontWeight.W500,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(24.dp))
 
         // Sentences Label
         Text(
             text = "Sentences",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.body2,
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -441,8 +438,8 @@ fun EnglishContent(result: WordFetchResultJson) {
         // Related Words Label
         Text(
             text = "Related Words",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.body2,
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -464,17 +461,17 @@ fun JapaneseContent(result: WordFetchResultJson) {
         // Pronunciation Label
         Text(
             text = "Pronunciation",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.body2,
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(4.dp))
 
         // Pronunciation
         Text(
             text = result.jaPronunciation,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.subtitle1,
             fontWeight = FontWeight.W500,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colors.onSurface,
             modifier = Modifier.padding(
                 horizontal = 16.dp,
                 vertical = 0.dp
@@ -485,25 +482,25 @@ fun JapaneseContent(result: WordFetchResultJson) {
         // Explanation Label
         Text(
             text = "Explanation",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.body2,
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(4.dp))
 
         // Explanation Text
         Text(
             text = result.jaExplanation,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.subtitle2,
             fontWeight = FontWeight.W500,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(24.dp))
 
         // Sentences Label
         Text(
             text = "Sentences",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.body2,
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -521,8 +518,8 @@ fun JapaneseContent(result: WordFetchResultJson) {
         // Related Words Label
         Text(
             text = "Related Words",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.body2,
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -544,17 +541,17 @@ fun ChineseContent(result: WordFetchResultJson) {
         // Pronunciation Label
         Text(
             text = "Pronunciation",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.body2,
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(4.dp))
 
         // Pronunciation
         Text(
             text = result.zhPronunciation,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.subtitle2,
             fontWeight = FontWeight.W500,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colors.onSurface,
             modifier = Modifier.padding(
                 horizontal = 16.dp,
                 vertical = 0.dp
@@ -565,25 +562,25 @@ fun ChineseContent(result: WordFetchResultJson) {
         // Explanation Label
         Text(
             text = "Explanation",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.body2,
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(4.dp))
 
         // Explanation Text
         Text(
             text = result.zhExplanation,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.subtitle2,
             fontWeight = FontWeight.W500,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(24.dp))
 
         // Sentences Label
         Text(
             text = "Sentences",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.body2,
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -601,8 +598,8 @@ fun ChineseContent(result: WordFetchResultJson) {
         // Related Words Label
         Text(
             text = "Related Words",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.body2,
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -620,7 +617,7 @@ fun ChineseContent(result: WordFetchResultJson) {
 
 // --- Mock ApiKeyConfigRepository for Previews ---
 // This provides dummy data so the ViewModel can initialize modelOptions
-private class MockApiKeyConfigRepository : ApiKeyConfigRepository(
+class MockApiKeyConfigRepository : ApiKeyConfigRepository(
     // Pass null or a mock database instance, as the repository methods
     // used by the ViewModel init block (getAllApiKeyConfigs) are mocked below.
     // In a real scenario, you might need a more sophisticated mock database.
@@ -879,7 +876,7 @@ fun WordFetchPagePreview_Success() {
                 enPronunciation = "rèqíng",
                 jaExplanation = "熱意、情熱、心の温かさ。。",
                 jaSentences = "彼らは私たちを熱意をもって歓迎した。;彼女は仕事に対して情熱的だ。",
-                jaRelatedWords = "熱意(ねつい);情熱(じょうねつ);意欲(いよく);積極 的(せっきょくてき);活気(か",
+                jaRelatedWords = "熱意(ねつい);情熱(じょうねつ);意欲(いよく);積極 的(せっきョくてき);活気(か",
                 jaPronunciation = "",
                 zhExplanation = "指积极、热烈的感情或态度。",
                 zhSentences = "他们用极大的热情欢 迎了我们。;她对工作充满热情。",
