@@ -4,12 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExposedDropdownMenuBox
-import androidx.compose.material.ExposedDropdownMenuDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material.*
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -156,10 +153,7 @@ val llmProviders = listOf(
  * @param config The ApiKeyConfig to edit, or null for adding a new one.
  * @param onNavigateBack Callback to navigate back.
  */
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalMaterialApi::class
-)
+@OptIn(ExperimentalMaterialApi::class) // Required for ExposedDropdownMenuBox
 @Composable
 fun ApiKeyEditingPage(
     viewModel: ApiKeyViewModel, // Receive ViewModel
@@ -191,16 +185,13 @@ fun ApiKeyEditingPage(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            Icons.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                backgroundColor = MaterialTheme.colors.surface,
+                contentColor = MaterialTheme.colors.onSurface,
             )
         }
     ) { paddingValues ->
@@ -261,13 +252,14 @@ fun ApiKeyEditingPage(
                     ) {
                         llmProviders.forEach { provider ->
                             DropdownMenuItem(
-                                text = { Text(provider.name) },
                                 onClick = {
                                     selectedProviderName = provider.name
                                     selectedModelName = "" // Reset model when provider changes
                                     isProviderDropdownExpanded = false
                                 }
-                            )
+                            ) {
+                                Text(provider.name)
+                            }
                         }
                     }
                 }
@@ -301,12 +293,13 @@ fun ApiKeyEditingPage(
                     ) {
                         availableModels.forEach { model ->
                             DropdownMenuItem(
-                                text = { Text(model) },
                                 onClick = {
                                     selectedModelName = model
                                     isModelDropdownExpanded = false
                                 }
-                            )
+                            ) {
+                                Text(model)
+                            }
                         }
                     }
                 }
@@ -334,7 +327,7 @@ fun ApiKeyEditingPage(
                         .fillMaxWidth()
                         .height(50.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE)) // Purple button
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF6200EE)) // Purple button
                 ) {
                     Text(
                         "Save Changes",
@@ -345,4 +338,3 @@ fun ApiKeyEditingPage(
         }
     }
 }
-
