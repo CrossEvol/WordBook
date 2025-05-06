@@ -1,7 +1,7 @@
 package com.crossevol.wordbook
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import dev.darkokoa.datetimewheelpicker.WheelTimePicker
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -84,7 +84,6 @@ actual fun readFileContent(filePath: String): String? {
 /**
  * Actual implementation of PlatformTimePicker for Desktop using the compose-datetime-wheel-picker library.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 actual fun PlatformTimePicker(
     show: Boolean,

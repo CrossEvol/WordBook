@@ -11,11 +11,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material3.Divider // Use Material3 Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material.Divider // Use Material3 Divider
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,7 +42,7 @@ fun RatingBar(
     maxRating: Int = 5,
     modifier: Modifier = Modifier,
     starColor: Color = Color(0xFFFFC107), // Amber color for filled stars
-    emptyStarColor: Color = MaterialTheme.colorScheme.outline // Use outline color for empty
+    emptyStarColor: Color = MaterialTheme.colors.onBackground // Use outline color for empty
 ) {
     Row(modifier = modifier) {
         for (i in 1..maxRating) {
@@ -101,7 +101,7 @@ fun WordListItem(
             ) {
                 Text(
                     text = item.title,
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.h6,
                     fontWeight = FontWeight.Bold
                 )
                 // Conditionally show Pronunciation
@@ -109,8 +109,8 @@ fun WordListItem(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = item.pronunciation,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.body2,
+                        color = MaterialTheme.colors.onSurface,
                         modifier = Modifier.padding(bottom = 4.dp) // Align baseline better
                     )
                 }
@@ -129,7 +129,7 @@ fun WordListItem(
             Spacer(modifier = Modifier.height(8.dp)) // Add space if showing explanation
             Text(
                 text = item.explanation,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.body2,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -142,8 +142,8 @@ fun WordListItem(
                 item.sentences.forEach { example ->
                     Text(
                         text = example,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.body2,
+                        color = MaterialTheme.colors.onSurface,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                 }
@@ -154,7 +154,7 @@ fun WordListItem(
         // This ensures the divider appears if *any* content below the title row is shown.
         if (!showNone && (showPronunciation || showExplanation || showProgress || showSentences)) {
             Spacer(modifier = Modifier.height(8.dp))
-            Divider(color = MaterialTheme.colorScheme.outlineVariant) // Use Material3 Divider
+            Divider(color = MaterialTheme.colors.onBackground) // Use Material3 Divider
         }
     }
 }

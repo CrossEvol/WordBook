@@ -8,7 +8,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.*
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -115,19 +115,19 @@ fun NotificationSettingsDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        containerColor = MaterialTheme.colorScheme.surface, // Use theme surface color
+        backgroundColor = MaterialTheme.colors.surface, // Use theme surface color
         title = {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                 Icon(
                     imageVector = Icons.Filled.Notifications,
                     contentDescription = "Notification Settings Icon",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = MaterialTheme.colors.onSurface,
                     modifier = Modifier.size(44.dp).padding(bottom = 16.dp)
                 )
                 Text(
                     "Notification Setting",
-                    style = MaterialTheme.typography.headlineMedium.copy(fontSize = 24.sp), // Adjusted size
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.h3.copy(fontSize = 24.sp), // Adjusted size
+                    color = MaterialTheme.colors.onSurface
                 )
             }
         },
@@ -136,8 +136,8 @@ fun NotificationSettingsDialog(
                 // --- Permission Section ---
                 Text(
                     "Permission",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.h1.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colors.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 // Use Column instead of Row for vertical layout
@@ -157,7 +157,7 @@ fun NotificationSettingsDialog(
                         onClick = {
                             dialogState = dialogState.copy(permissionEnabled = false)
                         },
-                         enabledColor = cyanColor // Use cyan for selected radio
+                        enabledColor = cyanColor // Use cyan for selected radio
                     )
                 }
 
@@ -166,8 +166,8 @@ fun NotificationSettingsDialog(
                 // --- Frequency Section ---
                 Text(
                     "Frequency",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.h1.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colors.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -208,7 +208,7 @@ fun NotificationSettingsDialog(
                         dialogState.startTimes
                     )
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = cyanColor),
+                colors = ButtonDefaults.buttonColors(backgroundColor = cyanColor),
                 shape = CircleShape // Rounded button
             ) {
                 Text("Confirm", color = Color.White)
@@ -228,7 +228,7 @@ private fun RadioButtonOption(
     text: String,
     selected: Boolean,
     onClick: () -> Unit,
-    enabledColor: Color = MaterialTheme.colorScheme.primary // Default to primary
+    enabledColor: Color = MaterialTheme.colors.primary // Default to primary
 ) {
     Row(
         Modifier
@@ -245,11 +245,11 @@ private fun RadioButtonOption(
             onClick = null, // Handled by Row's selectable
             colors = RadioButtonDefaults.colors(
                 selectedColor = enabledColor, // Use the passed color when selected
-                unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
+                unselectedColor = MaterialTheme.colors.onSurface
             )
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+        Text(text, style = MaterialTheme.typography.body1, color = MaterialTheme.colors.onSurface)
     }
 }
 
@@ -277,15 +277,15 @@ private fun FrequencyItem(
         // Keep text aligned to the start
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.body1,
+            color = MaterialTheme.colors.onSurface,
             modifier = Modifier.weight(1f) // Allow text to take available space pushing time/checkbox right
         )
         // Group Time and Checkbox together at the end
         Text(
             text = time,
-            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colors.onSurface,
             modifier = Modifier
                 .clip(MaterialTheme.shapes.small) // Add clip for visual feedback on click
                 .clickable(onClick = onTimeClick) // Make time clickable
@@ -297,7 +297,7 @@ private fun FrequencyItem(
             onCheckedChange = onCheckedChange,
             colors = CheckboxDefaults.colors(
                 checkedColor = enabledColor, // Use cyan color when checked
-                uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
+                uncheckedColor = MaterialTheme.colors.onSurface
             )
         )
     }

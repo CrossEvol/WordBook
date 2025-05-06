@@ -3,8 +3,8 @@ package com.crossevol.wordbook.ui.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -21,8 +21,8 @@ fun RelatedWordItem(
     // Use a simple Text with padding and clickable modifier
     Text(
         text = text,
-        style = MaterialTheme.typography.bodyMedium, // Slightly smaller text than sentences
-        color = MaterialTheme.colorScheme.onSurfaceVariant, // Use a secondary color
+        style = MaterialTheme.typography.body2, // Slightly smaller text than sentences
+        color = MaterialTheme.colors.onSurface, // Use a secondary color
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)

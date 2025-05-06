@@ -155,7 +155,7 @@ fun HomePage(
                         IconButton(onClick = { showLocaleMenu = true }) {
                             Text(
                                 currentLocale, // Display current locale state
-                                style = MaterialTheme.typography.labelLarge, // Or another suitable style
+                                style = MaterialTheme.typography.h2, // Or another suitable style
                                 color = MaterialTheme.colors.onPrimary // Match TopAppBar text color (assuming primary is dark enough)
                             )
                         }

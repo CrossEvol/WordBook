@@ -9,12 +9,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.Card
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,10 +32,10 @@ fun SentenceItem(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(8.dp), // Rounded corners
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f) // Light background
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // No shadow
+//        colors = CardDefaults.cardColors(
+//            containerColor = MaterialTheme.colors.onSurface.copy(alpha = 0.3f) // Light background
+//        ),
+//        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // No shadow
     ) {
         Row(
             modifier = Modifier
@@ -47,14 +46,14 @@ fun SentenceItem(
         ) {
             Text(
                 text = text,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.body1,
                 modifier = Modifier.weight(1f) // Allow text to take space
             )
             Spacer(modifier = Modifier.width(8.dp))
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                imageVector = Icons.Filled.KeyboardArrowRight,
                 contentDescription = "View sentence detail", // Accessibility
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = MaterialTheme.colors.onSurface
             )
         }
     }

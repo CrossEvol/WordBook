@@ -147,7 +147,7 @@ compose.desktop {
             )
 
             windows {
-                includeAllModules = true
+                includeAllModules = false
                 // Ensure menu icons are visible
                 menuGroup = "WordBook"
             }

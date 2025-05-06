@@ -3,8 +3,8 @@ package com.crossevol.wordbook
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding // Import padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -18,7 +18,6 @@ import com.crossevol.wordbook.data.api.WordFetchApi // Import API client
 import com.crossevol.wordbook.data.SettingsRepository // Import SettingsRepository
 import com.crossevol.wordbook.data.WordRepository // Import WordRepository
 import com.crossevol.wordbook.data.model.WordItemUI // Keep this
-import com.crossevol.wordbook.db.AppDatabase // Keep this for type hint if needed, or remove if unused
 import com.crossevol.wordbook.db.createDatabase // Keep this
 import com.crossevol.wordbook.db.initializeDatabase // Keep this
 import com.crossevol.wordbook.ui.screens.ApiKeyConfig // Keep this
@@ -40,11 +39,11 @@ import kotlinx.coroutines.withContext // Keep this
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 // Add imports for Scaffold and Snackbar
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration // Add this import
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState // Keep this
-import androidx.compose.material3.SnackbarResult // Keep this
+import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarDuration // Add this import
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState // Keep this
+import androidx.compose.material.SnackbarResult // Keep this
 import androidx.compose.runtime.rememberCoroutineScope // Keep this
 import com.crossevol.wordbook.db.DriverFactory // Keep this
 import androidx.compose.runtime.State // Import State for trigger
