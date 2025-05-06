@@ -39,11 +39,15 @@ kotlin {
             implementation(libs.ktor.client.android) // Ensure Ktor Android is here
             implementation(libs.okio) // Add okio for Android
             implementation(libs.androidx.work.runtime.ktx) // Add WorkManager
+            implementation(libs.androidx.lifecycle.viewmodel.compose) // Added dependency for getViewModel
+
+            // Common Material 3 dependency (correct for common code)
+            implementation(libs.androidx.material3)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
-            // implementation(compose.material) // Remove Material 2 dependency
+            implementation(compose.material)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
@@ -51,11 +55,7 @@ kotlin {
             // ViewModel dependencies
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
-            implementation(libs.androidx.lifecycle.viewmodel.compose) // Added dependency for getViewModel
 
-            // Common Material 3 dependency (correct for common code)
-            implementation(libs.androidx.material3)
-            // Removed: implementation(libs.androidx.material3.android) // This was the problem!
             implementation(libs.filechooser) // Add file chooser dependency
 
             // Kotlinx Serialization
@@ -88,7 +88,6 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.okhttp) // Ensure Ktor OkHttp is here
             implementation(libs.sqldelight.sqlite.driver)
-            implementation(libs.androidx.material3.desktop)
             implementation(libs.okio) // Add okio for Desktop
             implementation(libs.datetime.wheel.picker)
         }
@@ -129,22 +128,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17 // Changed to 17
     }
 }
-dependencies {
-    implementation(libs.androidx.material3.android)
-}
-
-// Removed the redundant dependencies block here
-/*
-dependencies {
-    implementation(libs.androidx.material3.android)
-    implementation(libs.androidx.foundation.layout.android)
-    implementation(libs.androidx.ui.android)
-    implementation(libs.androidx.ui.tooling.preview.android)
-    debugImplementation(compose.uiTooling)
-    // https://mvnrepository.com/artifact/de.drick.compose/hotpreview
-    implementation(libs.hotpreview)
-}
-*/
 
 
 compose.desktop {
