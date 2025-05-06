@@ -264,7 +264,7 @@ fun SettingsPage(
                 .height(50.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                backgroundColor = MaterialTheme.colors.onSurface, // Light background for button
+                backgroundColor = MaterialTheme.colors.onPrimary, // Light background for button
                 contentColor = MaterialTheme.colors.onSurface // Text color
             ),
             elevation = ButtonDefaults.elevation(defaultElevation = 2.dp)

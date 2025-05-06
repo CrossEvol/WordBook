@@ -149,7 +149,7 @@ private fun QuestionReviewScreen(
                     // Unblurred title
                     Text(
                         text = wordItem.title,
-                        style = MaterialTheme.typography.h1,
+                        style = MaterialTheme.typography.h5,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
@@ -283,8 +283,24 @@ private fun WordDetailsContentWithoutTitle(
     Column(modifier = modifier) {
         // Explanation Label
         Text(
+            text = "Pronunciation", // "explanation" in design, capitalized here
+            style = MaterialTheme.typography.subtitle2, // Smaller title for label
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Pronunciation (like "[ Hello, world ]")
+        Text(
+            text = wordItem.pronunciation,
+            style = MaterialTheme.typography.caption,
+            color = MaterialTheme.colors.onSurface
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Explanation Label
+        Text(
             text = "Explanation",
-            style = MaterialTheme.typography.h6,
+            style = MaterialTheme.typography.subtitle2,
             color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(4.dp))
@@ -299,7 +315,7 @@ private fun WordDetailsContentWithoutTitle(
         // Sentences Label
         Text(
             text = "Sentences",
-            style = MaterialTheme.typography.h3,
+            style = MaterialTheme.typography.subtitle2,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -317,7 +333,7 @@ private fun WordDetailsContentWithoutTitle(
         // Related Words Label
         Text(
             text = "Related Words",
-            style = MaterialTheme.typography.h3,
+            style = MaterialTheme.typography.subtitle2,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))

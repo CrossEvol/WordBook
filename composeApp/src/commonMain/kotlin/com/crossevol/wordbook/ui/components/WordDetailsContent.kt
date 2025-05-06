@@ -34,15 +34,23 @@ fun WordDetailsContent(
         // Word Name (Title)
         Text(
             text = wordItem.title,
-            style = MaterialTheme.typography.h1, // Larger headline
+            style = MaterialTheme.typography.h5, // Larger headline
             fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Explanation Label
+        Text(
+            text = "Pronunciation", // "explanation" in design, capitalized here
+            style = MaterialTheme.typography.subtitle2, // Smaller title for label
+            fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(4.dp))
 
         // Pronunciation (like "[ Hello, world ]")
         Text(
             text = wordItem.pronunciation,
-            style = MaterialTheme.typography.body1,
+            style = MaterialTheme.typography.caption,
             color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -50,23 +58,23 @@ fun WordDetailsContent(
         // Explanation Label
         Text(
             text = "Explanation", // "explanation" in design, capitalized here
-            style = MaterialTheme.typography.h6, // Smaller title for label
-            color = MaterialTheme.colors.onSurface
+            style = MaterialTheme.typography.subtitle1, // Smaller title for label
+            fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(4.dp))
 
         // Explanation Text
         Text(
             text = wordItem.explanation,
-            style = MaterialTheme.typography.body1
+            style = MaterialTheme.typography.caption
         )
         Spacer(modifier = Modifier.height(24.dp))
 
         // Sentences Label
         Text(
             text = "Sentences",
-            style = MaterialTheme.typography.h3, // Slightly larger title for section
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.subtitle1, // Slightly larger title for section
+            fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -83,8 +91,8 @@ fun WordDetailsContent(
         // Related Words Label
         Text(
             text = "Related Words",
-            style = MaterialTheme.typography.h3, // Match Sentences label style
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.subtitle1, // Match Sentences label style
+            fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(8.dp))
 

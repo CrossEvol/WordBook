@@ -68,7 +68,7 @@ fun SimpleActionSheet(
             ) {
                 Text(
                     editLabel, 
-                    style = MaterialTheme.typography.h1 // Larger text
+                    style = MaterialTheme.typography.button // Larger text
                 )
             }
 
@@ -85,7 +85,7 @@ fun SimpleActionSheet(
             ) {
                 Text(
                     deleteLabel, 
-                    style = MaterialTheme.typography.h3 // Larger text
+                    style = MaterialTheme.typography.button // Larger text
                 )
             }
 
@@ -103,7 +103,7 @@ fun SimpleActionSheet(
             ) {
                 Text(
                     cancelLabel, 
-                    style = MaterialTheme.typography.h3 // Larger text
+                    style = MaterialTheme.typography.button // Larger text
                 )
             }
             

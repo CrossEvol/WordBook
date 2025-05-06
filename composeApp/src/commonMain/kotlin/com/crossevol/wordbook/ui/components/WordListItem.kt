@@ -119,7 +119,8 @@ fun WordListItem(
             if (showProgress) {
                 RatingBar(
                     rating = item.rating,
-                    maxRating = 5
+                    maxRating = 5,
+                    emptyStarColor = Color.Gray
                 )
             }
         }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.* // Added this import
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -19,8 +20,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.unit.dp
 import com.crossevol.wordbook.data.SettingsRepository
 import com.crossevol.wordbook.data.WordRepository
 import com.crossevol.wordbook.data.mock.sampleWordListEN
@@ -155,7 +159,7 @@ fun HomePage(
                         IconButton(onClick = { showLocaleMenu = true }) {
                             Text(
                                 currentLocale, // Display current locale state
-                                style = MaterialTheme.typography.h2, // Or another suitable style
+                                style = MaterialTheme.typography.button, // Or another suitable style
                                 color = MaterialTheme.colors.onPrimary // Match TopAppBar text color (assuming primary is dark enough)
                             )
                         }
@@ -201,7 +205,8 @@ fun HomePage(
                         IconButton(onClick = { showFilterMenu = true }) { // Open the menu
                             Icon(
                                 imageVector = Icons.Filled.List,
-                                contentDescription = "Filter words"
+                                contentDescription = "Filter words",
+                                tint = Color.White
                             )
                         }
                         // The Filter Dropdown Menu itself
@@ -213,11 +218,9 @@ fun HomePage(
                         )
                     }
                 },
-//                colors = TopAppBarDefaults.topAppBarColors(
-//                    containerColor = MaterialTheme.colors.primary, // Use primary color from theme
-//                    titleContentColor = MaterialTheme.colors.onPrimary,
-//                    actionIconContentColor = MaterialTheme.colors.onPrimary
-//                )
+                backgroundColor = MaterialTheme.colors.primary,
+                contentColor = MaterialTheme.colors.onPrimary,
+                elevation = 4.dp,
             )
         },
         bottomBar = {
@@ -231,10 +234,16 @@ fun HomePage(
                         icon = {
                             Icon(
                                 item.icon,
-                                contentDescription = item.label
+                                contentDescription = item.label,
+                                tint = Color.White
                             )
                         },
-                        label = { Text(item.label) },
+                        label = {
+                            Text(
+                                item.label,
+                                color = Color.White
+                            )
+                        },
                         selected = selectedItemIndex == index,
                         onClick = {
                             selectedItemIndex = index
@@ -253,7 +262,8 @@ fun HomePage(
             FloatingActionButton(
                 onClick = { onNavigate("fetch") }, // Navigate to fetch screen
                 backgroundColor = MaterialTheme.colors.secondary, // Example color
-                contentColor = MaterialTheme.colors.onSecondary
+                contentColor = MaterialTheme.colors.onSecondary,
+                shape = RoundedCornerShape(8.dp)
             ) {
                 Icon(
                     Icons.Filled.Add,

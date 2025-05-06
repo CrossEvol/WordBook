@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 
 /**
  * A styled item for displaying a sentence, matching the design.
@@ -32,10 +33,8 @@ fun SentenceItem(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(8.dp), // Rounded corners
-//        colors = CardDefaults.cardColors(
-//            containerColor = MaterialTheme.colors.onSurface.copy(alpha = 0.3f) // Light background
-//        ),
-//        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // No shadow
+        backgroundColor = MaterialTheme.colors.onSurface.copy(alpha = 0.1f),
+        elevation = 0.dp
     ) {
         Row(
             modifier = Modifier
@@ -46,7 +45,7 @@ fun SentenceItem(
         ) {
             Text(
                 text = text,
-                style = MaterialTheme.typography.body1,
+                style = MaterialTheme.typography.caption,
                 modifier = Modifier.weight(1f) // Allow text to take space
             )
             Spacer(modifier = Modifier.width(8.dp))

@@ -138,14 +138,14 @@ private fun ReviewContent(
                 ) {
                     Text(
                         text = "Left",
-                        style = MaterialTheme.typography.h3.copy(
+                        style = MaterialTheme.typography.h4.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
                         modifier = Modifier.padding(end = 8.dp)
                     )
                     Text(
                         text = words.size.toString(),
-                        style = MaterialTheme.typography.h1.copy(
+                        style = MaterialTheme.typography.h2.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colors.primary
                         ),
@@ -153,7 +153,7 @@ private fun ReviewContent(
                     )
                     Text(
                         text = if (words.size == 1) " word" else " words",
-                        style = MaterialTheme.typography.h3.copy(
+                        style = MaterialTheme.typography.h4.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
                         modifier = Modifier.padding(start = 8.dp)
@@ -178,7 +178,7 @@ private fun ReviewContent(
                     ) {
                         Text(
                             "Start!",
-                            style = MaterialTheme.typography.h3.copy(
+                            style = MaterialTheme.typography.h4.copy(
                                 fontSize = 28.sp,
                                 color = MaterialTheme.colors.onPrimary
                             )
@@ -203,13 +203,13 @@ private fun ReviewContent(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(80.dp)
+                            .height(64.dp)
                             .padding(horizontal = 20.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = word.title,
-                            style = MaterialTheme.typography.h1,
+                            style = MaterialTheme.typography.subtitle2,
                             maxLines = 1
                         )
                     }

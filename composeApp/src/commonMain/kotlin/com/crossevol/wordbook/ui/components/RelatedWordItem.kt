@@ -21,8 +21,7 @@ fun RelatedWordItem(
     // Use a simple Text with padding and clickable modifier
     Text(
         text = text,
-        style = MaterialTheme.typography.body2, // Slightly smaller text than sentences
-        color = MaterialTheme.colors.onSurface, // Use a secondary color
+        style = MaterialTheme.typography.caption, // Slightly smaller text than sentences
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)

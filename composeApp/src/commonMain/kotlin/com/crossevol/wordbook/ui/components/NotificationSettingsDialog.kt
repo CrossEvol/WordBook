@@ -136,7 +136,7 @@ fun NotificationSettingsDialog(
                 // --- Permission Section ---
                 Text(
                     "Permission",
-                    style = MaterialTheme.typography.h1.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colors.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -166,7 +166,7 @@ fun NotificationSettingsDialog(
                 // --- Frequency Section ---
                 Text(
                     "Frequency",
-                    style = MaterialTheme.typography.h1.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colors.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
