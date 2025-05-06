@@ -1,41 +1,22 @@
 package com.crossevol.wordbook.ui.screens
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Surface
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack // Use auto-mirrored icon
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.crossevol.wordbook.data.mock.sampleWordItem
 import com.crossevol.wordbook.data.model.WordItemUI
-import com.crossevol.wordbook.ui.components.RelatedWordItem // Import RelatedWordItem
-import com.crossevol.wordbook.ui.components.SentenceItem // Import SentenceItem
-import com.crossevol.wordbook.ui.components.WordDetailsContent // Import the new component
-import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
+import com.crossevol.wordbook.ui.components.WordDetailsContent
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 private val logger = KotlinLogging.logger {} // Add logger instance
@@ -47,7 +28,6 @@ private val logger = KotlinLogging.logger {} // Add logger instance
  * @param wordItem The WordItem to display.
  * @param onBack Callback invoked when the back navigation is requested.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WordDetailPage(
     wordItem: WordItemUI,
@@ -60,15 +40,12 @@ fun WordDetailPage(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface, // Match background potentially
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                backgroundColor = MaterialTheme.colors.surface,
             )
         }
     ) { innerPadding ->
