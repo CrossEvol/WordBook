@@ -1,17 +1,16 @@
 package com.crossevol.wordbook.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable // Added for dropdown TextField
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape // Added for button shape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExposedDropdownMenuBox
-import androidx.compose.material.ExposedDropdownMenuDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown // Added for dropdown icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,10 +30,6 @@ import wordbook.composeapp.generated.resources.girl
  * @param onNavigateBack Callback to navigate back.
  * @param onSaveChanges Callback when save button is clicked, passing the updated info.
  */
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalMaterialApi::class
-)
 @Composable
 fun EditProfilePage(
     onNavigateBack: () -> Unit,
@@ -60,16 +55,14 @@ fun EditProfilePage(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            Icons.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface, // Match background
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                // Material 2 TopAppBar color parameters
+                backgroundColor = MaterialTheme.colors.surface, // Match background
+                contentColor = MaterialTheme.colors.onSurface
             )
         }
     ) { paddingValues ->
@@ -112,38 +105,39 @@ fun EditProfilePage(
                 singleLine = true
             )
 
-            // State Dropdown
-            ExposedDropdownMenuBox(
-                expanded = isStateDropdownExpanded,
-                onExpandedChange = { isStateDropdownExpanded = !isStateDropdownExpanded },
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            // State Dropdown (Material 2 implementation)
+            Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     value = selectedState,
-                    onValueChange = {}, // Input is read-only, selection changes state
-                    readOnly = true,
+                    onValueChange = { /* Read-only */ },
                     label = { Text("Select State") },
+                    readOnly = true,
                     trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = isStateDropdownExpanded)
+                        Icon(Icons.Filled.ArrowDropDown, "Dropdown icon")
                     },
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clickable { isStateDropdownExpanded = true } // Make the TextField clickable
                 )
-                ExposedDropdownMenu(
+                DropdownMenu(
                     expanded = isStateDropdownExpanded,
-                    onDismissRequest = { isStateDropdownExpanded = false }
+                    onDismissRequest = { isStateDropdownExpanded = false },
+                    // Position the dropdown below the TextField
+                    modifier = Modifier.fillMaxWidth() // Optional: make dropdown width match TextField
                 ) {
                     states.forEach { state ->
                         DropdownMenuItem(
-                            text = { Text(state) },
                             onClick = {
                                 selectedState = state
                                 isStateDropdownExpanded = false
                             }
-                        )
+                        ) {
+                            Text(state)
+                        }
                     }
                 }
             }
+
 
             // Bio TextField
             OutlinedTextField(
@@ -172,7 +166,7 @@ fun EditProfilePage(
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE)) // Purple button
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF6200EE)) // Purple button
             ) {
                 Text(
                     "Save Changes",
