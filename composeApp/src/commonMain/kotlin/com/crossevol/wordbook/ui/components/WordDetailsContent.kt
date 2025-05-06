@@ -3,19 +3,14 @@ package com.crossevol.wordbook.ui.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.crossevol.wordbook.data.model.WordItemUI
-import io.github.oshai.kotlinlogging.KotlinLogging // Import KotlinLogging
-
-private val logger = KotlinLogging.logger {} // Add logger instance
 
 /**
  * Reusable composable to display the core content of a word's details.
@@ -39,7 +34,7 @@ fun WordDetailsContent(
         // Word Name (Title)
         Text(
             text = wordItem.title,
-            style = MaterialTheme.typography.headlineLarge, // Larger headline
+            style = MaterialTheme.typography.h1, // Larger headline
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(4.dp))
@@ -47,30 +42,30 @@ fun WordDetailsContent(
         // Pronunciation (like "[ Hello, world ]")
         Text(
             text = wordItem.pronunciation,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = MaterialTheme.typography.body1,
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(16.dp))
 
         // Explanation Label
         Text(
             text = "Explanation", // "explanation" in design, capitalized here
-            style = MaterialTheme.typography.titleSmall, // Smaller title for label
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = MaterialTheme.typography.h6, // Smaller title for label
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(4.dp))
 
         // Explanation Text
         Text(
             text = wordItem.explanation,
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.body1
         )
         Spacer(modifier = Modifier.height(24.dp))
 
         // Sentences Label
         Text(
             text = "Sentences",
-            style = MaterialTheme.typography.titleMedium, // Slightly larger title for section
+            style = MaterialTheme.typography.h3, // Slightly larger title for section
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -88,7 +83,7 @@ fun WordDetailsContent(
         // Related Words Label
         Text(
             text = "Related Words",
-            style = MaterialTheme.typography.titleMedium, // Match Sentences label style
+            style = MaterialTheme.typography.h3, // Match Sentences label style
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
