@@ -6,17 +6,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.*
+import androidx.compose.material.* // Keep Material 2 import
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,7 +44,6 @@ data class ApiKeyConfig(
  * @param onAddApiKey Callback to navigate to the Add API Key page.
  * @param onEditApiKey Callback when an API key item's Edit button is clicked.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ApiKeyListPage(
     viewModel: ApiKeyViewModel, // Receive ViewModel
@@ -63,16 +62,14 @@ fun ApiKeyListPage(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            Icons.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                // Using Material 2 TopAppBar parameters
+                backgroundColor = MaterialTheme.colors.surface,
+                contentColor = MaterialTheme.colors.onSurface,
             )
         },
         floatingActionButton = {
@@ -119,10 +116,9 @@ fun ApiKeyItem(
             .fillMaxWidth()
             .clickable { onEditClick() }, // Make the whole card clickable to edit
         shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer // Use secondaryContainer for card background
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        // Using Material 2 Card parameters
+        backgroundColor = MaterialTheme.colors.secondary, // Use secondary for card background in M2
+        elevation = 4.dp // Use elevation parameter directly
     ) {
         Row(
             modifier = Modifier
@@ -141,16 +137,16 @@ fun ApiKeyItem(
             ) {
                 Text(
                     text = config.alias,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.h6, // Adjusted typography for better M2 fit
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp, // Adjust font size
-                    color = MaterialTheme.colorScheme.onSecondaryContainer // Text color
+                    color = MaterialTheme.colors.onSecondary // Use M2 color
                 )
                 Text(
                     text = config.model,
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.body2, // Adjusted typography for better M2 fit
                     fontSize = 14.sp, // Adjust font size
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f) // Slightly faded color
+                    color = MaterialTheme.colors.onSecondary.copy(alpha = 0.8f) // Use M2 color
                 )
             }
 
@@ -159,37 +155,58 @@ fun ApiKeyItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp) // Space between buttons
             ) {
+                // Edit Button
                 IconButton(
                     onClick = onEditClick,
                     modifier = Modifier.size(40.dp), // Button size
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primary, // Primary color for Edit button
-                        contentColor = MaterialTheme.colorScheme.onPrimary // Icon color
-                    )
+                    // Removed colors parameter
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Edit,
-                        contentDescription = "Edit API Key",
-                        modifier = Modifier.size(24.dp) // Icon size
-                    )
+                    // Provide LocalContentColor for the Icon
+                    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colors.primary) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit API Key",
+                            modifier = Modifier.size(24.dp) // Icon size
+                        )
+                    }
                 }
+                // Delete Button
                 IconButton(
                     onClick = onDeleteClick,
                     modifier = Modifier.size(40.dp), // Button size
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.error, // Error color for Delete button
-                        contentColor = MaterialTheme.colorScheme.onError // Icon color
-                    )
+                    // Removed colors parameter
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = "Delete API Key",
-                        modifier = Modifier.size(24.dp) // Icon size
-                    )
+                    // Provide LocalContentColor for the Icon
+                    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colors.error) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Delete API Key",
+                            modifier = Modifier.size(24.dp) // Icon size
+                        )
+                    }
                 }
             }
         }
     }
 }
 
+// Added a preview using the MockViewModel
+@Preview
+@Composable
+fun PreviewApiKeyListPage() {
+    // Use a mock ViewModel for preview
+    val mockViewModel = ApiKeyViewModel(MockApiKeyConfigRepository())
+    // Load some dummy data into the mock ViewModel's state
+    mockViewModel.loadApiKeyConfigs()
+
+    // Wrap in a MaterialTheme for preview
+    MaterialTheme {
+        ApiKeyListPage(
+            viewModel = mockViewModel,
+            onNavigateBack = {},
+            onAddApiKey = {},
+            onEditApiKey = {}
+        )
+    }
+}
 
