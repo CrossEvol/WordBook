@@ -22,20 +22,18 @@ import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Card
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.RadioButton
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -164,7 +162,7 @@ fun SettingsPage(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background) // Use theme background
+            .background(MaterialTheme.colors.background) // Use theme background
     ) {
         // Header Section
         Surface(
@@ -266,10 +264,10 @@ fun SettingsPage(
                 .height(50.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant, // Light background for button
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant // Text color
+                backgroundColor = MaterialTheme.colors.onSurface, // Light background for button
+                contentColor = MaterialTheme.colors.onSurface // Text color
             ),
-            elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+            elevation = ButtonDefaults.elevation(defaultElevation = 2.dp)
         ) {
             Icon(
                 imageVector = Icons.Filled.ExitToApp, // Correct Icon
@@ -296,10 +294,8 @@ private fun SettingsItem(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface // White/Surface background
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp) // Subtle shadow
+        backgroundColor = MaterialTheme.colors.surface, // White/Surface background
+        elevation = 1.dp // Subtle shadow
     ) {
         Row(
             modifier = Modifier
@@ -310,13 +306,13 @@ private fun SettingsItem(
             Icon(
                 imageVector = icon,
                 contentDescription = null, // Text describes the action
-                tint = MaterialTheme.colorScheme.onSurfaceVariant // Icon color
+                tint = MaterialTheme.colors.onSurface // Icon color
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = text,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface // Text color
+                style = MaterialTheme.typography.body1,
+                color = MaterialTheme.colors.onSurface // Text color
             )
         }
     }
@@ -337,7 +333,6 @@ fun SettingsPagePreview() {
 /**
  * Dialog for exporting data with path selection and format options.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExportDialog(
     onDismiss: () -> Unit,
@@ -418,8 +413,8 @@ fun ExportDialog(
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = pathWarningMessage,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
+                        style = MaterialTheme.typography.body2,
+                        color = MaterialTheme.colors.error
                     )
                 }
 
@@ -428,7 +423,7 @@ fun ExportDialog(
                 // Format selection radio group
                 Text(
                     text = "Export Format",
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.body2,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
@@ -456,7 +451,7 @@ fun ExportDialog(
                             )
                             Text(
                                 text = format,
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.body1,
                                 modifier = Modifier.padding(start = 16.dp)
                             )
                         }
@@ -484,7 +479,6 @@ fun ExportDialog(
 /**
  * Dialog for importing data with file selection and format options.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImportDialog(
     onDismiss: () -> Unit,
@@ -561,7 +555,7 @@ fun ImportDialog(
                 // Format selection radio group
                 Text(
                     text = "Import Format",
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.body2,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
@@ -589,7 +583,7 @@ fun ImportDialog(
                             )
                             Text(
                                 text = format,
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.body1,
                                 modifier = Modifier.padding(start = 16.dp)
                             )
                         }
