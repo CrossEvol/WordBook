@@ -2,10 +2,11 @@ package com.crossevol.wordbook.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Scaffold
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -73,7 +74,8 @@ fun WordReviewPage(
                 onBack = onBack
             )
         }
-        ReviewState.ANSWER -> {
+
+        ReviewState.ANSWER   -> {
             AnswerReviewScreen(
                 wordItem = wordItem,
                 remainingWordsCount = remainingWordsCount,
@@ -109,7 +111,6 @@ private enum class ReviewAction {
 /**
  * The initial question screen with the word title and blurred content
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun QuestionReviewScreen(
     wordItem: WordItemUI,
@@ -129,16 +130,13 @@ private fun QuestionReviewScreen(
                         navigationIcon = {
                             IconButton(onClick = onBack) {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    imageVector = Icons.Filled.ArrowBack,
                                     contentDescription = "Back"
                                 )
                             }
                         },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-                            titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        backgroundColor = MaterialTheme.colors.surface,
+                        contentColor = MaterialTheme.colors.onSurface,
                     )
                 }
             ) { innerPadding ->
@@ -151,11 +149,11 @@ private fun QuestionReviewScreen(
                     // Unblurred title
                     Text(
                         text = wordItem.title,
-                        style = MaterialTheme.typography.headlineLarge,
+                        style = MaterialTheme.typography.h1,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
-                    
+
                     // Blurred content (everything except the title)
                     Box(
                         modifier = Modifier
@@ -167,11 +165,11 @@ private fun QuestionReviewScreen(
                             // Pronunciation
                             Text(
                                 text = wordItem.pronunciation,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                style = MaterialTheme.typography.body1,
+                                color = MaterialTheme.colors.onSurface
                             )
                             Spacer(modifier = Modifier.height(16.dp))
-                            
+
                             // Rest of the word details
                             WordDetailsContentWithoutTitle(
                                 wordItem = wordItem,
@@ -189,7 +187,9 @@ private fun QuestionReviewScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = 56.dp)
-                .clickable(enabled = false, onClick = {}),
+                .clickable(
+                    enabled = false,
+                    onClick = {}),
             color = Color.Black.copy(alpha = 0.5f)
         ) {}
 
@@ -206,7 +206,11 @@ private fun QuestionReviewScreen(
                 editLabel = "Remember",
                 deleteLabel = "Forget",
                 cancelLabel = "Skip",
-                modifier = Modifier.padding(bottom = 24.dp, start = 16.dp, end = 16.dp)
+                modifier = Modifier.padding(
+                    bottom = 24.dp,
+                    start = 16.dp,
+                    end = 16.dp
+                )
             )
         }
     }
@@ -215,7 +219,6 @@ private fun QuestionReviewScreen(
 /**
  * The answer screen showing full word details with a Next FAB
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AnswerReviewScreen(
     wordItem: WordItemUI,
@@ -230,22 +233,19 @@ private fun AnswerReviewScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                backgroundColor = MaterialTheme.colors.surface,
+                contentColor = MaterialTheme.colors.onSurface,
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onNext,
-                containerColor = MaterialTheme.colorScheme.primary
+                backgroundColor = MaterialTheme.colors.primary
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowForward,
@@ -284,22 +284,22 @@ private fun WordDetailsContentWithoutTitle(
         // Explanation Label
         Text(
             text = "Explanation",
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = MaterialTheme.typography.h6,
+            color = MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.height(4.dp))
 
         // Explanation Text
         Text(
             text = wordItem.explanation,
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.body1
         )
         Spacer(modifier = Modifier.height(24.dp))
 
         // Sentences Label
         Text(
             text = "Sentences",
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.h3,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -317,7 +317,7 @@ private fun WordDetailsContentWithoutTitle(
         // Related Words Label
         Text(
             text = "Related Words",
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.h3,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -339,8 +339,15 @@ fun WordReviewPagePreview() {
     MaterialTheme {
         WordReviewPage(
             wordItem = sampleWordItem.copy(
-                sentences = listOf("First sentence example for review.", "Second sentence example for review."),
-                relatedWords = listOf("Related Word A", "Related Word B", "Related Word C")
+                sentences = listOf(
+                    "First sentence example for review.",
+                    "Second sentence example for review."
+                ),
+                relatedWords = listOf(
+                    "Related Word A",
+                    "Related Word B",
+                    "Related Word C"
+                )
             ),
             remainingWordsCount = 5,
             onRemember = {},
