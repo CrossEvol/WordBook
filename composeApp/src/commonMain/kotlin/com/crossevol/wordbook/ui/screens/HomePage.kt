@@ -5,27 +5,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.* // Added this import
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -82,7 +68,6 @@ val bottomNavItems = listOf(
  * The main Home Page screen composable using Material 3.
  * Includes TopAppBar, Bottom Navigation Bar, and a list of WordListItems.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePage(
     settingsRepository: SettingsRepository?, // Accept SettingsRepository
@@ -171,7 +156,7 @@ fun HomePage(
                             Text(
                                 currentLocale, // Display current locale state
                                 style = MaterialTheme.typography.labelLarge, // Or another suitable style
-                                color = MaterialTheme.colorScheme.onPrimary // Match TopAppBar text color (assuming primary is dark enough)
+                                color = MaterialTheme.colors.onPrimary // Match TopAppBar text color (assuming primary is dark enough)
                             )
                         }
                         DropdownMenu(
@@ -179,32 +164,35 @@ fun HomePage(
                             onDismissRequest = { showLocaleMenu = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("English (EN)") },
                                 onClick = {
                                     settingsRepository?.setLocale("EN") // Save to settings
                                     currentLocale = "EN" // Update local state
                                     showLocaleMenu = false
                                     // TODO: Implement actual locale change logic if needed elsewhere
                                 }
-                            )
+                            ) {
+                                Text("English (EN)")
+                            }
                             DropdownMenuItem(
-                                text = { Text("日本語 (JA)") },
                                 onClick = {
                                     settingsRepository?.setLocale("JA") // Save to settings
                                     currentLocale = "JA" // Update local state
                                     showLocaleMenu = false
                                     // TODO: Implement actual locale change logic if needed elsewhere
                                 }
-                            )
+                            ) {
+                                Text("日本語 (JA)")
+                            }
                             DropdownMenuItem(
-                                text = { Text("中文 (ZH)") },
                                 onClick = {
                                     settingsRepository?.setLocale("ZH") // Save to settings
                                     currentLocale = "ZH" // Update local state
                                     showLocaleMenu = false
                                     // TODO: Implement actual locale change logic if needed elsewhere
                                 }
-                            )
+                            ) {
+                                Text("中文 (ZH)")
+                            }
                         }
                     }
 
@@ -225,21 +213,21 @@ fun HomePage(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary, // Use primary color from theme
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+//                colors = TopAppBarDefaults.topAppBarColors(
+//                    containerColor = MaterialTheme.colors.primary, // Use primary color from theme
+//                    titleContentColor = MaterialTheme.colors.onPrimary,
+//                    actionIconContentColor = MaterialTheme.colors.onPrimary
+//                )
             )
         },
         bottomBar = {
             // Use NavigationBar for Material 3 bottom navigation
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.primaryContainer, // Example color
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            BottomNavigation( // Changed from NavigationBar to BottomNavigation for Material 2
+                backgroundColor = MaterialTheme.colors.primaryVariant, // Example color
+                contentColor = MaterialTheme.colors.onPrimary // Example color
             ) {
                 bottomNavItems.forEachIndexed { index, item ->
-                    NavigationBarItem(
+                    BottomNavigationItem( // Changed from NavigationBarItem to BottomNavigationItem
                         icon = {
                             Icon(
                                 item.icon,
@@ -253,13 +241,10 @@ fun HomePage(
                             onNavigate(item.route) // Trigger navigation callback
                         },
                         // Customize colors using NavigationBarItemDefaults if needed
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            indicatorColor = MaterialTheme.colorScheme.secondaryContainer // Color behind selected item
-                        )
+                        // Material 2 BottomNavigationItem doesn't have a direct 'colors' parameter like M3
+                        // You would typically control colors via the parent BottomNavigation or theme
+                        selectedContentColor = MaterialTheme.colors.primary, // Example
+                        unselectedContentColor = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.medium) // Example
                     )
                 }
             }
@@ -267,8 +252,8 @@ fun HomePage(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { onNavigate("fetch") }, // Navigate to fetch screen
-                containerColor = MaterialTheme.colorScheme.secondary, // Example color
-                contentColor = MaterialTheme.colorScheme.onSecondary
+                backgroundColor = MaterialTheme.colors.secondary, // Example color
+                contentColor = MaterialTheme.colors.onSecondary
             ) {
                 Icon(
                     Icons.Filled.Add,
