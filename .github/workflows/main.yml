@@ -141,10 +141,12 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build MSI
-        run: ./gradlew packageMsi
+        # Added --rerun-tasks to force execution
+        run: ./gradlew packageMsi --rerun-tasks
 
       - name: Build Distributable
-        run: ./gradlew createDistributable
+        # Added --rerun-tasks to force execution
+        run: ./gradlew createDistributable --rerun-tasks
 
       # Step to find the distributable directory created by createDistributable
       - name: Find Distributable Directory
