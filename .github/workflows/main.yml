@@ -163,9 +163,13 @@ jobs:
             exit 1
           }
           Write-Host "Distributable directory found: $($distDir.FullName)"
-          # Set output variables for the path and name
-          echo "dist_path=$($distDir.FullName)" >> $GITHUB_OUTPUT
-          echo "dist_name=$($distDir.Name)" >> $GITHUB_OUTPUT
+
+          # Write outputs to the file specified by $GITHUB_OUTPUT
+          $outputFile = $env:GITHUB_OUTPUT
+          "dist_path=$($distDir.FullName)" | Out-File -Path $outputFile -Append
+          "dist_name=$($distDir.Name)" | Out-File -Path $outputFile -Append
+
+          Write-Host "Set output variables: dist_path=$($distDir.FullName), dist_name=$($distDir.Name)"
         shell: pwsh # Specify PowerShell
 
       # Step to zip the distributable directory
@@ -173,8 +177,16 @@ jobs:
         # Use PowerShell syntax for zipping
         run: |
           $distPath = "${{ steps.find_dist.outputs.dist_path }}"
+          Write-Host "Attempting to zip directory. Value of distPath: '$distPath'" # Debugging line
+          if ([string]::IsNullOrEmpty($distPath)) {
+            Write-Error "Error: distPath is empty! Cannot proceed with zipping."
+            exit 1
+          }
+
           $zipFileName = "${{ steps.find_dist.outputs.dist_name }}.zip"
           $zipFilePath = "composeApp/build/compose/binaries/main/app/$zipFileName"
+          Write-Host "Zipping '$distPath' to '$zipFilePath'" # Debugging line
+
           Compress-Archive -Path $distPath -DestinationPath $zipFilePath
           Write-Host "Zipped file created: $zipFilePath"
         shell: pwsh # Specify PowerShell
