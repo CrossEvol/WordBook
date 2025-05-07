@@ -120,7 +120,8 @@ jobs:
     name: Build Compose Desktop Artifacts
     # Only run on tag push and after tests succeed
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
+    # Change the runner to Windows for building Windows-specific artifacts
+    runs-on: windows-latest
     needs: test # Run after tests succeed
     permissions:
       contents: write # Required to create releases
@@ -137,47 +138,55 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Make gradlew executable
-        run: chmod +x gradlew
+      # On Windows, gradlew is already executable, no need for chmod +x
+      # - name: Make gradlew executable
+      #   run: chmod +x gradlew
 
       - name: Build MSI
         # Added --rerun-tasks to force execution
+        # Use ./gradlew on Windows
         run: ./gradlew packageMsi --rerun-tasks
 
       - name: Build Distributable
         # Added --rerun-tasks to force execution
+        # Use ./gradlew on Windows
         run: ./gradlew createDistributable --rerun-tasks
 
       # Step to find the distributable directory created by createDistributable
       - name: Find Distributable Directory
         id: find_dist
+        # Use PowerShell syntax for finding the directory on Windows
         run: |
-          # Find the single directory inside the 'app' directory
-          DIST_DIR=$(find composeApp/build/compose/binaries/main/app/ -maxdepth 1 -mindepth 1 -type d)
-          if [ -z "$DIST_DIR" ]; then
-            echo "Error: Distributable directory not found!"
+          $distDir = Get-ChildItem -Path "composeApp/build/compose/binaries/main/app/" -Directory | Select-Object -First 1
+          if ($null -eq $distDir) {
+            Write-Error "Error: Distributable directory not found!"
             exit 1
-          fi
-          echo "Distributable directory found: $DIST_DIR"
+          }
+          Write-Host "Distributable directory found: $($distDir.FullName)"
           # Set output variables for the path and name
-          echo "dist_path=$DIST_DIR" >> $GITHUB_OUTPUT
-          echo "dist_name=$(basename $DIST_DIR)" >> $GITHUB_OUTPUT
+          echo "dist_path=$($distDir.FullName)" >> $GITHUB_OUTPUT
+          echo "dist_name=$($distDir.Name)" >> $GITHUB_OUTPUT
+        shell: pwsh # Specify PowerShell
 
       # Step to zip the distributable directory
       - name: Zip Distributable
+        # Use PowerShell syntax for zipping
         run: |
-          # Change directory to where the distributable is located
-          cd composeApp/build/compose/binaries/main/app/
-          # Zip the directory using the name found in the previous step
-          zip -r ${{ steps.find_dist.outputs.dist_name }}.zip ${{ steps.find_dist.outputs.dist_name }}
-          echo "Zipped file created: composeApp/build/compose/binaries/main/app/${{ steps.find_dist.outputs.dist_name }}.zip"
+          $distPath = "${{ steps.find_dist.outputs.dist_path }}"
+          $zipFileName = "${{ steps.find_dist.outputs.dist_name }}.zip"
+          $zipFilePath = "composeApp/build/compose/binaries/main/app/$zipFileName"
+          Compress-Archive -Path $distPath -DestinationPath $zipFilePath
+          Write-Host "Zipped file created: $zipFilePath"
+        shell: pwsh # Specify PowerShell
 
       - name: Verify Artifacts Exist
         # Check for the MSI in the nativeDistribution directory
         # Check for the zip file in the app directory
+        # Use PowerShell syntax for listing files
         run: |
-          ls -l composeApp/build/compose/binaries/main/msi/
-          ls -l composeApp/build/compose/binaries/main/app/
+          Get-ChildItem -Path "composeApp/build/compose/binaries/main/msi/"
+          Get-ChildItem -Path "composeApp/build/compose/binaries/main/app/"
+        shell: pwsh # Specify PowerShell
 
       - name: Upload Desktop Artifacts to Release
         uses: softprops/action-gh-release@v1
