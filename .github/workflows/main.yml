@@ -114,3 +114,101 @@ jobs:
         run: |
           rm -f my-release-key.keystore
           rm -f key.properties
+
+
+  build-desktop:
+    name: Build Compose Desktop Artifacts
+    # Only run on tag push and after tests succeed
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    # Change the runner to Windows for building Windows-specific artifacts
+    runs-on: windows-latest
+    needs: test # Run after tests succeed
+    permissions:
+      contents: write # Required to create releases
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      # On Windows, gradlew is already executable, no need for chmod +x
+      # - name: Make gradlew executable
+      #   run: chmod +x gradlew
+
+      - name: Build MSI
+        # Added --rerun-tasks to force execution
+        # Use ./gradlew on Windows
+        run: ./gradlew packageMsi --rerun-tasks
+
+      - name: Build Distributable
+        # Added --rerun-tasks to force execution
+        # Use ./gradlew on Windows
+        run: ./gradlew createDistributable --rerun-tasks
+
+      # Step to find the distributable directory created by createDistributable
+      - name: Find Distributable Directory
+        id: find_dist
+        # Use PowerShell syntax for finding the directory on Windows
+        run: |
+          $distDir = Get-ChildItem -Path "composeApp/build/compose/binaries/main/app/" -Directory | Select-Object -First 1
+          if ($null -eq $distDir) {
+            Write-Error "Error: Distributable directory not found!"
+            exit 1
+          }
+          Write-Host "Distributable directory found: $($distDir.FullName)"
+
+          # Write outputs to the file specified by $GITHUB_OUTPUT
+          $outputFile = $env:GITHUB_OUTPUT
+          "dist_path=$($distDir.FullName)" | Out-File -Path $outputFile -Append
+          "dist_name=$($distDir.Name)" | Out-File -Path $outputFile -Append
+
+          Write-Host "Set output variables: dist_path=$($distDir.FullName), dist_name=$($distDir.Name)"
+        shell: pwsh # Specify PowerShell
+
+      # Step to zip the distributable directory
+      - name: Zip Distributable
+        # Use PowerShell syntax for zipping
+        run: |
+          $distPath = "${{ steps.find_dist.outputs.dist_path }}"
+          Write-Host "Attempting to zip directory. Value of distPath: '$distPath'" # Debugging line
+          if ([string]::IsNullOrEmpty($distPath)) {
+            Write-Error "Error: distPath is empty! Cannot proceed with zipping."
+            exit 1
+          }
+
+          $zipFileName = "${{ steps.find_dist.outputs.dist_name }}.zip"
+          $zipFilePath = "composeApp/build/compose/binaries/main/app/$zipFileName"
+          Write-Host "Zipping '$distPath' to '$zipFilePath'" # Debugging line
+
+          Compress-Archive -Path $distPath -DestinationPath $zipFilePath
+          Write-Host "Zipped file created: $zipFilePath"
+        shell: pwsh # Specify PowerShell
+
+      - name: Verify Artifacts Exist
+        # Check for the MSI in the nativeDistribution directory
+        # Check for the zip file in the app directory
+        # Use PowerShell syntax for listing files
+        run: |
+          Get-ChildItem -Path "composeApp/build/compose/binaries/main/msi/"
+          Get-ChildItem -Path "composeApp/build/compose/binaries/main/app/"
+        shell: pwsh # Specify PowerShell
+
+      - name: Upload Desktop Artifacts to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            # Upload the MSI file from the correct path
+            composeApp/build/compose/binaries/main/msi/*.msi
+            # Upload the zip file created from the distributable directory
+            composeApp/build/compose/binaries/main/app/${{ steps.find_dist.outputs.dist_name }}.zip
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
